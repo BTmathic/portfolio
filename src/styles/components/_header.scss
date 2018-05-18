@@ -1,0 +1,58 @@
+#header {
+    background: darken(grey, 30%);
+    position: fixed;
+    width: 100vw;
+    z-index: 1;
+}
+
+#header__content {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    padding: $s-size 0;
+}
+
+#header__title {
+    color: white;
+    text-decoration: none;
+    h1 {
+        margin: 0;
+    }
+}
+
+#header a {
+  color: white;
+  text-decoration: none;
+}
+
+#landing-image img {
+  background-size: cover;
+  margin-bottom: -28px;
+  width: 100vw;
+}
+
+#landing-image-overlay {
+  left: 50vw;
+  position: absolute;
+  text-align: center;
+  top: 20vh;
+  width: 350px;
+}
+
+#landing-image h2 {
+  color: white;
+}
+
+#coding-icons {
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  margin: 0 auto;
+  margin-top: -20px;
+  width: 80%;
+}
+
+#coding-icons img {
+  height: auto;
+  width: 40px;
+}

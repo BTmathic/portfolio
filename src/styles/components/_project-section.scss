@@ -1,0 +1,20 @@
+.left-arrow, .right-arrow {
+  cursor: pointer;
+  font-size: 200%;
+  margin: 0 20px;
+}
+
+.project {
+  margin: 0 auto;
+}
+
+.project-carousel {
+  align-items: center;
+  display: flex;
+  margin: 0 auto;
+  max-width: 650px;
+}
+
+.project-image img {
+  max-width: 500px;
+}

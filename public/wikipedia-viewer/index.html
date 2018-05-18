@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <title>Wikipedia Viewer</title>
+    <link rel='icon' type='image/png' href='./w-icon.png' />
+  </head>
+
+  <body>
+    <div id='app'>
+      <div id='random-article'>
+        <a href='https://en.wikipedia.org/wiki/Special:Random'>
+          Click here for a random article
+        </a>
+      </div>
+
+      <div id='search'>
+        <div id='search-icon'>
+          <div id='search-icon-left' onclick='openSearchInput()'></div>
+          <div id='search-icon-middle'>
+            <input
+              alt='Enter search term here'
+              id='search-input'
+              name='search-term'
+              type='text'
+              placeholder='What would you like to search?'
+            />
+            <div id='close-search-input' onclick='closeSearchInput()'>
+              &times;
+            </div>
+          </div>
+          <div id='search-icon-right' onclick='openSearchInput()'></div>
+      
+        </div>
+      </div>
+      <div id='search-secondary'>
+        Click icon to search
+      </div>
+
+      <div id='search-results'>
+        
+      </div>
+  
+    </div>
+    <script src="./bundle.js"></script>
+    <script>
+      window.onkeyup = keyup;
+      let userSearchTerm;
+
+      function openSearchInput() {
+        document.getElementById('search-icon-middle').className = 'search-icon-open';
+        document.getElementById('search-icon-middle').style.width = '260px';
+        setTimeout(() => {
+          document.getElementById('search-input').style.display = 'inline';
+          document.getElementById('close-search-input').style.display = 'inline';
+        }, 500);
+      }
+
+      function closeSearchInput() {
+        document.getElementById('search-input').style.display = 'none';
+        document.getElementById('close-search-input').style.display = 'none';
+        document.getElementById('search-icon-middle').className = 'search-icon-close';
+        setTimeout(() => document.getElementById('search-icon-middle').style.width = '0px', 500);
+      }
+
+      function goToSearchPage(curid) {
+        const URL = 'https://en.wikipedia.org/?curid=' + curid;
+        window.open(URL, '_blank');
+      }
+
+      function htmlToElement(html) {
+        let template = document.createElement('template');
+        html = html.trim();
+        template.innerHTML = html;
+        let parsedHTML = '';
+        for (let i=0; i < template.content.childNodes.length; i++) {
+          let content = template.content.childNodes[i].nodeValue;
+          if (!!content) {
+            parsedHTML = parsedHTML.concat(template.content.childNodes[i].nodeValue);
+          } else {
+            parsedHTML = parsedHTML.concat(template.content.childNodes[i].firstChild.nodeValue);
+          }
+          
+        }
+        return parsedHTML + '...';
+      }
+
+      function keyup(e) {
+          userSearchTerm = e.target.value;
+          if (e.keyCode === 13) {
+            e.preventDefault(); //?
+            if (userSearchTerm !== '') {
+              fetch(`https://en.wikipedia.org/w/api.php?action=query&prop=info&inprop=url&list=search&origin=*&format=json&srsearch=${userSearchTerm}`, {
+                method: 'POST'
+              }).then(function (response) {
+                if (response.ok) {
+                  return response.json();
+                }
+                throw new Error('Network reponse failed: ' + response.statusText);
+              }).then(function (data) {
+                let resultsContainer = document.getElementById('search-results');
+                while (resultsContainer.firstChild) {
+                  resultsContainer.removeChild(resultsContainer.firstChild);
+                }
+                if (data.query.search.length === 0) {
+                  let resultNode = document.createElement("div");
+                  let resultTextNode = document.createTextNode("No results");
+                  resultNode.appendChild(resultTextNode);
+                  resultsContainer.appendChild(resultNode);
+                } else {
+                  data.query.search.map((searchResult) => {
+                    let titleNode = document.createElement("h2");
+                    titleNode.className = 'search-result-title';
+                    const titleTextNode = document.createTextNode(searchResult.title);
+                    titleNode.appendChild(titleTextNode);
+                    let snippetNode = document.createElement('div');
+                    snippetNode.className = 'search-result-snippet';
+                    let snippetTextNode = document.createTextNode(htmlToElement(searchResult.snippet));
+                    snippetNode.appendChild(snippetTextNode);
+
+                    let resultNode = document.createElement("div");
+                    resultNode.append(titleNode);
+                    resultNode.append(snippetNode);
+                    resultNode.className = 'search-result';
+                    resultNode.onclick = function goToResult() { goToSearchPage(searchResult.pageid); };
+                    resultsContainer.appendChild(resultNode);
+                  });
+                }
+              });
+            };
+          }
+        }
+    </script>
+  </body>
+
+</html>
