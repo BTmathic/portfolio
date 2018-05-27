@@ -1,3 +1,16 @@
 #contact {
   background: white;
 }
+
+#contact-options {
+  display: flex;
+  justify-content: space-between;
+  padding: $s-size $l-size;
+}
+
+.icon {
+  height: 40px;
+  margin: 0 5px;
+  padding: 3px;
+  width: 40px;
+}

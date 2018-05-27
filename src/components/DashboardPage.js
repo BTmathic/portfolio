@@ -10,6 +10,7 @@ const DashboardPage = () => (
     <div id='dashboard'>
       <AboutMe />
       <Projects />
+      {/* Latest blog post? Pinned blog post? */}
       <Contact />
     </div>
   </div>

@@ -8,7 +8,7 @@ const AboutMe = () => (
       <div id='about-me-content'>
         <div id='about-me-text'>
           <p id='hello'>Hello! My name is Alexander Molnar and I am a front end developer with an affinity for problem solving and extensive experience from a decade of programming, schooling, and a PhD in Mathematics.</p>
-          <p id='sub-hello'>I have a diverse set of skills, ranging from HTML, CSS and Javascript, to jQuery, React and Redux. </p>
+          <p id='sub-hello'>I have a diverse set of skills, ranging from HTML, CSS and Javascript, to jQuery, React and Redux, and D3 as well as the mathematical languages used with SageMath, Python and Cython. </p>
         </div>
         <div id='about-me-photo'>
           <img src='./Images/placeholder.jpg' alt='photo of me' />

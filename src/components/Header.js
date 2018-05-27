@@ -14,9 +14,7 @@ export const Header = ({ startLogout }) => (
           <a href='#about-me' className='header-link'>About Me</a>
           <a href='#projects' className='header-link'>Projects</a>
           <a href='#contact' className='header-link'>Contact</a>
-          <Link to='/blog'>
-            Musings
-        </Link>
+          <a href='#blog' className='header-link'>Blog</a>
         </div>
       </div>
     </header>
@@ -25,16 +23,16 @@ export const Header = ({ startLogout }) => (
         <h2>Web design and development</h2>
         <div id='coding-icons'>
           <div className='icon'>
-            <img src='./Images/react-logo.svg' alt='react-logo' />
+            <img src='./Images/react-logo.svg' alt='react logo' />
           </div>
           <div className='icon'>
-            <img src='./Images/redux-logo.svg' alt='redux-logo' />
+            <img src='./Images/redux-logo.svg' alt='redux logo' />
           </div>
           <div id='coding-icons-node'>
-            <img src='./Images/nodejs-logo.svg' alt='nodejs-logo' />
+            <img src='./Images/nodejs-logo.svg' alt='nodejs logo' />
           </div>
           <div className='icon'>
-            jQuery
+            <img src='./Images/d3-logo.svg' alt='D3 logo' />
           </div>
         </div>
       </div>
