@@ -20,7 +20,7 @@ const reactProjects = [ 'React', [
   }, {
     title: 'Recipe Box',
     image: '/Images/recipe-box.jpg',
-    alt: 'Screenshot of Game of Life app',
+    alt: 'Screenshot of Recipe Box app',
     link: 'https://BTmathic.github.io/recipe-box',
     tools: 'React Modal, Webpack'
   }, {

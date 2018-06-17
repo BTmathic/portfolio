@@ -9,8 +9,20 @@ html {
 body {
     color: $dark-grey;
     font-family: Helvetica, Arial, sans-serif;
-    font-size: $m-size;
+    font-size: $s-size;
     line-height: 1.6;
+}
+
+@media (min-width: 500px) {
+  body {
+    font-size: $sm-size;
+  }
+}
+
+@media (min-width: 768px) {
+  body {
+    font-size: $m-size;
+  }
 }
 
 button {

@@ -1,17 +1,16 @@
 import React from 'react';
 
 const AboutMe = () => (
-  <div>
-    <div className='section-wrapper'></div>
-    <div className='content-container' id='about-me'>
+  <div id='about-me'>
+    <div className='content-container'>
       <h1>About Me</h1>
       <div id='about-me-content'>
         <div id='about-me-text'>
-          <p id='hello'>Hello! My name is Alexander Molnar and I am a front end developer with an affinity for problem solving and extensive experience from a decade of programming, schooling, and a PhD in Mathematics.</p>
-          <p id='sub-hello'>I have a diverse set of skills, ranging from HTML, CSS and Javascript, to jQuery, React and Redux, and D3 as well as the mathematical languages used with SageMath, Python and Cython. </p>
+          <p id='hello'>I am a front end developer with an affinity for problem solving and extensive experience from a decade of programming, and schooling all the way to a PhD in Mathematics.</p>
+          <p id='sub-hello'>I have a diverse set of skills, ranging from HTML, CSS and Javascript, to jQuery, React and Redux, and D3 as well as putting them all together with Webpack. On top of this I worked for years with Python (and Cython) from working with SageMath. </p>
         </div>
         <div id='about-me-photo'>
-          <img src='./Images/placeholder.jpg' alt='photo of me' />
+          <img src='./Images/myAvatar.svg' alt='Avatar of me' />
         </div>
       </div>
     </div>

@@ -1,7 +1,23 @@
 .left-arrow, .right-arrow {
   cursor: pointer;
   font-size: 200%;
-  margin: 0 20px;
+  margin: 0px 2px;
+}
+
+.project-section {
+  background:  rgba($lavender, 0.1);
+  border: 2px solid $lavender;
+  border-radius: 5px;
+  margin: 3px 0;
+  h2 {
+    background: lighten($lavender, 20%);
+    border: 2px solid $lavender;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: -2px;
+    margin-top: -2px;
+    padding-left: 5px;
+  }
 }
 
 .project {
@@ -11,10 +27,35 @@
 .project-carousel {
   align-items: center;
   display: flex;
-  margin: 0 auto;
+  margin: 7px auto 0 auto;
   max-width: 650px;
 }
 
+.projects-open {
+  height: auto;
+}
+
+.project-indicator {
+  height: 0;
+  visibility: hidden;
+}
+
+.project-title, .project-tools {
+  display: none;
+}
+
+.project-image {
+  width: 100%;
+}
+
 .project-image img {
+  margin: 10px auto;
   max-width: 500px;
+  width: 100%;
+}
+
+@media (min-width: 768px) {
+  .left-arrow, .right-arrow {
+    margin: 0 20px;
+  }
 }

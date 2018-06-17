@@ -1,9 +1,9 @@
 import React from 'react';
 
-
 export default class ProjectSection extends React.Component {
   state = {
-    displayProject: 0
+    displayProject: 0,
+    sectionToggledOpen: !!this.props.projectsOpen
   }
 
   handleLeftClick = () => {
@@ -18,34 +18,42 @@ export default class ProjectSection extends React.Component {
     this.setState(() => ({ displayProject }));
   }
 
+  handleToggleProjectSection = () => {
+    this.setState((prevState) => ({ sectionToggledOpen: !prevState.sectionToggledOpen }));
+  }
+
   render() {
     return (
       <div className='project-section'>
-        <h2 className='projects-bar'>
+        <h2 className='projects-bar' onClick={this.handleToggleProjectSection}>
           {this.props.projects[0]}
         </h2>
-        <div className='project-carousel'>
-          <div className='left-arrow' onClick={this.handleLeftClick}>
-            &#10094;
-          </div>
-          <div className='project'>
-            <h3 className='project-title'>
-              {this.props.projects[1][this.state.displayProject].title}
-            </h3>
-            <div className='project-image'>
-              <a href={this.props.projects[1][this.state.displayProject].link} target="_blank">
-                <img src={this.props.projects[1][this.state.displayProject].image} alt={this.props.projects[1][this.state.displayProject].alt} />
-              </a>
+        { this.state.sectionToggledOpen && 
+          <div className='project-carousel'>
+            <div className='left-arrow' onClick={this.handleLeftClick}>
+              &#10094;
             </div>
-            <div className='project-tools'>
-              Additional tools used: {this.props.projects[1][this.state.displayProject].tools}
+              <div className='project'>
+                <h3 className='project-title'>
+                  {this.props.projects[1][this.state.displayProject].title}
+                </h3>
+                <div className='project-image'>
+                  <a href={this.props.projects[1][this.state.displayProject].link} target="_blank">
+                    <img src={this.props.projects[1][this.state.displayProject].image}
+                      alt={this.props.projects[1][this.state.displayProject].alt}
+                    />
+                  </a>
+                </div>
+                <div className='project-tools'>
+                  Additional tools used: {this.props.projects[1][this.state.displayProject].tools}
+                </div>
+              </div>
+              <div className='right-arrow' onClick={this.handleRightClick}>
+                &#10095;
             </div>
           </div>
-          <div className='right-arrow' onClick={this.handleRightClick}>
-            &#10095;
-          </div>
-        </div>
-        <div className='project-balls'>
+        }
+        <div className='project-indicator'>
           <span className='dot'></span>
         </div>
       </div>

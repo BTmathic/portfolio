@@ -1,5 +1,5 @@
 const cssProjects = [
-  'Select CSS projects from the old 50 Days of CSS challenge', [
+  'Projects from the 50 Days of CSS challenge', [
     {
       title: 'Beaver',
       image: '/Images/css-beaver.jpg',

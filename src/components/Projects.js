@@ -6,11 +6,10 @@ import reactProjects from '../projects/reactProjects';
 import jqueryProjects from '../projects/jqueryProjects';
 
 const Projects = () => (
-  <div>
-    <div className='section-wrapper'></div>
-    <div id='projects' className='content-container'>
+  <div id='projects'>
+    <div className='content-container'>
       <h1>Projects</h1>
-      <ProjectSection projects={reactProjects} />
+      <ProjectSection projects={reactProjects} projectsOpen={true} />
       <ProjectSection projects={jqueryProjects} />
       <ProjectSection projects={d3Projects} />
       <ProjectSection projects={cssProjects} />

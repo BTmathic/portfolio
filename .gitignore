@@ -1,4 +1,17 @@
 node_modules/
 public/dist/
+public/Images/
+public/bar-chart/
+public/calculator/
+public/drum-machine/
+public/force-directed-graph/
+public/global-meteor-chart/
+public/local-weather/
+public/pomodoro-clock/
+public/random-quote-machine/
+public/recipe-box/
+public/scatterplot/
+public/tribute-page/
+public/wikipedia-viewer/
 .env.development
 .env.test
