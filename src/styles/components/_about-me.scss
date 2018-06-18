@@ -9,8 +9,7 @@
 }
 
 @media (min-width: 768px) {
-  #about-me-photo img {
-    max-width: 400px;
-    width: 30vw;
+  #about-me-content {
+    flex-direction: row;
   }
 }

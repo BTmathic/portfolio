@@ -40,7 +40,8 @@
     border-radius: 15px;
     color: #000;
     font-size: $ml-size;
-    margin-top: 20px;
+    margin: 20px auto 0;
+    max-width: 250px;
     :link, :visited, :hover, :active {
       color: white;// darken($lavender, 15%);
       text-decoration: none;
