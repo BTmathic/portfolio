@@ -1,11 +1,14 @@
 import React from 'react';
+import BlogFilters from './BlogFilters';
+import BlogHeader from './BlogHeader';
+import BlogPosts from './BlogPosts';
 
-export default class Blog extends React.Component {
-  render() {
-    return (
-      <div>
-        Blog
-      </div>
-    )
-  }
-}
+const Blog = () => (
+  <div id='blog'>
+    <BlogHeader />
+    <BlogFilters />
+    <BlogPosts />
+  </div>
+)
+  
+export default Blog;
