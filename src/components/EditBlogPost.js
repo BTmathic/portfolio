@@ -14,9 +14,9 @@ const EditBlogPost = (props) => (
       }}
     />
     <button onClick={() => {
-      const id = props.post.id
-      props.dispatch(removePost({ id }));
+      props.dispatch(removePost({ id: props.post.id }));
       props.history.push('/blog');
+      // add modal check before deleting
     }}>Remove</button>
   </div>
 );

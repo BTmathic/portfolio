@@ -10,6 +10,11 @@ const config = {
 };
 
 firebase.initializeApp(config);
+
+firebase.database().ref().set({
+  name: 'me!'
+});
+
 const database = firebase.database();
 const googleAuthProvider = new firebase.auth.GoogleAuthProvider();
 

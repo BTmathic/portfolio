@@ -9,7 +9,7 @@ import { addPost } from './actions/posts';
 import 'normalize.css/normalize.css';
 import './styles/styles.scss';
 import 'react-dates/lib/css/_datepicker.css';
-//import { firebase } from './firebase/firebase';
+import './firebase/firebase';
 
 const store = configureStore();
 
@@ -32,7 +32,7 @@ store.dispatch(addPost({
   createdAt: 2
 }))
 
-const state = store.getState();
+//const state = store.getState();
 
 const jsx = (
   <Provider store={store}>
