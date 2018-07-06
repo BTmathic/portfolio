@@ -1,26 +1,52 @@
 import React from 'react';
+import Modal from 'react-modal';
 import { connect } from 'react-redux';
 
 import BlogPostForm from './BlogPostForm';
 import { startEditPost, startRemovePost } from '../actions/posts';
 
-const EditBlogPost = (props) => (
-  <div>
-    <BlogPostForm
-      post={props.post}
-      onSubmit={(post) => {
-        //post.postBody = '<p>' + post.postBody.replace(/\n\n/g, '</p>\n<p>') + '</p>';
-        props.dispatch(startEditPost(props.post.id, post))
-        props.history.push('/blog');
-      }}
-    />
-    <button onClick={() => {
-      props.dispatch(startRemovePost({ id: props.post.id }));
-      props.history.push('/blog');
-      // add modal check before deleting
-    }}>Remove</button>
-  </div>
-);
+class EditBlogPost extends React.Component {
+  state = {
+    modalIsOpen: false
+  }
+
+  handleRemove = () => {
+    this.props.dispatch(startRemovePost({ id: this.props.post.id }));
+    this.props.history.push('/blog');
+  }
+
+  toggleModal = () => {
+    this.setState((prevState) => ({ modalIsOpen: !prevState.modalIsOpen }));
+  }
+
+  componentWillMount() {
+    Modal.setAppElement('body');
+  }
+
+  render() {
+    return (
+      <div>
+        <BlogPostForm
+          post={this.props.post}
+          onSubmit={(post) => {
+            this.props.dispatch(startEditPost(this.props.post.id, post))
+            this.props.history.push('/blog');
+          }}
+        />
+        <button onClick={() => {this.toggleModal()}}>Remove</button>
+        <Modal
+          isOpen={this.state.modalIsOpen}
+          onRequestClose={this.toggleModal}
+          contentLabel={'Confirm delete post'}
+        >
+          Are you sure you want to delete this post?
+          <button onClick={() => {this.handleRemove()}}>Delete</button>
+          <button onClick={() => {this.toggleModal()}}>Cancel</button>
+        </Modal>
+      </div>
+    );
+  }
+}
 
 const mapStateToProps = (state, props) => {
   return {
