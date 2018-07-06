@@ -9,6 +9,7 @@ const EditBlogPost = (props) => (
     <BlogPostForm
       post={props.post}
       onSubmit={(post) => {
+        //post.postBody = '<p>' + post.postBody.replace(/\n\n/g, '</p>\n<p>') + '</p>';
         props.dispatch(startEditPost(props.post.id, post))
         props.history.push('/blog');
       }}

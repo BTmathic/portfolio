@@ -9,7 +9,10 @@ export default class BlogPostForm extends React.Component {
 
     this.state = {
       title: props.post ? props.post.title : '',
-      postBody: props.post ? props.post.postBody : '',
+      postBody: props.post ? props.post.postBody
+        .replace(/<p>/, '')
+        .replace(/<\/p><p>/g, '\n\n')
+        .replace(/<\/p>/, '') : '',
       tags: props.post ? props.post.tags : '',
       createdAt: props.post ? moment(props.post.createdAt) : moment(),
       calendarFocused: false,
@@ -45,15 +48,15 @@ export default class BlogPostForm extends React.Component {
     e.preventDefault();
 
     if (!this.state.title || !this.state.postBody) {
-      // Set error
       this.setState(() => ({
         formError: 'A title and post body is required'
       }));
     } else {
       this.setState(() => ({ formError: '' }));
+      const markedPostBody = '<p>' + this.state.postBody.replace(/\n\n/g, '</p><p>') + '</p>';
       this.props.onSubmit({
         title: this.state.title,
-        postBody: this.state.postBody,
+        postBody: markedPostBody,
         tags: this.state.tags,
         createdAt: this.state.createdAt.valueOf()
       });
