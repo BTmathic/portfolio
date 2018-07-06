@@ -1,18 +1,28 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { addPost } from '../actions/posts';
+import { startAddPost } from '../actions/posts';
 import BlogPostForm from './BlogPostForm';
 
-const AddBlogPost = (props) => (
-  <div>
-    <h1>New Post</h1>
-    <BlogPostForm
-      onSubmit={(post) => {
-        props.dispatch(addPost(post));
-        props.history.push('/blog');
-      }}
-    />
-  </div>
-);
+export class AddBlogPost extends React.Component {
+  onSubmit = (post) => {
+    this.props.startAddPost(post);
+    this.props.history.push('/blog');
+  };
 
-export default connect()(AddBlogPost);
+  render() {
+    return (
+      <div>
+        <h1>Create New Post</h1>
+        <BlogPostForm
+          onSubmit={this.onSubmit}
+        />
+      </div>
+    );
+  }
+}
+
+const mapDispatchToProps = (dispatch) => ({
+  startAddPost: (post) => dispatch(startAddPost(post))
+});
+
+export default connect(undefined, mapDispatchToProps)(AddBlogPost);

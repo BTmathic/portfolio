@@ -8,6 +8,9 @@ const Blog = () => (
     <BlogHeader />
     <BlogFilters />
     <BlogPosts />
+    <div id='blog-footer'>
+      Powered by Redux
+    </div>
   </div>
 )
   

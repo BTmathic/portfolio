@@ -3,14 +3,15 @@ import moment from 'moment';
 import { Link } from 'react-router-dom';
 
 const BlogPost = ({ id, title, postBody, createdAt}) => (
-  <Link to={`/edit/${id}`}>
-    <div>
+  
+  <div>
+    <Link to={`/edit/${id}`}>
       <h3>{title}</h3>
-      <div>{postBody}</div>
-      
-      <div>{moment(createdAt).format('MMMM Do, YYYY')}</div>
-    </div>
-  </Link>
+    </Link>
+    <div>{postBody}</div>
+    <div>tags</div>  
+    <div>{moment(createdAt).format('MMMM Do, YYYY')}</div>
+  </div>
 );
 
 export default BlogPost;

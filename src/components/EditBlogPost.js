@@ -2,19 +2,19 @@ import React from 'react';
 import { connect } from 'react-redux';
 
 import BlogPostForm from './BlogPostForm';
-import { editPost, removePost } from '../actions/posts';
+import { startEditPost, startRemovePost } from '../actions/posts';
 
 const EditBlogPost = (props) => (
   <div>
     <BlogPostForm
       post={props.post}
       onSubmit={(post) => {
-        props.dispatch(editPost(props.post.id, post))
+        props.dispatch(startEditPost(props.post.id, post))
         props.history.push('/blog');
       }}
     />
     <button onClick={() => {
-      props.dispatch(removePost({ id: props.post.id }));
+      props.dispatch(startRemovePost({ id: props.post.id }));
       props.history.push('/blog');
       // add modal check before deleting
     }}>Remove</button>

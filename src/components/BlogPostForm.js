@@ -92,7 +92,7 @@ export default class BlogPostForm extends React.Component {
             value={this.state.tags}
             onChange={this.onTagsChange}
           />
-          <button>{!!this.props.post ? 'Edit Post' : 'Create Post'}</button>
+          <button>{!!this.props.post ? 'Submit Edit' : 'Create Post'}</button>
         </form>
       </div>
     );
