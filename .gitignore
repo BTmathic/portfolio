@@ -24,3 +24,4 @@ public/tribute-page/
 public/wikipedia-viewer/
 .env.development
 .env.test
+.env

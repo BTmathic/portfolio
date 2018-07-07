@@ -5,7 +5,6 @@ import selectPosts from '../selectors/posts.js';
 
 const BlogPosts = (props) => (
   <div>
-    <h1>Blog</h1>
       {
         props.posts.length === 0 ? (
           <div>No posts to display</div>

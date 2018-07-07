@@ -1,15 +1,16 @@
 import React from 'react';
 import createHistory from 'history/createBrowserHistory';
 import { Router, Route, Switch } from 'react-router-dom';
-import Blog from '../components/Blog';
+
 import BlogAuthenticated from '../components/BlogAuthenticated';
-import LoginPage from '../components/LoginPage';
-import NotFoundPage from '../components/NotFoundPage';
 import DashboardPage from '../components/DashboardPage';
-import AddBlogPost from '../components/AddBlogPost';
+import NotFoundPage from '../components/NotFoundPage';
 import EditBlogPost from '../components/EditBlogPost';
-import PublicRoute from './PublicRoute';
+import AddBlogPost from '../components/AddBlogPost';
+import LoginPage from '../components/LoginPage';
 import PrivateRoute from './PrivateRoute';
+import PublicRoute from './PublicRoute';
+import Blog from '../components/Blog';
 
 export const history = createHistory();
 
@@ -17,10 +18,11 @@ const AppRouter = () => (
   <Router history={history}>
     <div>
       <Switch>
-        <PublicRoute path='/' component={DashboardPage} exact={true} />
-        <PublicRoute path='/blog' component={Blog} exact={true} />
-        <PublicRoute path='/create' component={AddBlogPost} />
-        <PublicRoute path='/edit/:id' component={EditBlogPost} />
+        <Route path='/' component={DashboardPage} exact={true} />
+        <Route path='/blog' component={Blog} exact={true} />
+        <PublicRoute path='/login' component={LoginPage} exact={true} />
+        <PrivateRoute path='/create' component={AddBlogPost} />
+        <PrivateRoute path='/edit/:id' component={EditBlogPost} />
         <PrivateRoute path='/blog-auth' component={BlogAuthenticated} />
         <Route component={NotFoundPage} />
       </Switch>
