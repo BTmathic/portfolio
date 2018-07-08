@@ -4,12 +4,14 @@ import BlogHeader from './BlogHeader';
 import BlogPosts from './BlogPosts';
 
 const Blog = () => (
-  <div id='blog' className='content-container'>
-    <BlogHeader />
-    <BlogFilters />
-    <BlogPosts />
-    <div id='blog-footer'>
-      Powered by Redux
+  <div id='blog'>
+    <div className='content-container'>
+      <BlogHeader />
+      <BlogFilters />
+      <BlogPosts />
+      <div id='blog-footer'>
+        Powered by Redux
+      </div>
     </div>
   </div>
 )

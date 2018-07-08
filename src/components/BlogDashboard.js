@@ -1,16 +1,13 @@
 import React from 'react';
-import marked from 'marked';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
+import BlogSnippet from './BlogSnippet';
 
 const BlogDashboard = (props) => (
   <div id='dashboard-blog'>
     <div className='content-container'>
       <h1>Blog</h1>
-      <h2>{props.post.title}</h2>
-      <div id='blog-snippet'>
-        <div dangerouslySetInnerHTML={{ __html: marked(props.post.postBody.slice(0, 200), { sanitize: true }) }}></div><span>...</span>
-      </div>
+      <BlogSnippet post={props.post} />
       <div id='link-to-blog'>
         <Link to='/blog' onClick={() => window.scrollTo(0,0)}>More Blog Posts...</Link>
       </div>

@@ -13,7 +13,6 @@ export default class BlogPostPreview extends React.Component {
   }
 
   render() {
-    console.log(this.state.textToMarkup);
     return (
       <div>
         <div dangerouslySetInnerHTML={{__html: marked(this.state.textToMarkup, { sanitize: true })}}></div>
