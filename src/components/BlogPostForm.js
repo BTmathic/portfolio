@@ -2,6 +2,7 @@ import React from 'react';
 import moment from 'moment';
 import { SingleDatePicker } from 'react-dates';
 import 'react-dates/lib/css/_datepicker.css';
+import BlogPostPreview from './BlogPostPreview';
 
 export default class BlogPostForm extends React.Component {
   constructor(props) {
@@ -9,10 +10,7 @@ export default class BlogPostForm extends React.Component {
 
     this.state = {
       title: props.post ? props.post.title : '',
-      postBody: props.post ? props.post.postBody
-        .replace(/<p>/, '')
-        .replace(/<\/p><p>/g, '\n\n')
-        .replace(/<\/p>/, '') : '',
+      postBody: props.post ? props.post.postBody: '',
       tags: props.post ? props.post.tags : '',
       createdAt: props.post ? moment(props.post.createdAt) : moment(),
       calendarFocused: false,
@@ -53,10 +51,9 @@ export default class BlogPostForm extends React.Component {
       }));
     } else {
       this.setState(() => ({ formError: '' }));
-      const markedPostBody = '<p>' + this.state.postBody.replace(/\n\n/g, '</p><p>') + '</p>';
       this.props.onSubmit({
         title: this.state.title,
-        postBody: markedPostBody,
+        postBody: this.state.postBody,
         tags: this.state.tags,
         createdAt: this.state.createdAt.valueOf()
       });
@@ -97,6 +94,7 @@ export default class BlogPostForm extends React.Component {
           />
           <button>{!!this.props.post ? 'Submit Edit' : 'Create Post'}</button>
         </form>
+        <BlogPostPreview postBody={this.state.postBody} />
       </div>
     );
   }

@@ -4,7 +4,7 @@ import BlogHeader from './BlogHeader';
 import BlogPosts from './BlogPosts';
 
 const Blog = () => (
-  <div id='blog'>
+  <div id='blog' className='content-container'>
     <BlogHeader />
     <BlogFilters />
     <BlogPosts />
