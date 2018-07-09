@@ -1,6 +1,6 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import BlogPost from './BlogPost';
+import BlogSnippet from './BlogSnippet';
 import selectPosts from '../selectors/posts.js';
 
 const BlogPosts = (props) => (
@@ -10,7 +10,7 @@ const BlogPosts = (props) => (
           <div>No posts to display</div>
         ) : (
             props.posts.map((post) => {
-              return <BlogPost key={post.id} {...post} />;
+              return <BlogSnippet key = {post.id} post={post} />
             })
           )
       }

@@ -1,10 +1,10 @@
 import React from 'react';
-import BlogFilters from './BlogFilters';
-import BlogHeader from './BlogHeader';
 import BlogPosts from './BlogPosts';
+import BlogHeader from './BlogHeader';
+import BlogFilters from './BlogFilters';
 
 const Blog = () => (
-  <div id='blog'>
+  <div className='blog'>
     <div className='content-container'>
       <BlogHeader />
       <BlogFilters />
