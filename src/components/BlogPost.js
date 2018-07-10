@@ -3,6 +3,8 @@ import moment from 'moment';
 import marked from 'marked';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
+import { history } from '../routers/AppRouter';
+import { setTextFilter } from '../actions/filters';
 
 const BlogPost = (props) => (
   <div className='blog-full-post'>
@@ -10,6 +12,7 @@ const BlogPost = (props) => (
       <header></header>
       <div className='blog-post'>
         <h3>{props.post.title}</h3>
+        <div id='back'>Back</div>
         <div className='post-body'
           dangerouslySetInnerHTML={{__html: marked(props.post.postBody, {sanitize: true })}}
         >
@@ -20,7 +23,18 @@ const BlogPost = (props) => (
           </Link>
         }
         
-        <div>tags</div>
+        <div>{props.post.tags.split(',').map((tag) => 
+          <span
+            key={tag}
+            className='tag'
+            onClick={() => {
+                history.push(`/tags/${tag}`);
+              }
+            }
+          >
+            {tag}
+          </span>
+        )}</div>
         <div>{moment(props.post.createdAt).format('MMMM Do, YYYY')}</div>
       </div>
       <footer></footer>
@@ -35,4 +49,8 @@ const mapStateToProps = (state, props) => {
   }
 }
 
-export default connect(mapStateToProps)(BlogPost);
+const mapDispatchToProps = (dispatch) => ({
+  setTextFilter: (tag) => dispatch(setTextFilter(tag))
+})
+
+export default connect(mapStateToProps, mapDispatchToProps)(BlogPost);

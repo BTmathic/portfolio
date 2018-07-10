@@ -2,25 +2,45 @@ import React from 'react';
 import { connect } from 'react-redux';
 import BlogSnippet from './BlogSnippet';
 import selectPosts from '../selectors/posts.js';
+import { setTextFilter, setStartDate, setEndDate } from '../actions/filters';
 
-const BlogPosts = (props) => (
-  <div>
-      {
-        props.posts.length === 0 ? (
-          <div>No posts to display</div>
-        ) : (
-            props.posts.map((post) => {
-              return <BlogSnippet key = {post.id} post={post} />
-            })
-          )
-      }
-  </div>
-);
+class BlogPosts extends React.Component {
 
-const mapStateToProps = (state) => {
+  componentWillMount() {
+    this.props.setTextFilter(this.props.tag);
+  }
+
+  componentWillUnmount() {
+    this.props.setTextFilter('');
+  }
+
+  render() {
+    return (
+      <div>
+        {
+          this.props.posts.length === 0 ? (
+            <div>No posts to display</div>
+          ) : (
+              this.props.posts.map((post) => {
+                return <BlogSnippet key={post.id} post={post} />
+              })
+            )
+        }
+      </div>
+    );
+  };
+}
+
+const mapStateToProps = (state, props) => {
   return {
     posts: selectPosts(state.posts, state.filters)
   };
 };
 
-export default connect(mapStateToProps)(BlogPosts);
+const mapDispatchToProps = (dispatch) => ({
+  setTextFilter: (text) => dispatch(setTextFilter(text)),
+  setStartDate: (date) => dispatch(setStartDate(date)),
+  setEndDate: (date) => dispatch(setEndDate(date))
+});
+
+export default connect(mapStateToProps, mapDispatchToProps)(BlogPosts);
