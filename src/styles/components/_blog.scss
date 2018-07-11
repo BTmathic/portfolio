@@ -20,8 +20,18 @@
     }
 
     .tag {
-      padding: 0 0.2rem;
+      background: grey;
+      border-radius: 5px;
+      color: white;
+      cursor: pointer;
+      margin: 0 0.5rem;
+      padding: 0.5rem 1rem;
     }
+  }
+
+  #blog-footer {
+    font-size: 80%;
+    text-align: center;
   }
 }
 
@@ -38,3 +48,31 @@ pre {
   padding: 1rem;
   width: 90%;
 }
+
+.blog-page {
+  display: flex;
+  flex-direction: row-reverse;
+  margin: 0 auto;
+  width: 100%;
+
+  nav {
+    background: white;
+    border-radius: 5px;
+    margin-left: 2rem;
+    margin-top: 1rem;
+    padding: 1rem 2rem;
+    width: 60%;
+
+    .nav-section {
+      padding-bottom: 4rem;
+      
+    }
+  }
+}
+
+.nav-section-tag {
+  cursor: pointer;
+  display: block;
+  text-decoration: none;
+}
+

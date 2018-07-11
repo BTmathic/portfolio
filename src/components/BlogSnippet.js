@@ -16,7 +16,7 @@ export default (props) => (
         __html: marked(props.post.postBody.split(/\s+/).slice(0,50).join(' ').concat('...')
         , { sanitize: true }) }}>
       </div>
-      <Link to={`/read/${props.post.id}`}>
+      <Link to={`/read/${props.post.id}`} onClick={() => {window.scrollTo(0,0)}}>
         Continue reading...
       </Link>
     </div>

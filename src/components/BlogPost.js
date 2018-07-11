@@ -4,7 +4,6 @@ import marked from 'marked';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 import { history } from '../routers/AppRouter';
-import { setTextFilter } from '../actions/filters';
 
 const BlogPost = (props) => (
   <div className='blog-full-post'>
@@ -47,10 +46,6 @@ const mapStateToProps = (state, props) => {
     id: state.auth.uid,
     post: state.posts.find((post) => post.id === props.match.params.id)
   }
-}
+};
 
-const mapDispatchToProps = (dispatch) => ({
-  setTextFilter: (tag) => dispatch(setTextFilter(tag))
-})
-
-export default connect(mapStateToProps, mapDispatchToProps)(BlogPost);
+export default connect(mapStateToProps)(BlogPost);

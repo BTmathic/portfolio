@@ -5,13 +5,22 @@ import selectPosts from '../selectors/posts.js';
 import { setTextFilter, setStartDate, setEndDate } from '../actions/filters';
 
 class BlogPosts extends React.Component {
-
+  state = {
+    filter: this.props.tag
+  }
+  
   componentWillMount() {
-    this.props.setTextFilter(this.props.tag);
+    this.props.setTextFilter(this.state.filter);
   }
 
-  componentWillUnmount() {
-    this.props.setTextFilter('');
+  componentDidUpdate() {
+    if (this.props.tag === this.state.filter) {
+      if (this.props.tag && (this.props.filters.text !== this.props.tag)) {
+        this.props.setTextFilter(this.props.tag);
+      }
+    } else {
+      this.setState(() => ({ filter: this.props.tag }));
+    }
   }
 
   render() {
@@ -31,11 +40,10 @@ class BlogPosts extends React.Component {
   };
 }
 
-const mapStateToProps = (state, props) => {
-  return {
-    posts: selectPosts(state.posts, state.filters)
-  };
-};
+const mapStateToProps = (state) => ({
+  posts: selectPosts(state.posts, state.filters),
+  filters: state.filters
+});
 
 const mapDispatchToProps = (dispatch) => ({
   setTextFilter: (text) => dispatch(setTextFilter(text)),

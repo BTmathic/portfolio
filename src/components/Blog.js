@@ -7,8 +7,10 @@ const Blog = (props) => (
   <div className='blog'>
     <div className='content-container'>
       <BlogHeader />
-      <BlogFilters />
-      <BlogPosts tag={props.tag}/>
+      <div className='blog-page'>
+        <BlogFilters />
+        <BlogPosts tag={props.tag} />
+      </div>
       <div id='blog-footer'>
         Powered by Redux
       </div>
