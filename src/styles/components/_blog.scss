@@ -61,18 +61,25 @@ pre {
     margin-left: 2rem;
     margin-top: 1rem;
     padding: 1rem 2rem;
-    width: 60%;
+    width: 80%;
 
     .nav-section {
       padding-bottom: 4rem;
-      
+
+      .nav-section-title {
+        font-weight: bold;
+      }
+      .nav-section-post, .nav-section-tag {
+        cursor: pointer;
+      }
     }
   }
-}
 
-.nav-section-tag {
-  cursor: pointer;
-  display: block;
-  text-decoration: none;
+  #blog-contact {
+    img {
+      height: 3rem;
+      width: 3rem;
+    }
+  }
 }
 

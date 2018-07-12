@@ -6,8 +6,8 @@ import { history } from '../routers/AppRouter';
 
 class BlogFilters extends React.Component {
   state = {
-    tags: [],
-    archives: []
+    archives: [],
+    tags: []
   }
   componentWillMount() {
     // go through dates, latest date, check previous 5 non-empty, all that exist go in archives section
@@ -50,7 +50,16 @@ class BlogFilters extends React.Component {
             Recent Posts
           </div>
           <div className='nav-section-contents'>
-            <div>List of 5 most recent titles</div>
+            {[1,2,3].map((index) => (
+              <div className='nav-section-post'
+                key={index}
+                onClick={() => {
+                  history.push(`/read/${this.props.posts[this.props.posts.length - index].id}`)
+                }
+              }>
+                {this.props.posts[this.props.posts.length - index].title}
+              </div>
+            ))}
           </div>
         </div>
         <div className='nav-section'>
@@ -69,7 +78,7 @@ class BlogFilters extends React.Component {
                 {tag}
               </div>
             ))}
-            <div>All tags</div>
+            {/*<div>All tags</div>*/}
           </div>
         </div>
         <div className='nav-section'>
@@ -78,7 +87,7 @@ class BlogFilters extends React.Component {
           </div>
           <div className='nav-section-contents'>
             {this.state.archives}
-            <div>Full archives</div>
+            {/*<div>Full archives</div>*/}
           </div>
         </div>
         <div className='nav-section'>
@@ -86,7 +95,12 @@ class BlogFilters extends React.Component {
             Contact
           </div>
           <div className='nav-section-contents'>
-            Social media buttons
+            <div id='blog-contact'>
+              <a href='https://github.com/BTmathic'><img src='Images/github-logo.png' alt='GitHub link' className='icon' /></a>
+              <a href='https://twitter.com/BrokeTriathlete'><img src='Images/twitter-logo.png' alt='Twitter link' className='icon' /></a>
+              <a href='#'><img src='Images/linkedin-logo.png' alt='LinkedIn link' className='icon' /></a>
+              <a href='mailto:mathic@gmail.com'><img src='Images/email.png' alt='Email' className='icon' /></a>
+            </div>
             Small contact form, maybe popup into a larger modal with name, email and comment
           </div>
         </div>
