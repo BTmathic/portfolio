@@ -69,17 +69,26 @@ pre {
       .nav-section-title {
         font-weight: bold;
       }
-      .nav-section-post, .nav-section-tag {
+      .nav-section-post, .nav-section-tag, .nav-section-archive {
         cursor: pointer;
       }
     }
   }
 
   #blog-contact {
+    margin-bottom: 0.5rem;
     img {
       height: 3rem;
       width: 3rem;
     }
   }
+
+  #send-message {
+      background: grey;
+      border-radius: 5px;
+      color: white;
+      cursor: pointer;
+      padding: 1rem;
+    }
 }
 

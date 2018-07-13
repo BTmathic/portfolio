@@ -9,14 +9,17 @@ class BlogFilters extends React.Component {
     archives: [],
     tags: []
   }
-  componentWillMount() {
-    // go through dates, latest date, check previous 5 non-empty, all that exist go in archives section
 
-    // both sections have a link to full list of tags/archives
+  componentWillMount() {
     let tags = [];
+    let archives = [];
     this.props.posts.map((post) => {
-      const nextTags = post.tags.replace(',', '').split(/\s+/);
-      nextTags.map((tag) => {
+      const postTags = post.tags.replace(',', '').split(/\s+/);
+      const postDateMonthYear = moment(post.createdAt).format('MMMM YYYY');
+      if (archives.indexOf(postDateMonthYear) === -1) {
+        archives.push(postDateMonthYear);
+      }
+      postTags.map((tag) => {
         if (tags.indexOf(tag) === -1) {
           tags.push(tag);
           tags.push(1);
@@ -35,7 +38,7 @@ class BlogFilters extends React.Component {
     }
     this.setState(() => ({
       tags: navTags,
-      archives: moment(this.props.posts[this.props.posts.length-1].createdAt).format('MMMM YYYY')
+      archives
     }));
   }
 
@@ -85,10 +88,21 @@ class BlogFilters extends React.Component {
           <div className='nav-section-title'>
             Archives
           </div>
-          <div className='nav-section-contents'>
-            {this.state.archives}
-            {/*<div>Full archives</div>*/}
-          </div>
+          {this.state.archives.map((month) => (
+            <div
+              className='nav-section-archive'
+              key={month}
+              onClick={() => {
+                history.push(`/archives/${month}`)
+              }
+            }>
+              {month}
+            </div>
+          ))}
+        </div>
+        <div className='nav-section-contents'>
+
+          {/*<div>Full archives</div>*/}
         </div>
         <div className='nav-section'>
           <div className='nav-section-title'>
@@ -101,7 +115,9 @@ class BlogFilters extends React.Component {
               <a href='#'><img src='Images/linkedin-logo.png' alt='LinkedIn link' className='icon' /></a>
               <a href='mailto:mathic@gmail.com'><img src='Images/email.png' alt='Email' className='icon' /></a>
             </div>
-            Small contact form, maybe popup into a larger modal with name, email and comment
+            <span id='send-message'>
+              Send me a message
+            </span>
           </div>
         </div>
       </nav>

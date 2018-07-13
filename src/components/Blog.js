@@ -9,7 +9,7 @@ const Blog = (props) => (
       <BlogHeader />
       <div className='blog-page'>
         <BlogFilters />
-        <BlogPosts tag={props.tag} />
+        <BlogPosts tag={props.tag} month={props.month} />
       </div>
       <div id='blog-footer'>
         Powered by Redux
