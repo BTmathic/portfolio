@@ -1,5 +1,6 @@
 import React from 'react';
 import moment from 'moment';
+import Modal from 'react-modal';
 import { connect } from 'react-redux';
 import { NavLink } from 'react-router-dom';
 import { history } from '../routers/AppRouter';
@@ -7,10 +8,17 @@ import { history } from '../routers/AppRouter';
 class BlogFilters extends React.Component {
   state = {
     archives: [],
-    tags: []
+    tags: [],
+    modalIsOpen: true
+  }
+
+  toggleModal = () => {
+    this.setState((prevState) => ({ modalIsOpen: !prevState.modalIsOpen }));
   }
 
   componentWillMount() {
+    Modal.setAppElement('body');
+
     let tags = [];
     let archives = [];
     this.props.posts.map((post) => {
@@ -46,14 +54,11 @@ class BlogFilters extends React.Component {
     return (
       <nav>
         <div className='nav-section'>
-          <NavLink to="/" activeClassName="is-active" exact={true}>Portfolio</NavLink>
-        </div>
-        <div className='nav-section'>
           <div className='nav-section-title'>
             Recent Posts
           </div>
           <div className='nav-section-contents'>
-            {[1,2,3].map((index) => (
+            {[1,2,3,4].map((index) => (
               <div className='nav-section-post'
                 key={index}
                 onClick={() => {
@@ -115,9 +120,42 @@ class BlogFilters extends React.Component {
               <a href='#'><img src='Images/linkedin-logo.png' alt='LinkedIn link' className='icon' /></a>
               <a href='mailto:mathic@gmail.com'><img src='Images/email.png' alt='Email' className='icon' /></a>
             </div>
-            <span id='send-message'>
-              Send me a message
-            </span>
+            {/*
+            <div id='send-message-container'>
+              <div id='send-message' onClick={() => {this.toggleModal()}}>
+                Send me a message
+              </div>
+              <Modal
+                className='message-modal'
+                closeTimeoutMS={200}
+                contentLabel={'Send me a message'}
+                isOpen={this.state.modalIsOpen}
+                onRequestClose={this.toggleModal}
+              >
+                <h2 id='message-modal__title'>
+                  Send me a message
+                </h2>
+                <form>
+                  What can I call you?
+                  <div id='message-name'>
+                    <input type='text' placeholder='Name' />
+                  </div>
+                  Where should I respond?
+                  <div id='message-email'>
+                    <input type='text' placeholder='Email' />
+                  </div>
+                  What would you like?
+                  <div id='message'> 
+                    <textarea defaultValue='Write your message here...'></textarea>
+                  </div>
+                  <div id='message-modal__buttons'>
+                    <button onClick={() => { this.toggleModal() }}>Send</button>
+                    <button onClick={() => { this.toggleModal() }}>Cancel</button>
+                  </div>
+                </form>
+              </Modal>
+            </div>
+            */}
           </div>
         </div>
       </nav>

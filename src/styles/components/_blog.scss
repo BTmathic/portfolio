@@ -1,14 +1,67 @@
+header {
+  #blog-header {
+    #blog-header-text {
+      background: darken(grey, 20%);
+      color: white;
+      padding-left: 4rem;
+        h2, h3 {
+        margin: 0;
+      }
+      h2 {
+        padding-top: 1rem;
+      }
+      h3 {
+        padding-bottom: 1rem;
+        color: darken(white, 20%);
+      }
+    }
+
+    #blog-header-buttons {
+      background: linear-gradient(
+        white 20%,
+        darken(white, 30%) 80%,
+        grey 95%,
+        darken(grey, 10%) 99%
+      );
+      
+      padding: 1rem 0;
+      .blog-header-button {
+        color: darken(grey, 30%);
+        color: lighten(black, 20%);
+        font-weight: bold;
+        margin: 0 1rem;
+        padding: 1rem 2rem;
+        text-decoration: none;
+      }
+      .blog-header-button:hover {
+        color: darken(grey, 10%);
+        transition: 0.3s;
+      }
+    }
+  }
+}
+
 .blog, .blog-full-post {
-  background: darken(white, 10%);
+  background: darken(white, 20%);
   h1 {
     margin: 0;
     padding-top: 25px;
   }
 
+  a {
+    color: darken(blue, 10%);
+    text-decoration: none;
+  }
+
+  a:hover {
+    color: lighten(blue, 15%);
+    transition: 0.3s;
+  }
+
   .blog-post-snippet, .blog-post {
     background: white;
     border-radius: 5px;
-    margin: 1rem 0;
+    margin: 1rem 2rem;
     padding: 2rem 4rem;
 
     ul {
@@ -31,13 +84,8 @@
 
   #blog-footer {
     font-size: 80%;
+    padding: 0.5rem 0;
     text-align: center;
-  }
-}
-
-.blog-full-post {
-  header, footer {
-    height: 2rem;
   }
 }
 
@@ -49,18 +97,23 @@ pre {
   width: 90%;
 }
 
-.blog-page {
+#blog-page {
+  background: darken(white, 10%);
+  padding-bottom: 1rem;
+}
+
+.blog-contents {
   display: flex;
   flex-direction: row-reverse;
   margin: 0 auto;
   width: 100%;
 
   nav {
-    background: white;
     border-radius: 5px;
     margin-left: 2rem;
     margin-top: 1rem;
-    padding: 1rem 2rem;
+    min-width: 210px;
+    padding: 2rem 2rem;
     width: 80%;
 
     .nav-section {
@@ -72,23 +125,102 @@ pre {
       .nav-section-post, .nav-section-tag, .nav-section-archive {
         cursor: pointer;
       }
+      .nav-section-post:hover, .nav-section-tag:hover, .nav-section-archive:hover {
+        color: grey;
+        transition: 0.3s;
+      }
     }
   }
 
   #blog-contact {
-    margin-bottom: 0.5rem;
+    margin: 1rem auto;
+    max-width: 17rem;
     img {
       height: 3rem;
       width: 3rem;
     }
   }
 
-  #send-message {
+  /*
+
+  #send-message-container {
+    width: 100%;
+    #send-message {
       background: grey;
       border-radius: 5px;
       color: white;
       cursor: pointer;
+      margin: 0 auto;
+      max-width: 17rem;
       padding: 1rem;
+      text-align: center;
     }
+  }
 }
 
+.ReactModalPortal > div {
+    opacity: 0;
+}
+
+.ReactModalPortal .ReactModal__Overlay {
+    align-items: center;
+    display: flex;
+    justify-content: center;
+    transition: opacity 200ms ease-in-out;
+}
+
+.ReactModalPortal .ReactModal__Overlay--after-open {
+    opacity: 1;
+}
+
+.ReactModalPortal .ReactModal__Overlay--before-close {
+    opacity: 0;
+}
+
+.message-modal {
+  background: lightgrey;
+  border-radius: 5px;
+  color: black;
+  max-width: 50rem;
+  outline: none;
+  padding: 2rem;
+  width: 80%;
+
+  #message-modal__title {
+    margin: 0 0 1rem 0;
+    text-align: center;
+  }
+
+  #message-name, #message-email, #message {
+    text-align: center;
+  }
+
+  form {
+    font-size: 2rem;
+    font-weight: 300;
+    margin: 0 0 2rem 0;
+
+    #message-modal__buttons {
+      display: flex;
+      justify-content: space-between;
+      
+      button {
+        background: grey;
+        border: none;
+        border-radius: 5px;
+        color: white;
+        padding: 1rem 2rem;
+      }
+    }
+
+    input {
+      max-width: 80%;
+    }
+
+    textarea {
+        height: 20rem;
+        width: 100%;
+      }
+  }
+  */
+}

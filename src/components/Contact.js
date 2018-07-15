@@ -5,7 +5,7 @@ const Contact = () => (
     <div className='content-container'>
       <h1>Contact</h1>
       <div id='reach-out'>
-        Want to get in touch with me? Whether to ask about my experience or my resume, coding questions or anything
+        Want to get in touch with me? Whether to collaborate, to ask about my experience or my resume, coding questions or anything
         to do with triathlon or greyhounds, feel free to drop me a line.
       </div>
       <div id='contact-options'>

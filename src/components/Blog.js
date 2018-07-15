@@ -6,14 +6,18 @@ import BlogFilters from './BlogFilters';
 const Blog = (props) => (
   <div className='blog'>
     <div className='content-container'>
-      <BlogHeader />
-      <div className='blog-page'>
-        <BlogFilters />
-        <BlogPosts tag={props.tag} month={props.month} />
+      <div id='blog-page'>
+        <header>
+          <BlogHeader />
+        </header>
+        <div className='blog-contents'>
+          <BlogFilters />
+          <BlogPosts tag={props.tag} month={props.month} />
+        </div>
       </div>
-      <div id='blog-footer'>
+      <footer id='blog-footer'>
         Powered by Redux
-      </div>
+      </footer>
     </div>
   </div>
 )
