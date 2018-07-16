@@ -23,11 +23,13 @@ header {
         grey 95%,
         darken(grey, 10%) 99%
       );
-      
+      display: flex;
+      justify-content: space-between;
       padding: 1rem 0;
       .blog-header-button {
         color: darken(grey, 30%);
         color: lighten(black, 20%);
+        cursor: pointer;
         font-weight: bold;
         margin: 0 1rem;
         padding: 1rem 2rem;
@@ -36,6 +38,31 @@ header {
       .blog-header-button:hover {
         color: darken(grey, 10%);
         transition: 0.3s;
+      }
+      #menu-mobile {
+        display: none;
+      }
+      @media (max-width: 768px) {
+        #menu-mobile {
+          display: inline;
+        }
+      }
+    }
+
+    @media (max-width: 768px) {
+      #blog-header-portfolio {
+        display: none;
+      }
+    }
+
+    @media (max-width: 500px) {
+      #blog-header-buttons {
+        #blog-header-about {
+          display: none;
+        }
+        .blog-header-button {
+          padding: 1rem;
+        }
       }
     }
   }
@@ -138,6 +165,17 @@ pre {
     img {
       height: 3rem;
       width: 3rem;
+    }
+  }
+
+  @media (max-width: 768px) {
+    #nav-menu {
+      display: none;
+    }
+
+    .mobile-nav-menu {
+      background: darken(white, 5%);
+      position: absolute;
     }
   }
 
