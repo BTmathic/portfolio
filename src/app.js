@@ -6,6 +6,7 @@ import AppRouter, { history } from './routers/AppRouter'
 
 import { startSetPosts } from './actions/posts';
 import { login, logout } from './actions/auth';
+import LoadingPage from './components/LoadingPage';
 
 import 'normalize.css/normalize.css';
 import './styles/styles.scss';
@@ -23,14 +24,15 @@ const jsx = (
 let hasRendered = false;
 const renderApp = () => {
   if (!hasRendered) {
-    store.dispatch(startSetPosts()).then(() => {
+    setTimeout(() => {
+      store.dispatch(startSetPosts()).then(() => {
       ReactDOM.render(jsx, document.getElementById('app'));
       hasRendered = true;
-    });
+    })}, 3000);
   }
 };
 
-ReactDOM.render(<p>Loading...</p>, document.getElementById('app'));
+ReactDOM.render(<LoadingPage />, document.getElementById('app'));
 
 firebase.auth().onAuthStateChanged((user) => {
   if (user) {
