@@ -22,7 +22,7 @@ const Header = (props) => (
       </div>
       <div>
       <span
-        id={ window.innerWidth > 768 ? null : 'menu-mobile'}
+        id='menu-mobile'
         className='blog-header-button'
         onClick={() => { props.toggleMenu(props.menuOpen) }}
       >

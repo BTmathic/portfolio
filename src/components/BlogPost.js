@@ -41,9 +41,11 @@ const BlogPost = (props) => (
           <div>{moment(props.post.createdAt).format('MMMM Do, YYYY')}</div>
         </div>
       </div>
-      <footer id='blog-footer'>
-        Powered by Redux
-      </footer>
+      <div>
+        <footer id='blog-footer'>
+          Powered by Redux
+        </footer>
+      </div>
     </div>
   </div>
 );

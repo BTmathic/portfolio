@@ -44,8 +44,5 @@ firebase.auth().onAuthStateChanged((user) => {
   } else {
     store.dispatch(logout());
     renderApp();
-    if (history.location.pathname === '/blog') {
-      //history.push('/login');
-    }
   }
 });

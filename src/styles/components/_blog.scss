@@ -70,6 +70,7 @@ header {
 
 .blog, .blog-full-post {
   background: darken(white, 20%);
+  min-height: 100vh;
   h1 {
     margin: 0;
     padding-top: 25px;
@@ -113,6 +114,7 @@ header {
     font-size: 80%;
     padding: 0.5rem 0;
     text-align: center;
+    width: 100%;
   }
 }
 
@@ -126,6 +128,7 @@ pre {
 
 #blog-page {
   background: darken(white, 10%);
+  height: 100%;
   padding-bottom: 1rem;
 }
 

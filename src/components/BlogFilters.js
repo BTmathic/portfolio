@@ -17,6 +17,9 @@ class BlogFilters extends React.Component {
 
   componentWillMount() {
     Modal.setAppElement('body');
+    if (window.innerWidth <= 768) {
+
+    }
 
     let tags = [];
     let archives = [];
@@ -51,9 +54,7 @@ class BlogFilters extends React.Component {
 
   render() {
     return (
-      <div id={window.innerWidth <= 768 && this.props.menuOpen ? 'nav-menu' : null}
-        className='mobile-nav-menu'
-      >
+      <div id={this.props.menuOpen ? 'nav-menu' : null} className='mobile-nav-menu'>
         <nav>
           <div className='nav-section'>
             <div className='nav-section-title'>
