@@ -14,31 +14,56 @@ const BlogPost = (props) => (
           <BlogHeader />
         </header>
         <div className='blog-post'>
-          <h3>{props.post.title}</h3>
-          <div id='back'>Back</div>
+          <div id='blog-post-header'>
+            <h3>{props.post.title}</h3>
+            <div id='back' onClick={() => {history.goBack()}}>
+              Back
+            </div>
+          </div>
           <div className='post-body'
             dangerouslySetInnerHTML={{__html: marked(props.post.postBody, {sanitize: true })}}
           >
           </div>
-          { 
+          <div id='blog-post-footer'>
+            <div>{props.post.tags.split(',').map((tag) => 
+              <span
+                key={tag}
+                className='tag'
+                onClick={() => {
+                    history.push(`/tags/${tag}`);
+                  }
+                }
+              >
+                {tag}
+              </span>
+            )}</div>
+            <div id='blog-post-date'>
+              {moment(props.post.createdAt).format('MMMM Do, YYYY')}
+            </div>
+          </div>
+          {
             props.id && <Link to={`/edit/${props.post.id}`}>
               Edit
             </Link>
           }
-          
-          <div>{props.post.tags.split(',').map((tag) => 
-            <span
-              key={tag}
-              className='tag'
-              onClick={() => {
-                  history.push(`/tags/${tag}`);
-                }
-              }
-            >
-              {tag}
-            </span>
-          )}</div>
-          <div>{moment(props.post.createdAt).format('MMMM Do, YYYY')}</div>
+        </div>
+        <div id='blog-post-links'>
+          <div>Link to previous post (if...)</div>
+          <div>Link to next post (if...)</div>
+        </div>
+        <div id='blog-comments'>
+          Comments (with name)
+        </div>
+        <div id='blog-leave-comment'>
+          <form>
+            <label htmlFor='name'>Name</label>
+            <input type='text' name='name' />
+            <label htmlFor='email'>Email</label>
+            <input type='text' name='email' />
+            <label htmlFor='comment'>Comment</label>
+            <textarea></textarea>
+            <button type='submit'>Submit</button>
+          </form>
         </div>
       </div>
       <div>

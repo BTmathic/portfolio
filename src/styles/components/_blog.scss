@@ -130,6 +130,64 @@ pre {
   background: darken(white, 10%);
   height: 100%;
   padding-bottom: 1rem;
+  #blog-post-header {
+    display: flex;
+    justify-content: space-between;
+    #back {
+      background: grey;
+      border-radius: 5px;
+      color: white;
+      cursor: pointer;
+      margin: 1.5rem;
+      padding: 0.5rem 1rem;
+    }
+  }
+  #blog-post-footer {
+    margin-top: 2rem;
+    padding-top: 2rem;
+    #blog-post-date {
+      padding-left: 0.5rem;
+      padding-top: 0.5rem;
+    }
+  }
+  #blog-post-links {
+    display: flex;
+    justify-content: space-between;
+    margin: 0 auto;
+    width: 80%;
+    div {
+      background: blue;
+      border-radius: 5px;
+      color: white;
+      cursor: pointer;
+      margin: 1rem 0;
+      padding: 1rem 2rem;
+    }
+  }
+  #blog-comments {
+    padding: 2rem 0;
+    text-align: center;
+  }
+  #blog-leave-comment {
+    margin: 0 auto;
+    width: 80%;
+    form {
+      display: flex;
+      flex-direction: column;
+      textarea {
+        height: 25rem;
+      }
+      button {
+        background: grey;
+        border: none;
+        border-radius: 5px;
+        color: white;
+        margin: 2rem auto 1rem;
+        padding: 1rem 2rem;
+        width: 20%;
+      }
+    }
+  }
 }
 
 .blog-contents {

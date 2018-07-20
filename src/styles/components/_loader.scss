@@ -22,7 +22,7 @@
       transform: rotate(0deg);
       width: 6rem;
     }
-    50% {
+    66% {
       height: 6rem;
       transform: rotate(0deg);
       width: 6rem;
@@ -82,22 +82,24 @@
 
     @keyframes topLoad {
       0% { top: -20rem; }
-      50% { top: -100%; }
+      33% { top: -100%; }
       100% { top: -100% }
     }
     @keyframes bottomLoad {
       0% { bottom: -20rem; }
-      50% { bottom: -100%; }
+      33% { bottom: -100%; }
       100% { bottom: -100%; }
     }
     @keyframes leftLoad {
       0% { left: -20rem; }
-      50% { left: -100%; }
+      33% { left: -20rem; }
+      66% { left: -100%; }
       100% { left: -100%; }
     }
     @keyframes rightLoad {
       0% { right: -20rem; }
-      50% { right: -100%; }
+      33% { right: -20rem; }
+      66% { right: -100%; }
       100% { right: -100%; }
     }
   }

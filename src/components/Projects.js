@@ -15,7 +15,7 @@ const Projects = () => (
       <ProjectSection projects={d3Projects} />
       <ProjectSection projects={cssProjects} />
       <div id='loader-link'>
-        <Link to='/loader'>What was that beautiful loading animation?</Link>
+        <Link to='/loader'>What was that fancy looking loading animation?</Link> (Inspired by <a href='https://codepen.io/SoufianeLasri/pen/XmxRdv'>this</a> pen.)
       </div>
     </div>
   </div>
