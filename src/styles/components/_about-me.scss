@@ -8,6 +8,19 @@
   width: 80vw;
 }
 
+#about-me-footer {
+  display: flex;
+  justify-content: space-evenly;
+  span {
+    display: flex;
+    justify-content: space-evenly;
+  }
+  ul {
+    list-style-type: none;
+    padding-left: 0;
+  }
+}
+
 @media (min-width: 768px) {
   #about-me-content {
     flex-direction: row;

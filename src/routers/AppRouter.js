@@ -5,6 +5,7 @@ import DashboardPage from '../components/DashboardPage';
 import NotFoundPage from '../components/NotFoundPage';
 import EditBlogPost from '../components/EditBlogPost';
 import AddBlogPost from '../components/AddBlogPost';
+import LoadingPage from '../components/LoadingPage';
 import LoginPage from '../components/LoginPage';
 import BlogPost from '../components/BlogPost';
 import Archives from '../components/Archives';
@@ -21,6 +22,7 @@ const AppRouter = () => (
       <Switch>
         <Route path='/' component={DashboardPage} exact={true} />
         <Route path='/blog' component={Blog} exact={true} />
+        <Route path='/loader' component={LoadingPage} exact={true} />
         <Route path='/archives/:id' component={Archives} />
         <Route path='/read/:id' component={BlogPost} />
         <Route path='/tags/:id' component={Tags} />

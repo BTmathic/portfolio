@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import ProjectSection from './ProjectSection';
 import d3Projects from '../projects/d3Projects';
 import cssProjects from '../projects/cssProjects';
@@ -13,6 +14,9 @@ const Projects = () => (
       <ProjectSection projects={jqueryProjects} />
       <ProjectSection projects={d3Projects} />
       <ProjectSection projects={cssProjects} />
+      <div id='loader-link'>
+        <Link to='/loader'>What was that beautiful loading animation?</Link>
+      </div>
     </div>
   </div>
 );
