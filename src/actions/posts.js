@@ -12,9 +12,10 @@ export const startAddPost = (postData = {}) => {
       title = '',
       postBody = '',
       tags = '',
-      createdAt = 0
+      createdAt = 0,
+      comments = ''
     } = postData;
-    const post = { title, postBody, tags, createdAt };
+    const post = { title, postBody, tags, createdAt, comments };
     database.ref('Posts')
       .push(post)
       .then((ref) => {
@@ -74,3 +75,41 @@ export const startSetPosts = () => {
       });
   }
 }
+
+export const addComment = (comment) => ({
+  type: 'ADD_COMMENT',
+  comment
+  }
+);
+
+export const startAddComment = (id, commentData = {}) => {
+  return (dispatch) => {
+    const {
+      name = '',
+      email = '',
+      commentBody = ''
+    } = commentData;
+    const comment = { name, email, commentBody };
+    database.ref(`Posts/${id}/comments`)
+      .push(commentData)
+      .then((ref) => {
+        dispatch(addComment({
+          id: ref.key,
+          comment
+        }));
+      });
+  };
+};
+
+export const removeComment = ({ id } = {}) => ({
+  type: 'REMOVE_COMMENT',
+  id
+});
+
+export const startRemoveComment = (postId, { commentId } = {}) => {
+  return (dispatch) => {
+    return database.ref(`Posts/${postId}/comments/${commentId}`).remove().then(() => {
+      dispatch(removeComment(postId, { commentId }));
+    });
+  };
+};

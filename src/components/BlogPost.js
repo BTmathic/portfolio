@@ -4,6 +4,7 @@ import marked from 'marked';
 import { connect } from 'react-redux';
 import { Link } from 'react-router-dom';
 import BlogHeader from './BlogHeader';
+import BlogComments from './BlogComments';
 import { history } from '../routers/AppRouter';
 
 const BlogPost = (props) => (
@@ -47,24 +48,7 @@ const BlogPost = (props) => (
             </Link>
           }
         </div>
-        <div id='blog-post-links'>
-          <div>Link to previous post (if...)</div>
-          <div>Link to next post (if...)</div>
-        </div>
-        <div id='blog-comments'>
-          Comments (with name)
-        </div>
-        <div id='blog-leave-comment'>
-          <form>
-            <label htmlFor='name'>Name</label>
-            <input type='text' name='name' />
-            <label htmlFor='email'>Email</label>
-            <input type='text' name='email' />
-            <label htmlFor='comment'>Comment</label>
-            <textarea></textarea>
-            <button type='submit'>Submit</button>
-          </form>
-        </div>
+        <BlogComments postId={props.match.params.id} />
       </div>
       <div>
         <footer id='blog-footer'>

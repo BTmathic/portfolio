@@ -47,10 +47,8 @@ class EditBlogPost extends React.Component {
   }
 }
 
-const mapStateToProps = (state, props) => {
-  return {
-    post: state.posts.find((post) => post.id === props.match.params.id)
-  };
-};
+const mapStateToProps = (state, props) => ({
+  post: state.posts.find((post) => post.id === props.match.params.id)
+  });
 
 export default connect(mapStateToProps)(EditBlogPost);

@@ -22,6 +22,13 @@ export default (state = postsReducerDefaultState, action) => {
       });
     case 'SET_POSTS':
       return action.posts;
+    case 'ADD_COMMENT':
+      return [
+        ...state,
+        action.comment
+      ];
+    case 'REMOVE_COMMENT':
+      return state.filter(({ id }) => id !== action.id);
     default:
       return state;
   }
