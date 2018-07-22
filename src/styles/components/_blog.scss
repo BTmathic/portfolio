@@ -155,13 +155,16 @@ pre {
     justify-content: space-between;
     margin: 0 auto;
     width: 80%;
-    div {
+    .blog-post-move {
       background: blue;
       border-radius: 5px;
       color: white;
       cursor: pointer;
       margin: 1rem 0;
       padding: 1rem 2rem;
+    }
+    .no-post {
+      display: none;
     }
   }
   #blog-comments {

@@ -1,6 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 import BlogComment from './BlogComment';
+import { history } from '../routers/AppRouter';
 import { startAddComment, removeComment } from '../actions/posts';
 
 class BlogComments extends React.Component {
@@ -8,6 +9,20 @@ class BlogComments extends React.Component {
     name: '',
     email: '',
     comment: ''
+  }
+
+  goToPost = (direction) => {
+    let currentPost;
+    this.props.posts.map((post, index) => {
+      if (post.id === this.props.postId) {
+        currentPost = index;
+      }
+    });
+    const nextPost = currentPost + direction;
+    if (nextPost > -1 && nextPost < this.props.posts.length) {
+      history.push(`/read/${this.props.posts[nextPost].id}`);
+      window.scrollTo(0, 0);
+    }
   }
 
   handleComments = () => {
@@ -62,8 +77,15 @@ class BlogComments extends React.Component {
     return (
       <div>
         <div id='blog-post-links'>
-          <div>Link to previous post (if...)</div>
-          <div>Link to next post (if...)</div>
+          <div className={this.props.postId === this.props.posts[0].id ? 'no-post' : 'blog-post-move'} onClick={() => {this.goToPost(-1)}}>
+            Previous post
+          </div>
+          <div className={this.props.postId === this.props.posts[0].id || 
+            this.props.postId === this.props.posts[this.props.posts.length-1].id ? 'no-post-padding' : 'no-post'
+          }></div>
+          <div className={this.props.postId === this.props.posts[this.props.posts.length - 1].id ? 'no-post' : 'blog-post-move'} onClick={() => {this.goToPost(1)}}>
+            Next post
+          </div>
         </div>
         <div id='blog-comments'>
           { this.handleComments() }
@@ -104,6 +126,7 @@ class BlogComments extends React.Component {
 }
 
 const mapStateToProps = (state, props) => ({
+  posts: state.posts,
   post: state.posts.filter((post) => post.id === props.postId)
 });
 

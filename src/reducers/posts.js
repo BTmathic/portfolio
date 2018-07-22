@@ -36,13 +36,20 @@ export default (state = postsReducerDefaultState, action) => {
     case 'REMOVE_COMMENT':
       return state.map((post) => {
         if (post.id === action.postId) {
-          return {
-            ...post,
-            comments: post.comments.filter((comment) => comment.id !== action.commentId)
-          };
+          if (post.comments.length === 1) {
+            return {
+              ...post,
+              comments: ''
+            };
+          } else {
+            return {
+              ...post,
+              comments: post.comments.filter((comment) => comment.id !== action.commentId)
+            };
+          }
         } else {
           return post;
-        }
+        };
       });
     default:
       return state;
