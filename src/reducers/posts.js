@@ -23,12 +23,27 @@ export default (state = postsReducerDefaultState, action) => {
     case 'SET_POSTS':
       return action.posts;
     case 'ADD_COMMENT':
-      return [
-        ...state,
-        action.comment
-      ];
+      return state.map((post) => {
+        if (post.id === action.postId) {
+          return {
+            ...post,
+            comments: post.comments.concat({ id: action.id, ...action.comment })
+          };
+        } else {
+          return post;
+        }
+      });
     case 'REMOVE_COMMENT':
-      return state.filter(({ id }) => id !== action.id);
+      return state.map((post) => {
+        if (post.id === action.postId) {
+          return {
+            ...post,
+            comments: post.comments.filter((comment) => comment.id !== action.commentId)
+          };
+        } else {
+          return post;
+        }
+      });
     default:
       return state;
   }

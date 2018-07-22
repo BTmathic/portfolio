@@ -1,16 +1,28 @@
 import React from 'react';
 import { connect } from 'react-redux';
-import { history } from '../routers/AppRouter';
 import BlogComment from './BlogComment';
 import { startAddComment, removeComment } from '../actions/posts';
 
 class BlogComments extends React.Component {
+  state = {
+    name: '',
+    email: '',
+    comment: ''
+  }
+
   handleComments = () => {
     const commentsObject = this.props.post[0].comments;
     let comments = [];
     for (let key in commentsObject) {
       if (commentsObject.hasOwnProperty(key)) {
-        comments.push(<BlogComment key={key} commentId={key} postId={this.props.postId} comment={commentsObject[key]} />);
+        comments.push(
+          <BlogComment
+            key={key}
+            commentId={this.props.post[0].id}
+            postId={this.props.postId}
+            comment={commentsObject[key]}
+          />
+        );
       }
     }
     return comments;
@@ -24,7 +36,26 @@ class BlogComments extends React.Component {
       commentBody: e.target.comment.value
     }
     this.props.startAddComment(this.props.postId, comment);
-    history.push(`/read/${this.props.postId}`);
+    this.setState(() => ({
+      name: '',
+      email: '',
+      comment: ''
+    }))
+  }
+
+  onNameChange = (e) => {
+    const name = e.target.value;
+    this.setState(() => ({ name }));
+  }
+  
+  onEmailChange = (e) => {
+    const email = e.target.value;
+    this.setState(() => ({ email }));
+  }
+  
+  onCommentChange = (e) => {
+    const comment = e.target.value;
+    this.setState(() => ({ comment }));
   }
 
   render() {
@@ -39,13 +70,31 @@ class BlogComments extends React.Component {
         </div>
         <div id='blog-leave-comment'>
           <h2>Leave a comment</h2>
-          <form onSubmit={(e) => this.handleSubmit(e)}>
+          <form onSubmit={(e) => {
+            this.handleSubmit(e);
+          }}>
             <label htmlFor='name'>Name</label>
-            <input type='text' name='name' required/>
+            <input
+              type='text'
+              name='name'
+              value={this.state.name}
+              onChange={this.onNameChange}
+              required
+            />
             <label htmlFor='email'>Email (your email will not be published)</label>
-            <input type='email' name='email' required/>
+            <input
+              type='email'
+              name='email'
+              value={this.state.email}
+              onChange={this.onEmailChange}
+              required
+            />
             <label htmlFor='comment'>Comment</label>
-            <textarea name='comment'></textarea>
+            <textarea
+              name='comment'
+              value={this.state.comment}
+              onChange={this.onCommentChange}
+            ></textarea>
             <button type='submit'>Post Comment</button>
           </form>
         </div>

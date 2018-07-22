@@ -33,12 +33,10 @@ const Header = (props) => (
   </div>
 ); 
 
-const mapStateToProps = (state) => {
-  return {
-    id: state.auth.uid,
-    menuOpen: state.menu
-  }
-}
+const mapStateToProps = (state) => ({
+  id: state.auth.uid,
+  menuOpen: state.menu
+});
 
 const mapDispatchToProps = (dispatch) => ({
   startLogout: () => dispatch(startLogout()),

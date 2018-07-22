@@ -1,4 +1,3 @@
-//import uuid from 'uuid';
 import database from '../firebase/firebase';
 
 export const addPost = (post) => ({
@@ -66,9 +65,20 @@ export const startSetPosts = () => {
     return database.ref('Posts').once('value').then((snapshot) => {
         const posts = [];
         snapshot.forEach((childSnapshot) => {
+          const firebaseComments = childSnapshot.val().comments;
+          const comments = [];
+          for (let key in firebaseComments) {
+            if (firebaseComments.hasOwnProperty(key)) {
+              comments.push({
+                id: key,
+                ...firebaseComments[key]
+              });
+            }
+          }
           posts.push({
             id: childSnapshot.key,
-            ...childSnapshot.val()
+            ...childSnapshot.val(),
+            comments
           });
         });
         dispatch(setPosts(posts));
@@ -76,13 +86,15 @@ export const startSetPosts = () => {
   }
 }
 
-export const addComment = (comment) => ({
+export const addComment = ({ commentId, postId, comment }) => ({
   type: 'ADD_COMMENT',
+  commentId,
+  postId,
   comment
   }
 );
 
-export const startAddComment = (id, commentData = {}) => {
+export const startAddComment = (postId, commentData) => {
   return (dispatch) => {
     const {
       name = '',
@@ -90,26 +102,28 @@ export const startAddComment = (id, commentData = {}) => {
       commentBody = ''
     } = commentData;
     const comment = { name, email, commentBody };
-    database.ref(`Posts/${id}/comments`)
+    database.ref(`Posts/${postId}/comments`)
       .push(commentData)
       .then((ref) => {
         dispatch(addComment({
-          id: ref.key,
+          commentId: ref.key,
+          postId,
           comment
         }));
       });
   };
 };
 
-export const removeComment = ({ id } = {}) => ({
+export const removeComment = (postId, commentId) => ({
   type: 'REMOVE_COMMENT',
-  id
+  postId,
+  commentId
 });
 
-export const startRemoveComment = (postId, { commentId } = {}) => {
+export const startRemoveComment = (postId, commentId) => {
   return (dispatch) => {
     return database.ref(`Posts/${postId}/comments/${commentId}`).remove().then(() => {
-      dispatch(removeComment(postId, { commentId }));
+      dispatch(removeComment(postId, commentId));
     });
   };
 };
