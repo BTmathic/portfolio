@@ -64,7 +64,7 @@ export default class BlogPostForm extends React.Component {
     return (
       <div>
       {this.state.formError && <p>{this.state.formError}</p>}
-        <form onSubmit={this.onSubmit}>
+        <form onSubmit={this.onSubmit} className='new-blog-post'>
           <input
             type='text'
             placeholder='Title'
@@ -92,7 +92,7 @@ export default class BlogPostForm extends React.Component {
             value={this.state.tags}
             onChange={this.onTagsChange}
           />
-          <button>{!!this.props.post ? 'Submit Edit' : 'Create Post'}</button>
+          <button className='create-post'>{!!this.props.post ? 'Submit Edit' : 'Create Post'}</button>
         </form>
         <BlogPostPreview postBody={this.state.postBody} />
       </div>

@@ -39,11 +39,11 @@ const AboutMe = () => (
               <li>Git &amp; Github</li>
             </ul>
             <ul>
+              <li>jQuery</li>
+              <li>Node, npm and Yarn</li>
               <li>React &amp; Redux</li>
-              <li>Terminal</li>
               <li>Visual Studio Code</li>
               <li>Webpack</li>
-              <li>Yarn</li>
             </ul>
           </span>
         </div>

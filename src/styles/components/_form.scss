@@ -1,8 +1,22 @@
-.form {
+.new-blog-post {
     display: flex;
     flex-direction: column;
+    margin: 0 auto;
+    max-width: 80%;
     > * {
         margin-bottom: $m-size;
+    }
+    .create-post {
+      background: grey;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      margin: 0 auto;
+      padding: 0.5rem 0;
+      width: 15%;
+    }
+    textarea {
+      height: 15rem;
     }
 }
 

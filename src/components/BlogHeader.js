@@ -17,8 +17,9 @@ const Header = (props) => (
         <Link to="/#projects" className='blog-header-button' id='blog-header-portfolio'>Portfolio</Link>
         <Link to="/#about-me" className='blog-header-button' id='blog-header-about'>About</Link>
         <Link to="/#contact" className='blog-header-button'>Contact</Link>
-        {props.id && <NavLink to='/create' activeClassName='is-active' id='blog-new-post'>New Post</NavLink>}
-        {props.id && <NavLink to='/login' activeClassName='is-active' onClick={props.startLogout} id='blog-logout'>Logout</NavLink>}
+        {props.id && <span className='blog-header-button'></span>}
+        {props.id && <NavLink to='/create' activeClassName='is-active' className='blog-header-button'>New Post</NavLink>}
+        {props.id && <NavLink to='/login' activeClassName='is-active' onClick={props.startLogout} className='blog-header-button'>Logout</NavLink>}
       </div>
       <div>
       <span

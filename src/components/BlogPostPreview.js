@@ -15,7 +15,7 @@ export default class BlogPostPreview extends React.Component {
   render() {
     return (
       <div>
-        <div dangerouslySetInnerHTML={{__html: marked(this.state.textToMarkup, { sanitize: true })}}></div>
+        <div className='content-container' dangerouslySetInnerHTML={{__html: marked(this.state.textToMarkup, { sanitize: true })}}></div>
       </div>
     );
   }
