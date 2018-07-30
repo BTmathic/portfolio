@@ -1,5 +1,11 @@
 const jqueryProjects = [ 'Javascript and jQuery', [
   {
+    title: 'Product Landing Page',
+    image: '/Images/landing-page.png',
+    alt: 'Screenshot of Product Landing Page',
+    link: 'https://BTmathic.github.io/landing-page',
+    tools: 'Webpack'
+  }, {
     title: 'Simon',
     image: '/Images/simon.png',
     alt: 'Screenshot of Simon app',
@@ -23,6 +29,18 @@ const jqueryProjects = [ 'Javascript and jQuery', [
     alt: 'Screenshot of Wikipedia Viewer app',
     link: 'https://BTmathic.github.io/wikipedia-viewer',
     tools: 'Wikipedia API: https://www.mediawiki.org/wiki/API:Main_page, Webpack'
+  }, {
+    title: 'Survey Form',
+    image: '/Images/survey-form.png',
+    alt: 'Screenshot of Survey Form',
+    link: 'https://BTmathic.github.io/survey-form',
+    tools: 'Webpack'
+  }, {
+    title: 'Technical Documentation Page',
+    image: '/Images/tech-docs.png',
+    alt: 'Screenshot of Technical Documentation page',
+    link: 'https://BTmathic.github.io/tech-docs',
+    tools: 'Webpack'
   }
 ]];
 

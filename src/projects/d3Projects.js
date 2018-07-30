@@ -6,7 +6,7 @@ const d3Projects = ['Data Visualization', [
     link: 'https://BTmathic.github.io/bar-chart',
     tools: 'javascript, D3'
   }, {
-    title: 'Visualizing Top Finish Times in Cycling',
+    title: 'Visualizing Top Climb Times in Cycling',
     image: '/Images/scatterplot.png',
     alt: 'Screenshot of Scatterplot',
     link: 'https://BTmathic.github.io/scatterplot',

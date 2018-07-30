@@ -7,8 +7,8 @@ import { history } from '../routers/AppRouter';
 class BlogFilters extends React.Component {
   state = {
     archives: [],
-    tags: [],
-    modalIsOpen: true
+    tags: []
+    //modalIsOpen: true
   }
 
   toggleModal = () => {
@@ -16,11 +16,7 @@ class BlogFilters extends React.Component {
   }
 
   componentWillMount() {
-    Modal.setAppElement('body');
-    if (window.innerWidth <= 768) {
-
-    }
-
+    //Modal.setAppElement('body');
     let tags = [];
     let archives = [];
     this.props.posts.map((post) => {
@@ -61,7 +57,7 @@ class BlogFilters extends React.Component {
               Recent Posts
             </div>
             <div className='nav-section-contents'>
-              {[1,2,3,4].map((index) => (
+              {[1,2,3,4,5].map((index) => (
                 <div className='nav-section-post'
                   key={index}
                   onClick={() => {
