@@ -11,6 +11,7 @@ const Contact = () => (
       <div id='contact-options'>
         <div id='other-contact'>
           <a href='https://github.com/BTmathic'><img src='Images/github-logo.png' alt='GitHub link' className='icon'/></a>
+          <a href='https://codepen.io/brokentriathlete/'><img src='Images/codepen-logo.png' alt='Codepen logo' className='icon'/></a>
           <a href='https://twitter.com/BrokeTriathlete'><img src='Images/twitter-logo.png' alt='Twitter link' className='icon' /></a>
           <a href='#'><img src='Images/linkedin-logo.png' alt='LinkedIn link' className='icon' /></a>
         </div>

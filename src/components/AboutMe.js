@@ -24,7 +24,7 @@ const AboutMe = () => (
             <li>HTML</li>
             <li>JavaScript</li>
             <li>JSX</li>
-            <li>Sass</li>
+            <li>SCSS</li>
           </ul>
           </span>
         </div>
