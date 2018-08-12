@@ -23,7 +23,7 @@ class BlogFilters extends React.Component {
       const postTags = post.tags.replace(',', '').split(/\s+/);
       const postDateMonthYear = moment(post.createdAt).format('MMMM YYYY');
       if (archives.indexOf(postDateMonthYear) === -1) {
-        archives.push(postDateMonthYear);
+        archives.unshift(postDateMonthYear);
       }
       postTags.map((tag) => {
         if (tags.indexOf(tag) === -1) {
@@ -113,12 +113,16 @@ class BlogFilters extends React.Component {
               Contact
             </div>
             <div className='nav-section-contents'>
-              <div id='blog-contact'>
-                <a href='https://github.com/BTmathic'><img src='Images/github-logo.png' alt='GitHub link' className='icon' /></a>
-                <a href='https://codepen.io/brokentriathlete/'><img src='Images/codepen-logo.png' alt='Codepen logo' className='icon' /></a>
-                <a href='https://twitter.com/BrokeTriathlete'><img src='Images/twitter-logo.png' alt='Twitter link' className='icon' /></a>
-                <a href='#'><img src='Images/linkedin-logo.png' alt='LinkedIn link' className='icon' /></a>
-                <a href='mailto:mathic@gmail.com'><img src='Images/email.png' alt='Email' className='icon' /></a>
+              <div className='blog-contact'>
+                <div className='blog-contact__row'>
+                  <a href='https://github.com/BTmathic'><img src='Images/github-logo.png' alt='GitHub link' className='icon' /></a>
+                  <a href='https://codepen.io/brokentriathlete/'><img src='Images/codepen-logo.png' alt='Codepen logo' className='icon' /></a>
+                  <a href='https://twitter.com/BrokeTriathlete'><img src='Images/twitter-logo.png' alt='Twitter link' className='icon' /></a>
+                </div>
+                <div className='blog-contact__row'>
+                  <a href='#'><img src='Images/linkedin-logo.png' alt='LinkedIn link' className='icon' /></a>
+                  <a href='mailto:mathic@gmail.com'><img src='Images/email.png' alt='Email' className='icon' /></a>
+                </div>
               </div>
               {/*
               <div id='send-message-container'>

@@ -10,13 +10,13 @@ const Contact = () => (
       </div>
       <div id='contact-options'>
         <div id='other-contact'>
-          <a href='https://github.com/BTmathic'><img src='Images/github-logo.png' alt='GitHub link' className='icon'/></a>
-          <a href='https://codepen.io/brokentriathlete/'><img src='Images/codepen-logo.png' alt='Codepen logo' className='icon'/></a>
-          <a href='https://twitter.com/BrokeTriathlete'><img src='Images/twitter-logo.png' alt='Twitter link' className='icon' /></a>
-          <a href='#'><img src='Images/linkedin-logo.png' alt='LinkedIn link' className='icon' /></a>
+          <a href='https://github.com/BTmathic'><img src='Images/github-logo.png' alt='GitHub link' className='socials-icon'/></a>
+          <a href='https://codepen.io/brokentriathlete/'><img src='Images/codepen-logo.png' alt='Codepen logo' className='socials-icon'/></a>
+          <a href='https://twitter.com/BrokeTriathlete'><img src='Images/twitter-logo.png' alt='Twitter link' className='socials-icon' /></a>
+          <a href='#'><img src='Images/linkedin-logo.png' alt='LinkedIn link' className='socials-icon' /></a>
         </div>
         <div id='email'>
-          <a href='mailto:mathic@gmail.com'><img src='Images/email.png' alt='Email' className='icon' /></a>
+          <a href='mailto:mathic@gmail.com'><img src='Images/email.png' alt='Email' className='socials-icon' /></a>
         </div>
       </div>
     </div>
