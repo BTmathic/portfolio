@@ -1,6 +1,6 @@
 import React from 'react';
 
-const AboutMe = () => (
+const AboutMe = (props) => (
   <div id='about-me'>
     <div className='content-container'>
       <h1>About Me</h1>

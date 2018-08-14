@@ -6,19 +6,23 @@ import cssProjects from '../projects/cssProjects';
 import reactProjects from '../projects/reactProjects';
 import jqueryProjects from '../projects/jqueryProjects';
 
-const Projects = () => (
-  <div id='projects'>
-    <div className='content-container'>
-      <h1>Projects</h1>
-      <ProjectSection projects={reactProjects} projectsOpen={true} />
-      <ProjectSection projects={jqueryProjects} />
-      <ProjectSection projects={d3Projects} />
-      <ProjectSection projects={cssProjects} />
-      <div id='loader-link'>
-        <Link to='/loader'>What was that fancy looking loading animation?</Link> (Inspired by <a href='https://codepen.io/SoufianeLasri/pen/XmxRdv'>this</a> pen.)
+class Projects extends React.Component {
+  render() {
+    return (
+      <div id='projects'>
+        <div className='content-container'>
+          <h1>Projects</h1>
+          <ProjectSection projects={reactProjects} projectsOpen={true} />
+          <ProjectSection projects={jqueryProjects} />
+          <ProjectSection projects={d3Projects} />
+          <ProjectSection projects={cssProjects} />
+          <div id='loader-link'>
+            <Link to='/loader'>What was that fancy looking loading animation?</Link> (Inspired by <a href='https://codepen.io/SoufianeLasri/pen/XmxRdv'>this</a> pen.)
       </div>
-    </div>
-  </div>
-);
+        </div>
+      </div>
+    );
+  }
+}
 
 export default Projects;

@@ -11,19 +11,22 @@ export default class DashboardPage extends React.Component {
   }
   
   handleScroll = () => {
-    if (window.scrollY === 0) {
-      this.setState(() => ({ atTop: true }));
-    } else if (this.state.top) {
-      this.setState(() => ({ atTop: false }));
-    }
+    // if (window.scrollY === 0) {
+    //   this.setState(() => ({ atTop: true }));
+    // } else if (this.state.top) {
+    //   this.setState(() => ({ atTop: false }));
+    // }
   }
 
   componentDidMount() {
-    window.addEventListener('scroll', this.handleScroll);
+    //window.addEventListener('scroll', this.handleScroll);
+    if (!!this.props.location.hash) {
+      window.scrollTo(0, this[this.props.location.hash.substr(1)].offsetTop + window.innerHeight - 100);
+    }
   }
 
   componentWillUnmount() {
-    window.removeEventListener('scroll', this.handleScroll);
+    //window.removeEventListener('scroll', this.handleScroll);
   }
   
   render() {
@@ -31,11 +34,19 @@ export default class DashboardPage extends React.Component {
       <div>
        <Header atTop={this.state.top} />
         <div id='dashboard'>
-          <AboutMe />
-          <Projects />
-          <BlogDashboard />
-          <Contact />
-          <div id='footer'>Site created by Alexander Molnar (me!)</div>
+          <span ref={node => this['about-me'] = node}>
+            <AboutMe />
+          </span>
+          <span ref = {node => this.projects = node}>
+            <Projects />
+          </span>
+          <span ref={node => this['dashboard-blog'] = node}>
+            <BlogDashboard />
+          </span>
+          <span ref={node => this.contact = node}>
+            <Contact />
+          </span>
+          <div id='footer'>Site created by Alexander Molnar</div>
         </div>
       </div>
     );
