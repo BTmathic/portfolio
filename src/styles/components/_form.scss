@@ -6,7 +6,7 @@
     > * {
         margin-bottom: $m-size;
     }
-    .create-post {
+    .create-post, .remove-post {
       background: grey;
       border: none;
       border-radius: 5px;
@@ -24,3 +24,17 @@
     margin: 0 0 $m-size 0;
     font-style: italic;
 }
+
+.remove-post, .remove-post-modal {
+  background: grey;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  display: flex;
+  justify-content: space-around;
+  margin: 1rem auto 2rem;
+  padding: 0.5rem 0;
+}
+
+.remove-post { width: 15%; }
+.remove-post-modal { width: 50% }

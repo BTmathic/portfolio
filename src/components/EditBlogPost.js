@@ -32,15 +32,28 @@ class EditBlogPost extends React.Component {
             this.props.history.push('/blog');
           }}
         />
-        <button onClick={() => {this.toggleModal()}}>Remove</button>
+        <button className='remove-post'
+          onClick={() => {this.toggleModal()}}
+        >
+          Remove
+        </button>
         <Modal
+          className='modal'
           isOpen={this.state.modalIsOpen}
           onRequestClose={this.toggleModal}
           contentLabel={'Confirm delete post'}
         >
-          Are you sure you want to delete this post?
-          <button onClick={() => {this.handleRemove()}}>Delete</button>
-          <button onClick={() => {this.toggleModal()}}>Cancel</button>
+          <div className='modal__title'>Are you sure you want to delete this post?</div>
+          <button className='remove-post-modal'
+            onClick={() => {this.handleRemove()}}
+          >
+            Delete
+          </button>
+          <button className='remove-post-modal'
+            onClick={() => {this.toggleModal()}}
+          >
+            Cancel
+          </button>
         </Modal>
       </div>
     );
