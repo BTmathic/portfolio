@@ -1,0 +1,15 @@
+.not-found {
+  align-items: center;
+  display: flex;
+  height: 100vh;
+  justify-content: space-around;
+  text-align: center;
+  div {
+    display: flex;
+    flex-direction: column;
+    font-size: $l-size;
+    .four-oh-four {
+      font-size: 10rem;
+    }
+  }
+}

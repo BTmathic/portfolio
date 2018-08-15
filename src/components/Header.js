@@ -1,14 +1,14 @@
 import React from 'react';
 
 export default () => (
-  <div id='page-header'>
-    <header id='header'>
+  <div className='page-header'>
+    <header className='header'>
       <div className='content-container'>
-        <div id='header__content'>
-          <a href='#top' id='header__title'>
+        <div className='header__content'>
+          <a href='#top' className='header__title'>
             <h1>AM</h1>
           </a>
-          <div id='header__links'>
+          <div className='header__links'>
             <a href='#about-me' className='header-link'>
               About Me
             </a>
@@ -25,10 +25,10 @@ export default () => (
         </div>
       </div>
     </header>
-    <div id='introduction'>
-      <h1><span id='intro-hello'>Hello</span><span id='intro-hello-mobile'>,</span> I'm Alexander Molnar</h1>
+    <div className='introduction'>
+      <h1><span className='intro-hello'>Hello</span><span className='intro-hello-mobile'>,</span> I'm Alexander Molnar</h1>
       <h2>I work in web design and development</h2>
-      <div id='coding-icons'>
+      <div className='coding-icons'>
         <div className='icon'>
           <img src='./Images/react-logo.svg' alt='react logo' />
         </div>

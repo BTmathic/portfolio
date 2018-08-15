@@ -53,12 +53,12 @@ class BlogFilters extends React.Component {
       <div id={this.props.menuOpen ? 'nav-menu' : null} className='mobile-nav-menu'>
         <nav>
           <div className='nav-section'>
-            <div className='nav-section-title'>
+            <div className='nav-section__title'>
               Recent Posts
             </div>
-            <div className='nav-section-contents'>
+            <div>
               {[1,2,3,4,5].map((index) => (
-                <div className='nav-section-post'
+                <div className='nav-section__post'
                   key={index}
                   onClick={() => {
                     history.push(`/read/${this.props.posts[this.props.posts.length - index].id}`)
@@ -70,13 +70,13 @@ class BlogFilters extends React.Component {
             </div>
           </div>
           <div className='nav-section'>
-            <div className='nav-section-title'>
+            <div className='nav-section__title'>
               Tags
             </div>
-            <div className='nav-section-contents'>
+            <div>
               {this.state.tags.map((tag) => (
                 <div 
-                  className='nav-section-tag'
+                  className='nav-section__tag'
                   key={tag}
                   onClick={() => {
                     history.push(`/tags/${tag.slice(0, tag.indexOf(' '))}`)
@@ -89,12 +89,12 @@ class BlogFilters extends React.Component {
             </div>
           </div>
           <div className='nav-section'>
-            <div className='nav-section-title'>
+            <div className='nav-section__title'>
               Archives
             </div>
             {this.state.archives.map((month) => (
               <div
-                className='nav-section-archive'
+                className='nav-section__archive'
                 key={month}
                 onClick={() => {
                   history.push(`/archives/${month}`)
@@ -104,15 +104,12 @@ class BlogFilters extends React.Component {
               </div>
             ))}
           </div>
-          <div className='nav-section-contents'>
-
-            {/*<div>Full archives</div>*/}
-          </div>
+          {/*<div>Full archives</div>*/}
           <div className='nav-section'>
-            <div className='nav-section-title'>
+            <div className='nav-section__title'>
               Contact
             </div>
-            <div className='nav-section-contents'>
+            <div>
               <div className='blog-contact'>
                 <div className='blog-contact__row'>
                   <a href='https://github.com/BTmathic'><img src='Images/github-logo.png' alt='GitHub link' className='icon' /></a>

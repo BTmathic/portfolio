@@ -1,8 +1,11 @@
-#contact-options {
+.contact__options {
   display: flex;
   justify-content: space-between;
   margin-top: 10px;
   padding: $sm-size $m-size 0 $m-size;
+  .contact__options-email {
+    display: flex;
+  }
 }
 
 .socials-icon {
@@ -11,22 +14,19 @@
   width: 30px;
 }
 
-#email {
-  display: flex;
-}
+
 
 @media (min-width: 768px) {
-  #contact-options {
+  .contact__options {
     padding: $m-size $l-size 0 $l-size;
+    .contact__options-email {
+      margin-top: -1px;
+    }
   }
   
   .socials-icon {
     height: 40px;
     padding: 3px;
     width: 40px;
-  }
-
-  #email {
-    margin-top: -1px;
   }
 }

@@ -1,15 +1,15 @@
-#about-me-content {
+.about-me__content {
   display: flex;
   flex-direction: column-reverse;
+  .about-me__photo img {
+    max-width: 250px;
+    width: 80vw;
+  }
 }
 
-#about-me-photo img {
-  max-width: 250px;
-  width: 80vw;
-}
-
-#about-me-footer {
+.about-me__footer {
   display: flex;
+  flex-direction: column;
   justify-content: space-evenly;
   span {
     display: flex;
@@ -22,7 +22,10 @@
 }
 
 @media (min-width: 768px) {
-  #about-me-content {
+  .about-me__content {
+    flex-direction: row;
+  }
+  .about-me__footer {
     flex-direction: row;
   }
 }

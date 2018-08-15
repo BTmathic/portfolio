@@ -8,24 +8,21 @@ import BlogComments from './BlogComments';
 import { history } from '../routers/AppRouter';
 
 const BlogPost = (props) => (
-  <div className='blog-full-post'>
+  <div className='full-blog-post'>
     <div className='content-container'>
-      <div id='blog-page'>
+      <div className='blog-post'>
         <header>
           <BlogHeader />
         </header>
-        <div className='blog-post'>
-          <div id='blog-post-header'>
+        <div className='blog-post__contents'>
+          <div>
             <h3>{props.post.title}</h3>
-            <div id='back' onClick={() => {history.goBack()}}>
-              Back
-            </div>
           </div>
-          <div className='post-body'
+          <div
             dangerouslySetInnerHTML={{__html: marked(props.post.postBody, {sanitize: true })}}
           >
           </div>
-          <div id='blog-post-footer'>
+          <div className='blog-post__footer'>
             <div>{props.post.tags.split(',').map((tag) => 
               <span
                 key={tag}
@@ -38,7 +35,7 @@ const BlogPost = (props) => (
                 {tag}
               </span>
             )}</div>
-            <div id='blog-post-date'>
+            <div className='blog-post__date'>
               {moment(props.post.createdAt).format('MMMM Do, YYYY')}
             </div>
           </div>
@@ -51,7 +48,7 @@ const BlogPost = (props) => (
         <BlogComments postId={props.match.params.id} />
       </div>
       <div>
-        <footer id='blog-footer'>
+        <footer className='blog__footer'>
           Powered by Redux
         </footer>
       </div>

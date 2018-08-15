@@ -8,7 +8,7 @@ const BlogDashboard = (props) => (
     <div className='content-container'>
       <h1>Blog</h1>
       <BlogSnippet post={props.post} />
-      <div id='link-to-blog'>
+      <div className='link-to-blog'>
         <Link to='/blog' onClick={() => window.scrollTo(0,0)}>More Blog Posts...</Link>
       </div>
     </div>

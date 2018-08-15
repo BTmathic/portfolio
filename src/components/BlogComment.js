@@ -5,19 +5,19 @@ import { startRemoveComment } from '../actions/posts';
 const BlogComment = (props) => {
   return (
   <div className='blog-comment'>
-    <div className='blog-comment-header'>
-      <div className='blog-comment-name'>
+    <div className='blog-comment__header'>
+      <div className='blog-comment__name'>
         {props.comment.name}
       </div>
       { props.id && 
-        <div className='blog-comment-delete'
+        <div className='blog-comment__delete'
           onClick={() => { props.startRemoveComment(props.postId, props.comment.id) }}
         >
           Delete
         </div>
       }
     </div>
-    <div className='blog-comment-body'>
+    <div>
       {props.comment.commentBody}
     </div>
   </div>

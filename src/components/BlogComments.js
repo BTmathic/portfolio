@@ -76,21 +76,19 @@ class BlogComments extends React.Component {
   render() {
     return (
       <div>
-        <div id='blog-post-links'>
+        <div className='blog-post__links'>
           <div className={this.props.postId === this.props.posts[0].id ? 'no-post' : 'blog-post-move'} onClick={() => {this.goToPost(-1)}}>
             Previous post
           </div>
-          <div className={this.props.postId === this.props.posts[0].id || 
-            this.props.postId === this.props.posts[this.props.posts.length-1].id ? 'no-post-padding' : 'no-post'
-          }></div>
+          <div></div>
           <div className={this.props.postId === this.props.posts[this.props.posts.length - 1].id ? 'no-post' : 'blog-post-move'} onClick={() => {this.goToPost(1)}}>
             Next post
           </div>
         </div>
-        <div id='blog-comments'>
+        <div className='blog-post__comments'>
           { this.handleComments() }
         </div>
-        <div id='blog-leave-comment'>
+        <div className='blog-post__leave-comment'>
           <h2>Leave a comment</h2>
           <form onSubmit={(e) => {
             this.handleSubmit(e);

@@ -6,34 +6,17 @@ import Projects from './Projects';
 import BlogDashboard from './BlogDashboard';
 
 export default class DashboardPage extends React.Component {
-  state = {
-    atTop: true
-  }
-  
-  handleScroll = () => {
-    // if (window.scrollY === 0) {
-    //   this.setState(() => ({ atTop: true }));
-    // } else if (this.state.top) {
-    //   this.setState(() => ({ atTop: false }));
-    // }
-  }
-
   componentDidMount() {
-    //window.addEventListener('scroll', this.handleScroll);
-    if (!!this.props.location.hash) {
+    if (!!this.props.location.hash && this.props.location.hash !== '#top') {
       window.scrollTo(0, this[this.props.location.hash.substr(1)].offsetTop + window.innerHeight - 100);
     }
-  }
-
-  componentWillUnmount() {
-    //window.removeEventListener('scroll', this.handleScroll);
   }
   
   render() {
     return (
       <div>
-       <Header atTop={this.state.top} />
-        <div id='dashboard'>
+       <Header />
+        <div className='dashboard'>
           <span ref={node => this['about-me'] = node}>
             <AboutMe />
           </span>
@@ -46,7 +29,7 @@ export default class DashboardPage extends React.Component {
           <span ref={node => this.contact = node}>
             <Contact />
           </span>
-          <div id='footer'>Site created by Alexander Molnar</div>
+          <div className='footer'>Site created by Alexander Molnar</div>
         </div>
       </div>
     );
