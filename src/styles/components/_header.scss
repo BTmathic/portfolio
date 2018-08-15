@@ -89,20 +89,20 @@
   }
 
   @media (min-width: 409px) {
-    .introduction h1 {
-      padding-top: calc(100vh/2.5);
-      .intro-hello {
-        display: inline;
+    .introduction {
+      h1 {
+        padding-top: calc(100vh/2.5);
+        .intro-hello {
+          display: inline;
+        }
+        .intro-hello-mobile {
+          visibility: visible;
+        }
       }
-      .intro-hello-mobile {
-        visibility: visible;
+      .coding-icons {
+        margin-top: 10px;
+        width: 275px;
       }
-    }
-    
-    
-    .coding-icons {
-      margin-top: 10px;
-      width: 275px;
     }
   }
 }
