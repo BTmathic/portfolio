@@ -90,9 +90,7 @@ class BlogComments extends React.Component {
         </div>
         <div className='blog-post__leave-comment'>
           <h2>Leave a comment</h2>
-          <form onSubmit={(e) => {
-            this.handleSubmit(e);
-          }}>
+          <form onSubmit={(e) => { this.handleSubmit(e); }}>
             <label htmlFor='name'>Name</label>
             <input
               type='text'

@@ -64,17 +64,3 @@
   }
 }
 */
-
-.projects__content {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-evenly;
-  margin: 0 auto;
-  .project {
-    padding: 2rem 0;
-    img {
-      height: 14.1rem; // 768/1366 * 25rem
-      width: 25rem;
-    }
-  }
-}

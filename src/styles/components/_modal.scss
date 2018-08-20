@@ -1,3 +1,17 @@
+#send-message-container {
+  width: 100%;
+  #send-message {
+    background: grey;
+    border-radius: 5px;
+    color: white;
+    cursor: pointer;
+    margin: 0 auto;
+    max-width: 17rem;
+    padding: 0.5rem 1rem;
+    text-align: center;
+  }
+}
+
 .ReactModalPortal > div {
     opacity: 0;
 }
@@ -17,22 +31,49 @@
     opacity: 0;
 }
 
-.modal {
-    background: darken(white, 10%);
-    color: black;
-    max-width: 40rem;
-    outline: none;
-    padding: $l-size;
-    text-align: center;
+.message-modal {
+  background: lightgrey;
+  border-radius: 5px;
+  color: black;
+  max-width: 50rem;
+  outline: none;
+  padding: 2rem;
+  width: 80%;
+
+#message-modal__title {
+  margin: 0 0 1rem 0;
+  text-align: center;
 }
 
-.modal__title {
-    margin: 0 0 $m-size 0;
+#message-name, #message-email, #message {
+  text-align: center;
 }
 
-.modal__body {
-    font-size: 2rem;
-    font-weight: 300;
-    margin: 0 0 $l-size 0;
-    word-break: break-all;
+form {
+  font-size: 2rem;
+  font-weight: 300;
+  margin: 0 0 2rem 0;
+
+  #message-modal__buttons {
+    display: flex;
+    justify-content: space-between;
+    
+    button {
+      background: grey;
+      border: none;
+      border-radius: 5px;
+      color: white;
+      padding: 1rem 2rem;
+    }
+  }
+
+  input {
+    max-width: 80%;
+  }
+
+  textarea {
+      height: 20rem;
+      width: 100%;
+    }
+  }
 }

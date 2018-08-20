@@ -1,0 +1,34 @@
+.projects__content {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 5px;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-evenly;
+  margin: 0 auto;
+  padding: 2rem 0;
+  .project {
+    padding: 2rem 0;
+    img {
+      border-radius: 5px;
+      width: 100%;
+    }
+  }
+}
+
+@media (min-width: $desktop-breakpoint) {
+  .projects__content {
+    .projects__content {
+      .project {
+        width: 45%;
+      }
+    }
+  }
+}
+
+@media (min-width: 960px) {
+  .projects__content {
+    .project {
+      width: 30%;
+    }
+  }
+}

@@ -7,16 +7,65 @@ import { history } from '../routers/AppRouter';
 class BlogFilters extends React.Component {
   state = {
     archives: [],
-    tags: []
-    //modalIsOpen: true
+    tags: [],
+    modalIsOpen: false,
+    formSent: '',
+    name: '',
+    email: '',
+    message: ''
   }
 
   toggleModal = () => {
     this.setState((prevState) => ({ modalIsOpen: !prevState.modalIsOpen }));
   }
 
+  handleSubmit = (e) => {
+    e.preventDefault();
+
+    fetch('/contact', {
+      method: 'POST',
+      credentials: 'include',
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        name: this.state.name,
+        email: this.state.email,
+        message: this.state.message
+      })
+    })
+    .then((response) => response.json())
+    .then((json) => {
+      if (json.succes) {
+        this.setState(() => ({ formSent: true }));
+        this.toggleModal()
+      } else {
+        this.setState(() => ({ formSent: false }));
+      }
+    })
+    .catch((error) => {
+      console.error(error)
+    });
+  }
+
+  onNameChange = (e) => {
+    const name = e.target.value;
+    this.setState(() => ({ name }));
+  }
+
+  onEmailChange = (e) => {
+    const email = e.target.value;
+    this.setState(() => ({ email }));
+  }
+
+  onMessageChange = (e) => {
+    const message = e.target.value;
+    this.setState(() => ({ message }));
+  }
+
   componentWillMount() {
-    //Modal.setAppElement('body');
+    Modal.setAppElement('body');
     let tags = [];
     let archives = [];
     this.props.posts.map((post) => {
@@ -121,7 +170,7 @@ class BlogFilters extends React.Component {
                   <a href='mailto:mathic@gmail.com'><img src='Images/email.png' alt='Email' className='icon' /></a>
                 </div>
               </div>
-              {/*
+              {
               <div id='send-message-container'>
                 <div id='send-message' onClick={() => {this.toggleModal()}}>
                   Send me a message
@@ -136,27 +185,47 @@ class BlogFilters extends React.Component {
                   <h2 id='message-modal__title'>
                     Send me a message
                   </h2>
-                  <form>
+                  <form onSubmit={(e) => {this.handleSubmit(e);}}>
                     What can I call you?
                     <div id='message-name'>
-                      <input type='text' placeholder='Name' />
+                      <input
+                        type='text'
+                        name='name'
+                        onChange={this.onNameChange}
+                        placeholder='Name'
+                        value={this.state.name}
+                        required 
+                      />
                     </div>
                     Where should I respond?
                     <div id='message-email'>
-                      <input type='text' placeholder='Email' />
+                      <input
+                        type='text'
+                        name='email'
+                        onChange={this.onEmailChange}
+                        placeholder='Email'
+                        value={this.state.email}
+                        required
+                      />
                     </div>
                     What would you like?
                     <div id='message'> 
-                      <textarea defaultValue='Write your message here...'></textarea>
+                      <textarea
+                        name='message'
+                        onChange={this.onMessageChange}
+                        placeholder={'Write your message here...'}
+                        value={this.state.message}
+                      >
+                      </textarea>
                     </div>
                     <div id='message-modal__buttons'>
-                      <button onClick={() => { this.toggleModal() }}>Send</button>
+                      <button type='submit'>Send</button>
                       <button onClick={() => { this.toggleModal() }}>Cancel</button>
                     </div>
                   </form>
                 </Modal>
               </div>
-              */}
+              }
             </div>
           </div>
         </nav>

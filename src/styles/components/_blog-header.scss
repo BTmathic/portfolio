@@ -49,13 +49,13 @@
   }
 
   @media (max-width: 768px) {
-    .blog-header--portfolio {
+    .blog-header--desktop-only {
       display: none;
     }
   }
 
   @media (max-width: 500px) {
-    .blog-header--buttons {
+    .blog-header__buttons {
       .blog-header--about {
         display: none;
       }

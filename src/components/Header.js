@@ -35,7 +35,7 @@ export default () => (
         <div className='icon'>
           <img src='./Images/redux-logo.svg' alt='redux logo' />
         </div>
-        <div className='icon' id='coding-icons-node'>
+        <div className='icon coding-icons-node'>
           <img src='./Images/nodejs-logo.svg' alt='nodejs logo' />
         </div>
         <div className='icon'>
