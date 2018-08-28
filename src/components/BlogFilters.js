@@ -21,12 +21,11 @@ class BlogFilters extends React.Component {
 
   handleSubmit = (e) => {
     e.preventDefault();
-
+    
     fetch('/contact', {
-      method: 'POST',
-      credentials: 'include',
+      method: 'post',
+      //credentials: 'include',
       headers: {
-        'Accept': 'application/json',
         'Content-Type': 'application/json'
       },
       body: JSON.stringify({
@@ -35,18 +34,20 @@ class BlogFilters extends React.Component {
         message: this.state.message
       })
     })
-    .then((response) => response.json())
-    .then((json) => {
-      if (json.succes) {
-        this.setState(() => ({ formSent: true }));
-        this.toggleModal()
-      } else {
-        this.setState(() => ({ formSent: false }));
-      }
+    /*
+    .then((response) => {
+      this.toggleModal();
+      //return response.json();
     })
-    .catch((error) => {
-      console.error(error)
+    .then((json) => {
+      this.toggleModal()
+    })
+    .catch((err) => {
+      this.toggleModal()
+      //console.error(err);
     });
+    */
+    this.toggleModal()
   }
 
   onNameChange = (e) => {

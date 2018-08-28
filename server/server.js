@@ -1,32 +1,49 @@
-const path = require('path');
+require('dotenv').config({ path: '.env.development' });
+
 const express = require('express');
 const app = express();
+const bodyParser = require('body-parser');
+const cors = require('cors');
 const nodemailer = require('nodemailer');
+const path = require('path');
+
+const publicPath = path.join(__dirname, '..', 'public');
+const port = process.env.PORT || 3000;
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
-    user: 'alex.home.mini@gmail.com',
-    pass: 'ghome6139853731'
+    user: process.env.USER_EMAIL,
+    pass: process.env.USER_PASS
   }
 });
-const publicPath = path.join(__dirname, '..', 'public');
-const port = process.env.PORT || 3000;
 
 app.use(express.static(publicPath));
+app.use(cors({ origin: '*' }));
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
 
 app.post('/contact', (req, res) => {
+  const mail = {
+    from: req.body.email,
+    to: 'mathic@gmail.com',
+    subject: 'Message from ' + req.body.name + ' at ' + req.body.email,
+    text: req.body.message
+  };
+  /*
   const mailOptions = {
     from: 'me@me.com',
     to: 'mathic@gmail.com',
     subject: 'Message from test',
     text: 'Test'
   };
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.log(error);
+  */
+  transporter.sendMail(mail, (err) => {
+    if (err) {
+      console.log('Error sending mail: ', err);
+    } else {
+      console.log('Success, mail sent!');
     }
-    console.log('Email sent: ' + info.response);
-  })
+  });
 });
 
 app.get('*', (req, res) => {

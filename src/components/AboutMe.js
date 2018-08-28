@@ -34,15 +34,17 @@ const AboutMe = (props) => (
             <ul>
               <li>Babel</li>
               <li>Bootstrap</li>
-              <li>Codepen</li>
+              <li>Chai</li>
               <li>D3</li>
+              <li>Firebase</li>
               <li>Git &amp; Github</li>
             </ul>
             <ul>
+              <li>Jest</li>
               <li>jQuery</li>
-              <li>Node, npm and Yarn</li>
+              <li>MongoDB and Mongoose</li>
+              <li>Node</li>
               <li>React &amp; Redux</li>
-              <li>Visual Studio Code</li>
               <li>Webpack</li>
             </ul>
           </span>

@@ -10,7 +10,7 @@
     padding: 2rem 0;
     img {
       border-radius: 5px;
-      width: 100%;
+      width: 90%;
     }
   }
 }
@@ -20,6 +20,9 @@
     .projects__content {
       .project {
         width: 45%;
+        img {
+          width: 100%;
+        }
       }
     }
   }
