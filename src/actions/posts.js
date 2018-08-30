@@ -12,9 +12,10 @@ export const startAddPost = (postData = {}) => {
       postBody = '',
       tags = '',
       createdAt = 0,
-      comments = ''
+      comments = '',
+      visible = false
     } = postData;
-    const post = { title, postBody, tags, createdAt, comments };
+    const post = { title, postBody, tags, createdAt, comments, visible };
     database.ref('Posts')
       .push(post)
       .then((ref) => {

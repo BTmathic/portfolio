@@ -24,7 +24,7 @@ class BlogFilters extends React.Component {
     
     fetch('/contact', {
       method: 'post',
-      //credentials: 'include',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json'
       },

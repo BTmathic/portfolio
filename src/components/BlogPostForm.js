@@ -14,6 +14,7 @@ export default class BlogPostForm extends React.Component {
       tags: props.post ? props.post.tags : '',
       createdAt: props.post ? moment(props.post.createdAt) : moment(),
       calendarFocused: false,
+      visible: props.post ? props.post.visible : false,
       formError: ''
     }
   }
@@ -55,7 +56,8 @@ export default class BlogPostForm extends React.Component {
         title: this.state.title,
         postBody: this.state.postBody,
         tags: this.state.tags,
-        createdAt: this.state.createdAt.valueOf()
+        createdAt: this.state.createdAt.valueOf(),
+        visible: false
       });
     }
   }

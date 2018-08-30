@@ -62,6 +62,17 @@
         border-radius: 5px;
         margin: 1rem 2rem;
         padding: 2rem 4rem;
+        .blog-post-snippet__date {
+          align-items: center;
+          display: flex;
+          justify-content: space-between;
+          div {
+            background: grey;
+            border-radius: 5px;
+            color: white;
+            padding: 1rem 2rem;
+          }
+        }
       }
     }
   }

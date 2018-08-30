@@ -34,7 +34,7 @@ const AboutMe = (props) => (
             <ul>
               <li>Babel</li>
               <li>Bootstrap</li>
-              <li>Chai</li>
+              <li>Chai (Mocha)</li>
               <li>D3</li>
               <li>Firebase</li>
               <li>Git &amp; Github</li>
@@ -43,7 +43,7 @@ const AboutMe = (props) => (
               <li>Jest</li>
               <li>jQuery</li>
               <li>MongoDB and Mongoose</li>
-              <li>Node</li>
+              <li>Node and Express</li>
               <li>React &amp; Redux</li>
               <li>Webpack</li>
             </ul>

@@ -5,8 +5,9 @@ import { Link } from 'react-router-dom';
 
 export default (props) => (
   <div className='blog-post-snippet'>
-    <div>
+    <div className='blog-post-snippet__date'>
       { moment(props.post.createdAt).format('MMMM Do, YYYY') }
+      {!props.post.visible && <div>Not visible</div>}
     </div>
     <h3>{props.post.title}</h3>
     <div>

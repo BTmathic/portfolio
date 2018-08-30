@@ -64,7 +64,9 @@ class BlogPosts extends React.Component {
             <div>No posts to display</div>
           ) : (
               this.props.posts.map((post) => {
-                return <BlogSnippet key={post.id} post={post} />
+                if (post.visible || this.props.authId) {
+                  return <BlogSnippet key={post.id} post={post} makePostVisible={this.makePostVisible} />
+                }
               })
             )
         }
@@ -74,6 +76,7 @@ class BlogPosts extends React.Component {
 }
 
 const mapStateToProps = (state) => ({
+  authId: state.auth.uid,
   posts: selectPosts(state.posts, state.filters),
   filters: state.filters
 });

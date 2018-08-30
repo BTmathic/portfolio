@@ -12,6 +12,18 @@
       color: lighten(blue, 15%);
       transition: 0.3s;
     }
+    .blog-post__title {
+      align-items: center;
+      display: flex;
+      justify-content: space-between;
+      button {
+        background: grey;
+        border: none;
+        border-radius: 5px;
+        color: white;
+        padding: 1rem 2rem;
+      }
+    }
     .blog-post__contents {
       background: white;
       border-radius: 5px;
