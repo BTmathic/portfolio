@@ -70,23 +70,25 @@ class BlogFilters extends React.Component {
     let tags = [];
     let archives = [];
     this.props.posts.map((post) => {
-      const postTags = post.tags.replace(',', '').split(/\s+/);
-      const postDateMonthYear = moment(post.createdAt).format('MMMM YYYY');
-      if (archives.indexOf(postDateMonthYear) === -1) {
-        archives.unshift(postDateMonthYear);
+      if (post.visible) {
+        const postTags = post.tags.replace(',', '').split(/\s+/);
+        const postDateMonthYear = moment(post.createdAt).format('MMMM YYYY');
+        if (archives.indexOf(postDateMonthYear) === -1) {
+          archives.unshift(postDateMonthYear);
+        }
+        postTags.map((tag) => {
+          if (tags.indexOf(tag) === -1) {
+            tags.push(tag);
+            tags.push(1);
+          } else {
+            tags[tags.indexOf(tag) + 1] += 1;
+          }
+        });
       }
-      postTags.map((tag) => {
-        if (tags.indexOf(tag) === -1) {
-          tags.push(tag);
-          tags.push(1);
-         } else {
-           tags[tags.indexOf(tag) + 1] += 1;
-         }
-      });
     });
 
     const navTags = [];
-    for (let i=0; i < Math.min(5, tags.length/2); i++) {
+    for (let i=0; i < 5; i++) {
       const max = Math.max(...tags.map((element) => typeof element === "number" ? element : 0));
       const maxIndex = tags.indexOf(max);
       navTags.push(`${tags[maxIndex-1]} (${tags[maxIndex]})`);
@@ -99,6 +101,7 @@ class BlogFilters extends React.Component {
   }
 
   render() {
+    const visiblePosts = this.props.posts.filter((post) => post.visible);
     return (
       <div id={this.props.menuOpen ? 'nav-menu' : null} className='mobile-nav-menu'>
         <nav>
@@ -114,7 +117,7 @@ class BlogFilters extends React.Component {
                     history.push(`/read/${this.props.posts[this.props.posts.length - index].id}`)
                   }
                 }>
-                  {this.props.posts[this.props.posts.length - index].title}
+                  {visiblePosts[visiblePosts.length - index].title}
                 </div>
               ))}
             </div>
