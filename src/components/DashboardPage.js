@@ -3,6 +3,7 @@ import Header from './Header';
 import AboutMe from './AboutMe';
 import Contact from './Contact';
 import Projects from './Projects';
+import OpenSource from './OpenSource';
 import BlogDashboard from './BlogDashboard';
 
 export default class DashboardPage extends React.Component {
@@ -23,6 +24,7 @@ export default class DashboardPage extends React.Component {
           <span ref = {node => this.projects = node}>
             <Projects />
           </span>
+          <OpenSource />
           <span ref={node => this['dashboard-blog'] = node}>
             <BlogDashboard />
           </span>

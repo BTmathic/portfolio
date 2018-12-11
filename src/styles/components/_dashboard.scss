@@ -29,7 +29,8 @@
     padding-bottom: 50px;
   }
 
-  #projects { 
+  #projects {
+    padding-bottom: 12rem;
     z-index: 3;
     .loader-link {
       margin-bottom: -2rem;
@@ -37,6 +38,7 @@
     }
   }
   #dashboard-blog {
+    padding-top: 0;
     .blog-snippet {
       display: inline;
       padding-right: 5px;
@@ -67,7 +69,6 @@
   }
 
   .footer {
-    background: white;
     font-size: $font-size-small;
     padding: 2px;
     text-align: center;

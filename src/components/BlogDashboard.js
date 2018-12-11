@@ -16,8 +16,9 @@ const BlogDashboard = (props) => (
 );
 
 const mapStateToProps = (state) => {
+  const visiblePosts = state.posts.filter((post) => post.visible);
   return {
-    post : state.posts[state.posts.length - 1]
+    post : visiblePosts[visiblePosts.length-1]
   }
 }
 

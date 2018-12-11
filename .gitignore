@@ -4,6 +4,7 @@ public/Images/
 public/bar-chart/
 public/calculator/
 public/camper-leaderboard/
+public/chloropleth-map/
 public/coffee-house/
 public/drum-machine/
 public/dungeon-crawler/
@@ -22,6 +23,7 @@ public/survey-form/
 public/tech-docs/
 public/thai-restaurant/
 public/tic-tac-toe/
+public/treemap/
 public/tribute-page/
 public/wikipedia-viewer/
 .env.development
