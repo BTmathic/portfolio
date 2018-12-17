@@ -7,7 +7,6 @@
   #about-me, #projects, #dashboard-blog, #contact {
     background: linear-gradient(lighten($dashboard-grey, 5%), $dashboard-grey);
     margin-bottom: 10px;
-    padding-top: 70px;
   }
 
   #about-me, #dashboard-blog, #contact {
@@ -15,6 +14,7 @@
   }
 
   #about-me, #projects, #contact {
+    padding-top: 70px;
     text-align: center;
   }
 
@@ -38,7 +38,6 @@
     }
   }
   #dashboard-blog {
-    padding-top: 0;
     .blog-snippet {
       display: inline;
       padding-right: 5px;
