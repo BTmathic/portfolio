@@ -29,14 +29,6 @@ app.post('/contact', (req, res) => {
     subject: 'Message from ' + req.body.name + ' at ' + req.body.email,
     text: req.body.message
   };
-  /*
-  const mailOptions = {
-    from: 'me@me.com',
-    to: 'mathic@gmail.com',
-    subject: 'Message from test',
-    text: 'Test'
-  };
-  */
   transporter.sendMail(mail, (err) => {
     if (err) {
       console.log('Error sending mail: ', err);
