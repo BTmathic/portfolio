@@ -10,9 +10,7 @@ const path = require('path');
 const publicPath = path.join(__dirname, '..', 'public');
 const port = process.env.PORT || 3000;
 const transporter = nodemailer.createTransport({
-  host: 'smtp.zoho.com',
-  port: 465,
-  secure: true, // use SSL
+  service: 'gmail',
   auth: {
     user: process.env.USER_EMAIL,
     pass: process.env.USER_PASS
