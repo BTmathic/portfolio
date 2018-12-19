@@ -33,8 +33,10 @@ app.post('/contact', (req, res) => {
   transporter.sendMail(mail, (err) => {
     if (err) {
       console.log('Error sending mail: ', err);
+      res.status(500);
     } else {
       console.log('Success, mail sent!');
+      res.status(200);
     }
   });
 });
