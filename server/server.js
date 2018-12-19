@@ -25,6 +25,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.post('/contact', (req, res) => {
   const mail = {
     from: req.body.email,
+    replyTo: req.body.email,
     to: 'mathic@gmail.com',
     subject: 'Message from ' + req.body.name + ' at ' + req.body.email,
     text: req.body.message
