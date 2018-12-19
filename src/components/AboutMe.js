@@ -52,6 +52,6 @@ const AboutMe = (props) => (
       </div>
     </div>
   </div>
-)
+);
 
 export default AboutMe;

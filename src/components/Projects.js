@@ -18,7 +18,7 @@ class Projects extends React.Component {
               projects.map((project) => {
                 return (
                   <div className='project' key={project.title}>
-                    <a href={project.link} target="_blank">
+                    <a href={project.link} target='_blank'>
                       <img src={project.image} alt={project.alt} />
                     </a>
                   </div>
