@@ -17,10 +17,14 @@
     display: flex;
     flex-direction: column;
     justify-content: space-evenly;
-    margin: 0 auto;
-    padding: 2rem 0;
+    margin: 2rem auto;
     width: 50%;
-    .fcc-logo { background: green; padding: 2rem 1rem; }
+    .fcc-logo { 
+      background: green; 
+      a { 
+        padding: 2rem 1rem;
+      }
+    }      
     .hack-logo { background: white; }
     div {
       align-items: center;
