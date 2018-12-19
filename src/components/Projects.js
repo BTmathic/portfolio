@@ -25,12 +25,7 @@ class Projects extends React.Component {
                 );
               })
             }
-            
           </div>
-          {/*<ProjectSection projects={reactProjects} projectsOpen={true} />
-             <ProjectSection projects={jqueryProjects} />
-             <ProjectSection projects={d3Projects} />
-             <ProjectSection projects={cssProjects} />*/}
           <div className='loader-link'>
             <Link to='/loader'>What was that fun looking loading animation?</Link> (Inspired by <a href='https://codepen.io/SoufianeLasri/pen/XmxRdv'>this</a> pen.)
           </div>

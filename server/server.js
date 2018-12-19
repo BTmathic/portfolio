@@ -4,8 +4,10 @@ const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
 const cors = require('cors');
+const helmet = require('helmet');
 const nodemailer = require('nodemailer');
 const path = require('path');
+const ninetyDaysInMilliseconds = 90 * 24 * 60 * 60 * 1000;
 
 const publicPath = path.join(__dirname, '..', 'public');
 const port = process.env.PORT || 3000;
@@ -21,6 +23,27 @@ app.use(express.static(publicPath));
 app.use(cors({ origin: '*' }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+app.use(helmet({
+  hidePoweredBy: {},
+  framerguard: {
+    action: 'deny'
+  },
+  xssFilter: {},
+  noSniff: {},
+  ieNoOpen: {},
+  hsts: {
+    maxAge: ninetyDaysInMilliseconds,
+    force: true
+  },
+  dnsPrefetchControl: {},
+  noCache: {},
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self"],
+      scriptSrc: ["'self"]
+    }
+  }
+}));
 
 app.post('/contact', (req, res) => {
   const mail = {
