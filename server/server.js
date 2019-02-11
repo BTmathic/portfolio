@@ -1,7 +1,6 @@
 require('dotenv').config({ path: '.env.development' });
 
 const express = require('express');
-const app = express();
 const bodyParser = require('body-parser');
 const Bundler = require('parcel-bundler');
 const cors = require('cors');
@@ -10,6 +9,7 @@ const nodemailer = require('nodemailer');
 const path = require('path');
 const ninetyDaysInMilliseconds = 90 * 24 * 60 * 60 * 1000;
 
+const app = express();
 const publicPath = path.join(__dirname, '..', 'public');
 const port = process.env.PORT || 3000;
 const bundler = new Bundler(path.join(publicPath, 'index.html'));
@@ -67,6 +67,10 @@ app.post('/contact', (req, res) => {
 
 app.use(bundler.middleware());
 
+app.get('*', (req, res) => {
+  res.sendFile(path.join(publicPath, 'index.html'));
+});
+
 app.listen(port, () => {
-  console.log('Server is up!');
+  console.log('Server is up on port', port);
 });
