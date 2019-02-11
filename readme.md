@@ -15,7 +15,7 @@ A basic shell of a portfolio site with a landing view, about section, projects s
 
 ### Build Tools
 
-* Webpack
+* Parcel
 * Babel
 * Yarn
 

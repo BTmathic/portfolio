@@ -1,11 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-//import ProjectSection from './ProjectSection';
 import projects from '../projects/projects';
-//import d3Projects from '../projects/d3Projects';
-//import cssProjects from '../projects/cssProjects';
-//import reactProjects from '../projects/reactProjects';
-//import jqueryProjects from '../projects/jqueryProjects';
 
 class Projects extends React.Component {
   render() {

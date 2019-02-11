@@ -1,5 +1,10 @@
 import React from 'react';
 
+const reactLogo = require('../../public/Images/react-logo.svg');
+const reduxLogo = require('../../public/Images/redux-logo.svg');
+const nodeLogo = require('../../public/Images/nodejs-logo.svg');
+const d3Logo = require('../../public/Images/d3-logo.svg');
+
 export default () => (
   <div className='page-header'>
     <header className='header'>
@@ -30,16 +35,16 @@ export default () => (
       <h2>I work in web design and development</h2>
       <div className='coding-icons'>
         <div className='icon'>
-          <img src='./Images/react-logo.svg' alt='react logo' />
+          <img src={reactLogo} alt='react logo' />
         </div>
         <div className='icon'>
-          <img src='./Images/redux-logo.svg' alt='redux logo' />
+          <img src={reduxLogo} alt='redux logo' />
         </div>
         <div className='icon coding-icons-node'>
-          <img src='./Images/nodejs-logo.svg' alt='nodejs logo' />
+          <img src={nodeLogo} alt='nodejs logo' />
         </div>
         <div className='icon'>
-          <img src='./Images/d3-logo.svg' alt='D3 logo' />
+          <img src={d3Logo} alt='D3 logo' />
         </div>
       </div>
     </div>

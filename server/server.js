@@ -3,6 +3,7 @@ require('dotenv').config({ path: '.env.development' });
 const express = require('express');
 const app = express();
 const bodyParser = require('body-parser');
+const Bundler = require('parcel-bundler');
 const cors = require('cors');
 const helmet = require('helmet');
 const nodemailer = require('nodemailer');
@@ -11,6 +12,7 @@ const ninetyDaysInMilliseconds = 90 * 24 * 60 * 60 * 1000;
 
 const publicPath = path.join(__dirname, '..', 'public');
 const port = process.env.PORT || 3000;
+const bundler = new Bundler(path.join(publicPath, 'index.html'));
 const transporter = nodemailer.createTransport({
   service: 'gmail',
   auth: {
@@ -19,7 +21,6 @@ const transporter = nodemailer.createTransport({
   }
 });
 
-app.use(express.static(publicPath));
 app.use(cors({ origin: '*' }));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -37,12 +38,12 @@ app.use(helmet({
   },
   dnsPrefetchControl: {},
   noCache: {},
-  contentSecurityPolicy: {
-    directives: {
-      defaultSrc: ["'self"],
-      scriptSrc: ["'self"]
-    }
-  }
+  // contentSecurityPolicy: {
+  //   directives: {
+  //     defaultSrc: ["'self"],
+  //     scriptSrc: ["'self"]
+  //   }
+  // }
 }));
 
 app.post('/contact', (req, res) => {
@@ -64,9 +65,7 @@ app.post('/contact', (req, res) => {
   });
 });
 
-app.get('*', (req, res) => {
-  res.sendFile(path.join(publicPath, 'index.html'));
-});
+app.use(bundler.middleware());
 
 app.listen(port, () => {
   console.log('Server is up!');
