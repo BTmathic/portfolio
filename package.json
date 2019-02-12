@@ -6,7 +6,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "parcel public/index.html",
-    "build": "parcel build public/index.html",
+    "build": "parcel build public/index.html --out-dir prod",
     "start": "node server/server.js",
     "heroku-postbuild": "yarn run build"
   },
