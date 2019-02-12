@@ -1,5 +1,7 @@
 import React from 'react';
 
+const me = require('../../public/Images/myAvatar.svg');
+
 const AboutMe = (props) => (
   <div id='about-me'>
     <div className='content-container'>
@@ -12,7 +14,7 @@ const AboutMe = (props) => (
           <p>My current focus is mostly working with React and Redux.</p>
         </div>
         <div className='about-me__photo'>
-          <img src='./Images/myAvatar.svg' alt='Avatar of me' />
+          <img src={me} alt='Avatar of me' />
         </div>
       </div>
       <div className='about-me__footer'>
@@ -52,6 +54,6 @@ const AboutMe = (props) => (
       </div>
     </div>
   </div>
-)
+);
 
 export default AboutMe;

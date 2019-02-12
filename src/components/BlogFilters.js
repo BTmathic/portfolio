@@ -4,6 +4,11 @@ import Modal from 'react-modal';
 import { connect } from 'react-redux';
 import { history } from '../routers/AppRouter';
 
+const githubLogo = require('../../public/Images/github-logo.png');
+const codepenLogo = require('../../public/Images/codepen-logo.png');
+const linkedInLogo = require('../../public/Images/linkedin-logo.png');
+const emailImage = require('../../public/Images/email.png');
+
 class BlogFilters extends React.Component {
   state = {
     archives: [],
@@ -165,13 +170,13 @@ class BlogFilters extends React.Component {
             <div>
               <div className='blog-contact'>
                 <div className='blog-contact__row'>
-                  <a href='https://github.com/BTmathic'><img src='Images/github-logo.png' alt='GitHub link' className='icon' /></a>
-                  <a href='https://codepen.io/brokentriathlete/'><img src='Images/codepen-logo.png' alt='Codepen logo' className='icon' /></a>
+                  <a href='https://github.com/BTmathic'><img src={githubLogo} alt='GitHub link' className='icon' /></a>
+                  <a href='https://codepen.io/brokentriathlete/'><img src={codepenLogo} alt='Codepen logo' className='icon' /></a>
                   {/*<a href='https://twitter.com/BrokeTriathlete'><img src='Images/twitter-logo.png' alt='Twitter link' className='icon' /></a>*/}
                 </div>
                 <div className='blog-contact__row'>
-                  <a href='#'><img src='Images/linkedin-logo.png' alt='LinkedIn link' className='icon' /></a>
-                  <a href='mailto:mathic@gmail.com'><img src='Images/email.png' alt='Email' className='icon' /></a>
+                  <a href='#'><img src={linkedInLogo} alt='LinkedIn link' className='icon' /></a>
+                  <a href='mailto:mathic@gmail.com'><img src={emailImage} alt='Email' className='icon' /></a>
                 </div>
               </div>
               {
