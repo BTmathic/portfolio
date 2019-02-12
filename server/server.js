@@ -67,8 +67,12 @@ app.post('/contact', (req, res) => {
 
 app.use(bundler.middleware());
 
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static('client/build'));
+}
+
 app.get('*', (req, res) => {
-  res.sendFile(path.join(publicPath, 'index.html'));
+  res.sendFile(path.join(publicPath, 'client/build', 'index.html'));
 });
 
 app.listen(port, () => {

@@ -25,6 +25,7 @@
     "nodemailer": "^4.6.8",
     "normalize.css": "8.0.1",
     "numeral": "2.0.6",
+    "parcel-bundler": "^1.11.0",
     "raf": "3.3.2",
     "react": "16.0.0",
     "react-addons-shallow-compare": "^15.6.2",
@@ -49,7 +50,6 @@
     "enzyme-adapter-react-16": "1.0.0",
     "enzyme-to-json": "3.0.1",
     "jest": "^22.4.3",
-    "parcel-bundler": "^1.11.0",
     "react-test-renderer": "16.0.0"
   }
 }
