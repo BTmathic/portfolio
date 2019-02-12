@@ -1,4 +1,9 @@
 node_modules/
+<<<<<<< HEAD
+=======
+dist/
+prod/
+>>>>>>> 916ccf9bf11a903286fbe19877fe3e11bff214b1
 public/bar-chart/
 public/calculator/
 public/camper-leaderboard/
