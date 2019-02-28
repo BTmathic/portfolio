@@ -74,6 +74,14 @@ app.get('*', (req, res) => {
   res.sendFile(path.join(publicPath, 'prod', 'index.html'));
 });
 
+if (process.env.NODE_ENV === 'production') {
+  app.use(express.static('prod'));
+}
+
+app.get('*', (req, res) => {
+  res.sendFile(path.join(publicPath, 'prod', 'index.html'));
+});
+
 app.listen(port, () => {
   console.log('Server is up on port', port);
 });
