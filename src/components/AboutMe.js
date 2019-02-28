@@ -22,10 +22,12 @@ const AboutMe = (props) => (
           <h3>Langagues I speak:</h3>
           <span>
             <ul>
-              <li>CSS</li>  
-              <li>HTML</li>
+              <li>CSS 3</li>  
+              <li>HTML 5</li>
+              <li>Java</li>
               <li>JavaScript</li>
               <li>JSX</li>
+              <li>Python</li>
               <li>SCSS</li>
             </ul>
           </span>
@@ -40,13 +42,15 @@ const AboutMe = (props) => (
               <li>D3</li>
               <li>Firebase</li>
               <li>Git &amp; Github</li>
+              <li>Jest</li>
             </ul>
             <ul>
-              <li>Jest</li>
               <li>jQuery</li>
               <li>MongoDB and Mongoose</li>
               <li>Node and Express</li>
+              <li>Parcel</li>
               <li>React &amp; Redux</li>
+              <li>SQL</li>
               <li>Webpack</li>
             </ul>
           </span>

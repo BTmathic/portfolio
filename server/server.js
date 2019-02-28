@@ -66,8 +66,6 @@ app.post('/contact', (req, res) => {
 });
 
 app.use(bundler.middleware());
-<<<<<<< HEAD
-
 if (process.env.NODE_ENV === 'production') {
   app.use(express.static('prod'));
 }
@@ -75,8 +73,6 @@ if (process.env.NODE_ENV === 'production') {
 app.get('*', (req, res) => {
   res.sendFile(path.join(publicPath, 'prod', 'index.html'));
 });
-=======
->>>>>>> 916ccf9bf11a903286fbe19877fe3e11bff214b1
 
 app.listen(port, () => {
   console.log('Server is up on port', port);

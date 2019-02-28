@@ -6,23 +6,16 @@
   "license": "MIT",
   "scripts": {
     "dev": "parcel public/index.html",
-<<<<<<< HEAD
     "build": "parcel build public/index.html --out-dir prod",
-=======
-    "build": "parcel build public/index.html",
->>>>>>> 916ccf9bf11a903286fbe19877fe3e11bff214b1
     "start": "node server/server.js",
     "heroku-postbuild": "yarn run build"
   },
   "dependencies": {
-<<<<<<< HEAD
     "babel-core": "^6.26.3",
     "babel-plugin-transform-class-properties": "^6.24.1",
     "babel-plugin-transform-object-rest-spread": "^6.26.0",
     "babel-preset-env": "^1.7.0",
     "babel-preset-react": "^6.24.1",
-=======
->>>>>>> 916ccf9bf11a903286fbe19877fe3e11bff214b1
     "body-parser": "^1.18.3",
     "cors": "^2.8.4",
     "cross-env": "^5.1.4",
@@ -53,19 +46,10 @@
     "validator": "8.0.0"
   },
   "devDependencies": {
-    "babel-core": "^6.26.3",
-    "babel-plugin-transform-class-properties": "^6.24.1",
-    "babel-plugin-transform-object-rest-spread": "^6.26.0",
-    "babel-preset-env": "^1.7.0",
-    "babel-preset-react": "^6.24.1",
     "enzyme": "3.0.0",
     "enzyme-adapter-react-16": "1.0.0",
     "enzyme-to-json": "3.0.1",
     "jest": "^22.4.3",
-<<<<<<< HEAD
-=======
-    "parcel-bundler": "^1.11.0",
->>>>>>> 916ccf9bf11a903286fbe19877fe3e11bff214b1
     "react-test-renderer": "16.0.0"
   }
 }
