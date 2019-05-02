@@ -1,9 +1,19 @@
 const projects = [
   {
+    title: 'Tilemap Editor',
+    image: require('../../public/Images/tilemap.png'),
+    alt: 'Screenshot of Tilemap Editor App',
+    link: 'https://tilemap-editor.herokuapp.com/'
+  }, {
     title: 'Coffee House',
     image: require('../../public/Images/coffee-house.png'),
     alt: 'Screenshot of Coffee House website',
     link: 'https://BTmathic.github.io/coffee-house'
+  }, {
+    title: 'Expense Tracker',
+    image: require('../../public/Images/expensify.png'),
+    alt: 'Screenshot of Dungeon Crawler app',
+    link: 'https://react-expensify-mathic.herokuapp.com'
   }, {
     title: 'Thai Restaurant',
     image: require('../../public/Images/thai-restaurant.png'),
@@ -15,11 +25,11 @@ const projects = [
     alt: 'Screenshot of Dungeon Crawler app',
     link: 'https://BTmathic.github.io/dungeon-crawler'
   }, {
-    title: 'Expense Tracker',
-    image: require('../../public/Images/expensify.png'),
-    alt: 'Screenshot of Dungeon Crawler app',
-    link: 'https://react-expensify-mathic.herokuapp.com'
-  }, {
+    title: 'Product Landing Page',
+    image: require('../../public/Images/landing-page.png'),
+    alt: 'Screenshot of Product Landing Page',
+    link: 'https://BTmathic.github.io/landing-page'
+  } /*{
     title: "Conway's Game of Life",
     image: require('../../public/Images/game-of-life.png'),
     alt: 'Screenshot of Game of Life app',
@@ -40,11 +50,6 @@ const projects = [
     alt: 'Screenshot of Calculator app',
     link: 'https://BTmathic.github.io/calculator'
   }, {
-    title: 'Product Landing Page',
-    image: require('../../public/Images/landing-page.png'),
-    alt: 'Screenshot of Product Landing Page',
-    link: 'https://BTmathic.github.io/landing-page'
-  }, {
     title: 'Simon',
     image: require('../../public/Images/simon.png'),
     alt: 'Screenshot of Simon app',
@@ -59,7 +64,7 @@ const projects = [
     image: require('../../public/Images/wikipedia-viewer.png'),
     alt: 'Screenshot of Wikipedia Viewer app',
     link: 'https://BTmathic.github.io/wikipedia-viewer'
-  }
+  }*/
 ];
 
 export default projects;

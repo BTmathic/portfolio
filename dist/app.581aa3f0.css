@@ -770,6 +770,7 @@
     height: 15px;
     width: 14px;
     vertical-align: middle; }
+
 /*! normalize.css v8.0.1 | MIT License | github.com/necolas/normalize.css */
 
 /* Document
@@ -1119,6 +1120,7 @@ template {
 [hidden] {
   display: none;
 }
+
 * {
   box-sizing: border-box; }
 
@@ -1941,19 +1943,12 @@ button:disabled {
       width: 90%; }
 
 @media (min-width: 45rem) {
-  .projects__content .projects__content .project {
-    width: 45%; }
-    .projects__content .projects__content .project img {
-      width: 100%; } }
-
-@media (min-width: 960px) {
-  .projects__content .project {
-    width: 30%; } }
-
-@media (min-width: 45rem) {
   .show-for-mobile {
     display: none; } }
 
 @media (max-width: 44.99rem) {
   .show-for-desktop {
     display: none; } }
+
+
+/*# sourceMappingURL=/app.581aa3f0.css.map */

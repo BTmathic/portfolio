@@ -14,24 +14,3 @@
     }
   }
 }
-
-@media (min-width: $desktop-breakpoint) {
-  .projects__content {
-    .projects__content {
-      .project {
-        width: 45%;
-        img {
-          width: 100%;
-        }
-      }
-    }
-  }
-}
-
-@media (min-width: 960px) {
-  .projects__content {
-    .project {
-      width: 30%;
-    }
-  }
-}

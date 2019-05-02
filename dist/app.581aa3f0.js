@@ -5,8 +5,6 @@
 //
 // anything defined in a previous bundle is accessed via the
 // orig method which is the require for previous bundles
-
-// eslint-disable-next-line no-global-assign
 parcelRequire = (function (modules, cache, entry, globalName) {
   // Save the require from previous bundle to this closure if any
   var previousRequire = typeof parcelRequire === 'function' && parcelRequire;
@@ -77,8 +75,16 @@ parcelRequire = (function (modules, cache, entry, globalName) {
     }, {}];
   };
 
+  var error;
   for (var i = 0; i < entry.length; i++) {
-    newRequire(entry[i]);
+    try {
+      newRequire(entry[i]);
+    } catch (e) {
+      // Save first error but execute all entries
+      if (!error) {
+        error = e;
+      }
+    }
   }
 
   if (entry.length) {
@@ -103,6 +109,13 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   }
 
   // Override the current require with this new one
+  parcelRequire = newRequire;
+
+  if (error) {
+    // throw error from earlier, _after updating parcelRequire_
+    throw error;
+  }
+
   return newRequire;
 })({"../node_modules/object-assign/index.js":[function(require,module,exports) {
 /*
@@ -395,14 +408,28 @@ module.exports = ReactPropTypesSecret;
  */
 'use strict';
 
+var printWarning = function () {};
+
 if (undefined !== 'production') {
-  var invariant = require('fbjs/lib/invariant');
-
-  var warning = require('fbjs/lib/warning');
-
   var ReactPropTypesSecret = require('./lib/ReactPropTypesSecret');
 
   var loggedTypeFailures = {};
+  var has = Function.call.bind(Object.prototype.hasOwnProperty);
+
+  printWarning = function (text) {
+    var message = 'Warning: ' + text;
+
+    if (typeof console !== 'undefined') {
+      console.error(message);
+    }
+
+    try {
+      // --- Welcome to debugging React ---
+      // This error was thrown as a convenience so that you can use this stack
+      // to find the callsite that caused this warning to fire.
+      throw new Error(message);
+    } catch (x) {}
+  };
 }
 /**
  * Assert that the values match with the type specs.
@@ -420,7 +447,7 @@ if (undefined !== 'production') {
 function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
   if (undefined !== 'production') {
     for (var typeSpecName in typeSpecs) {
-      if (typeSpecs.hasOwnProperty(typeSpecName)) {
+      if (has(typeSpecs, typeSpecName)) {
         var error; // Prop type validation may throw. In case they do, we don't want to
         // fail the render phase where it didn't fail before. So we log it.
         // After these have been cleaned up, we'll let them throw.
@@ -428,28 +455,47 @@ function checkPropTypes(typeSpecs, values, location, componentName, getStack) {
         try {
           // This is intentionally an invariant that gets caught. It's the same
           // behavior as without this statement except with a better message.
-          invariant(typeof typeSpecs[typeSpecName] === 'function', '%s: %s type `%s` is invalid; it must be a function, usually from ' + 'the `prop-types` package, but received `%s`.', componentName || 'React class', location, typeSpecName, typeof typeSpecs[typeSpecName]);
+          if (typeof typeSpecs[typeSpecName] !== 'function') {
+            var err = Error((componentName || 'React class') + ': ' + location + ' type `' + typeSpecName + '` is invalid; ' + 'it must be a function, usually from the `prop-types` package, but received `' + typeof typeSpecs[typeSpecName] + '`.');
+            err.name = 'Invariant Violation';
+            throw err;
+          }
+
           error = typeSpecs[typeSpecName](values, typeSpecName, componentName, location, null, ReactPropTypesSecret);
         } catch (ex) {
           error = ex;
         }
 
-        warning(!error || error instanceof Error, '%s: type specification of %s `%s` is invalid; the type checker ' + 'function must return `null` or an `Error` but returned a %s. ' + 'You may have forgotten to pass an argument to the type checker ' + 'creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and ' + 'shape all require an argument).', componentName || 'React class', location, typeSpecName, typeof error);
+        if (error && !(error instanceof Error)) {
+          printWarning((componentName || 'React class') + ': type specification of ' + location + ' `' + typeSpecName + '` is invalid; the type checker ' + 'function must return `null` or an `Error` but returned a ' + typeof error + '. ' + 'You may have forgotten to pass an argument to the type checker ' + 'creator (arrayOf, instanceOf, objectOf, oneOf, oneOfType, and ' + 'shape all require an argument).');
+        }
 
         if (error instanceof Error && !(error.message in loggedTypeFailures)) {
           // Only monitor this failure once because there tends to be a lot of the
           // same error.
           loggedTypeFailures[error.message] = true;
           var stack = getStack ? getStack() : '';
-          warning(false, 'Failed %s type: %s%s', location, error.message, stack != null ? stack : '');
+          printWarning('Failed ' + location + ' type: ' + error.message + (stack != null ? stack : ''));
         }
       }
     }
   }
 }
+/**
+ * Resets warning cache when testing.
+ *
+ * @private
+ */
+
+
+checkPropTypes.resetWarningCache = function () {
+  if (undefined !== 'production') {
+    loggedTypeFailures = {};
+  }
+};
 
 module.exports = checkPropTypes;
-},{"fbjs/lib/invariant":"../node_modules/fbjs/lib/invariant.js","fbjs/lib/warning":"../node_modules/fbjs/lib/warning.js","./lib/ReactPropTypesSecret":"../node_modules/prop-types/lib/ReactPropTypesSecret.js"}],"../node_modules/react/cjs/react.development.js":[function(require,module,exports) {
+},{"./lib/ReactPropTypesSecret":"../node_modules/prop-types/lib/ReactPropTypesSecret.js"}],"../node_modules/react/cjs/react.development.js":[function(require,module,exports) {
 /** @license React v16.0.0
  * react.development.js
  *
@@ -2497,7 +2543,256 @@ if (performance.now) {
 }
 
 module.exports = performanceNow;
-},{"./performance":"../node_modules/fbjs/lib/performance.js"}],"../node_modules/prop-types/factoryWithTypeCheckers.js":[function(require,module,exports) {
+},{"./performance":"../node_modules/fbjs/lib/performance.js"}],"../node_modules/react-is/cjs/react-is.development.js":[function(require,module,exports) {
+/** @license React v16.8.4
+ * react-is.development.js
+ *
+ * Copyright (c) Facebook, Inc. and its affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+'use strict';
+
+if (undefined !== "production") {
+  (function () {
+    'use strict';
+
+    Object.defineProperty(exports, '__esModule', {
+      value: true
+    }); // The Symbol used to tag the ReactElement-like types. If there is no native Symbol
+    // nor polyfill, then a plain number is used for performance.
+
+    var hasSymbol = typeof Symbol === 'function' && Symbol.for;
+    var REACT_ELEMENT_TYPE = hasSymbol ? Symbol.for('react.element') : 0xeac7;
+    var REACT_PORTAL_TYPE = hasSymbol ? Symbol.for('react.portal') : 0xeaca;
+    var REACT_FRAGMENT_TYPE = hasSymbol ? Symbol.for('react.fragment') : 0xeacb;
+    var REACT_STRICT_MODE_TYPE = hasSymbol ? Symbol.for('react.strict_mode') : 0xeacc;
+    var REACT_PROFILER_TYPE = hasSymbol ? Symbol.for('react.profiler') : 0xead2;
+    var REACT_PROVIDER_TYPE = hasSymbol ? Symbol.for('react.provider') : 0xeacd;
+    var REACT_CONTEXT_TYPE = hasSymbol ? Symbol.for('react.context') : 0xeace;
+    var REACT_ASYNC_MODE_TYPE = hasSymbol ? Symbol.for('react.async_mode') : 0xeacf;
+    var REACT_CONCURRENT_MODE_TYPE = hasSymbol ? Symbol.for('react.concurrent_mode') : 0xeacf;
+    var REACT_FORWARD_REF_TYPE = hasSymbol ? Symbol.for('react.forward_ref') : 0xead0;
+    var REACT_SUSPENSE_TYPE = hasSymbol ? Symbol.for('react.suspense') : 0xead1;
+    var REACT_MEMO_TYPE = hasSymbol ? Symbol.for('react.memo') : 0xead3;
+    var REACT_LAZY_TYPE = hasSymbol ? Symbol.for('react.lazy') : 0xead4;
+
+    function isValidElementType(type) {
+      return typeof type === 'string' || typeof type === 'function' || // Note: its typeof might be other than 'symbol' or 'number' if it's a polyfill.
+      type === REACT_FRAGMENT_TYPE || type === REACT_CONCURRENT_MODE_TYPE || type === REACT_PROFILER_TYPE || type === REACT_STRICT_MODE_TYPE || type === REACT_SUSPENSE_TYPE || typeof type === 'object' && type !== null && (type.$$typeof === REACT_LAZY_TYPE || type.$$typeof === REACT_MEMO_TYPE || type.$$typeof === REACT_PROVIDER_TYPE || type.$$typeof === REACT_CONTEXT_TYPE || type.$$typeof === REACT_FORWARD_REF_TYPE);
+    }
+    /**
+     * Forked from fbjs/warning:
+     * https://github.com/facebook/fbjs/blob/e66ba20ad5be433eb54423f2b097d829324d9de6/packages/fbjs/src/__forks__/warning.js
+     *
+     * Only change is we use console.warn instead of console.error,
+     * and do nothing when 'console' is not supported.
+     * This really simplifies the code.
+     * ---
+     * Similar to invariant but only logs a warning if the condition is not met.
+     * This can be used to log issues in development environments in critical
+     * paths. Removing the logging code for production environments will keep the
+     * same logic and follow the same code paths.
+     */
+
+
+    var lowPriorityWarning = function () {};
+
+    {
+      var printWarning = function (format) {
+        for (var _len = arguments.length, args = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+          args[_key - 1] = arguments[_key];
+        }
+
+        var argIndex = 0;
+        var message = 'Warning: ' + format.replace(/%s/g, function () {
+          return args[argIndex++];
+        });
+
+        if (typeof console !== 'undefined') {
+          console.warn(message);
+        }
+
+        try {
+          // --- Welcome to debugging React ---
+          // This error was thrown as a convenience so that you can use this stack
+          // to find the callsite that caused this warning to fire.
+          throw new Error(message);
+        } catch (x) {}
+      };
+
+      lowPriorityWarning = function (condition, format) {
+        if (format === undefined) {
+          throw new Error('`lowPriorityWarning(condition, format, ...args)` requires a warning ' + 'message argument');
+        }
+
+        if (!condition) {
+          for (var _len2 = arguments.length, args = Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
+            args[_key2 - 2] = arguments[_key2];
+          }
+
+          printWarning.apply(undefined, [format].concat(args));
+        }
+      };
+    }
+    var lowPriorityWarning$1 = lowPriorityWarning;
+
+    function typeOf(object) {
+      if (typeof object === 'object' && object !== null) {
+        var $$typeof = object.$$typeof;
+
+        switch ($$typeof) {
+          case REACT_ELEMENT_TYPE:
+            var type = object.type;
+
+            switch (type) {
+              case REACT_ASYNC_MODE_TYPE:
+              case REACT_CONCURRENT_MODE_TYPE:
+              case REACT_FRAGMENT_TYPE:
+              case REACT_PROFILER_TYPE:
+              case REACT_STRICT_MODE_TYPE:
+              case REACT_SUSPENSE_TYPE:
+                return type;
+
+              default:
+                var $$typeofType = type && type.$$typeof;
+
+                switch ($$typeofType) {
+                  case REACT_CONTEXT_TYPE:
+                  case REACT_FORWARD_REF_TYPE:
+                  case REACT_PROVIDER_TYPE:
+                    return $$typeofType;
+
+                  default:
+                    return $$typeof;
+                }
+
+            }
+
+          case REACT_LAZY_TYPE:
+          case REACT_MEMO_TYPE:
+          case REACT_PORTAL_TYPE:
+            return $$typeof;
+        }
+      }
+
+      return undefined;
+    } // AsyncMode is deprecated along with isAsyncMode
+
+
+    var AsyncMode = REACT_ASYNC_MODE_TYPE;
+    var ConcurrentMode = REACT_CONCURRENT_MODE_TYPE;
+    var ContextConsumer = REACT_CONTEXT_TYPE;
+    var ContextProvider = REACT_PROVIDER_TYPE;
+    var Element = REACT_ELEMENT_TYPE;
+    var ForwardRef = REACT_FORWARD_REF_TYPE;
+    var Fragment = REACT_FRAGMENT_TYPE;
+    var Lazy = REACT_LAZY_TYPE;
+    var Memo = REACT_MEMO_TYPE;
+    var Portal = REACT_PORTAL_TYPE;
+    var Profiler = REACT_PROFILER_TYPE;
+    var StrictMode = REACT_STRICT_MODE_TYPE;
+    var Suspense = REACT_SUSPENSE_TYPE;
+    var hasWarnedAboutDeprecatedIsAsyncMode = false; // AsyncMode should be deprecated
+
+    function isAsyncMode(object) {
+      {
+        if (!hasWarnedAboutDeprecatedIsAsyncMode) {
+          hasWarnedAboutDeprecatedIsAsyncMode = true;
+          lowPriorityWarning$1(false, 'The ReactIs.isAsyncMode() alias has been deprecated, ' + 'and will be removed in React 17+. Update your code to use ' + 'ReactIs.isConcurrentMode() instead. It has the exact same API.');
+        }
+      }
+      return isConcurrentMode(object) || typeOf(object) === REACT_ASYNC_MODE_TYPE;
+    }
+
+    function isConcurrentMode(object) {
+      return typeOf(object) === REACT_CONCURRENT_MODE_TYPE;
+    }
+
+    function isContextConsumer(object) {
+      return typeOf(object) === REACT_CONTEXT_TYPE;
+    }
+
+    function isContextProvider(object) {
+      return typeOf(object) === REACT_PROVIDER_TYPE;
+    }
+
+    function isElement(object) {
+      return typeof object === 'object' && object !== null && object.$$typeof === REACT_ELEMENT_TYPE;
+    }
+
+    function isForwardRef(object) {
+      return typeOf(object) === REACT_FORWARD_REF_TYPE;
+    }
+
+    function isFragment(object) {
+      return typeOf(object) === REACT_FRAGMENT_TYPE;
+    }
+
+    function isLazy(object) {
+      return typeOf(object) === REACT_LAZY_TYPE;
+    }
+
+    function isMemo(object) {
+      return typeOf(object) === REACT_MEMO_TYPE;
+    }
+
+    function isPortal(object) {
+      return typeOf(object) === REACT_PORTAL_TYPE;
+    }
+
+    function isProfiler(object) {
+      return typeOf(object) === REACT_PROFILER_TYPE;
+    }
+
+    function isStrictMode(object) {
+      return typeOf(object) === REACT_STRICT_MODE_TYPE;
+    }
+
+    function isSuspense(object) {
+      return typeOf(object) === REACT_SUSPENSE_TYPE;
+    }
+
+    exports.typeOf = typeOf;
+    exports.AsyncMode = AsyncMode;
+    exports.ConcurrentMode = ConcurrentMode;
+    exports.ContextConsumer = ContextConsumer;
+    exports.ContextProvider = ContextProvider;
+    exports.Element = Element;
+    exports.ForwardRef = ForwardRef;
+    exports.Fragment = Fragment;
+    exports.Lazy = Lazy;
+    exports.Memo = Memo;
+    exports.Portal = Portal;
+    exports.Profiler = Profiler;
+    exports.StrictMode = StrictMode;
+    exports.Suspense = Suspense;
+    exports.isValidElementType = isValidElementType;
+    exports.isAsyncMode = isAsyncMode;
+    exports.isConcurrentMode = isConcurrentMode;
+    exports.isContextConsumer = isContextConsumer;
+    exports.isContextProvider = isContextProvider;
+    exports.isElement = isElement;
+    exports.isForwardRef = isForwardRef;
+    exports.isFragment = isFragment;
+    exports.isLazy = isLazy;
+    exports.isMemo = isMemo;
+    exports.isPortal = isPortal;
+    exports.isProfiler = isProfiler;
+    exports.isStrictMode = isStrictMode;
+    exports.isSuspense = isSuspense;
+  })();
+}
+},{}],"../node_modules/react-is/index.js":[function(require,module,exports) {
+'use strict';
+
+if (undefined === 'production') {
+  module.exports = require('./cjs/react-is.production.min.js');
+} else {
+  module.exports = require('./cjs/react-is.development.js');
+}
+},{"./cjs/react-is.development.js":"../node_modules/react-is/cjs/react-is.development.js"}],"../node_modules/prop-types/factoryWithTypeCheckers.js":[function(require,module,exports) {
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -2506,17 +2801,38 @@ module.exports = performanceNow;
  */
 'use strict';
 
-var emptyFunction = require('fbjs/lib/emptyFunction');
-
-var invariant = require('fbjs/lib/invariant');
-
-var warning = require('fbjs/lib/warning');
+var ReactIs = require('react-is');
 
 var assign = require('object-assign');
 
 var ReactPropTypesSecret = require('./lib/ReactPropTypesSecret');
 
 var checkPropTypes = require('./checkPropTypes');
+
+var has = Function.call.bind(Object.prototype.hasOwnProperty);
+
+var printWarning = function () {};
+
+if (undefined !== 'production') {
+  printWarning = function (text) {
+    var message = 'Warning: ' + text;
+
+    if (typeof console !== 'undefined') {
+      console.error(message);
+    }
+
+    try {
+      // --- Welcome to debugging React ---
+      // This error was thrown as a convenience so that you can use this stack
+      // to find the callsite that caused this warning to fire.
+      throw new Error(message);
+    } catch (x) {}
+  };
+}
+
+function emptyFunctionThatReturnsNull() {
+  return null;
+}
 
 module.exports = function (isValidElement, throwOnDirectAccess) {
   /* global Symbol */
@@ -2607,6 +2923,7 @@ module.exports = function (isValidElement, throwOnDirectAccess) {
     any: createAnyTypeChecker(),
     arrayOf: createArrayOfTypeChecker,
     element: createElementTypeChecker(),
+    elementType: createElementTypeTypeChecker(),
     instanceOf: createInstanceTypeChecker,
     node: createNodeChecker(),
     objectOf: createObjectOfTypeChecker,
@@ -2665,14 +2982,16 @@ module.exports = function (isValidElement, throwOnDirectAccess) {
       if (secret !== ReactPropTypesSecret) {
         if (throwOnDirectAccess) {
           // New behavior only for users of `prop-types` package
-          invariant(false, 'Calling PropTypes validators directly is not supported by the `prop-types` package. ' + 'Use `PropTypes.checkPropTypes()` to call them. ' + 'Read more at http://fb.me/use-check-prop-types');
+          var err = new Error('Calling PropTypes validators directly is not supported by the `prop-types` package. ' + 'Use `PropTypes.checkPropTypes()` to call them. ' + 'Read more at http://fb.me/use-check-prop-types');
+          err.name = 'Invariant Violation';
+          throw err;
         } else if (undefined !== 'production' && typeof console !== 'undefined') {
           // Old behavior for people using React.PropTypes
           var cacheKey = componentName + ':' + propName;
 
           if (!manualPropTypeCallCache[cacheKey] && // Avoid spamming the console because they are often not actionable except for lib authors
           manualPropTypeWarningCount < 3) {
-            warning(false, 'You are manually calling a React.PropTypes validation ' + 'function for the `%s` prop on `%s`. This is deprecated ' + 'and will throw in the standalone `prop-types` package. ' + 'You may be seeing this warning due to a third-party PropTypes ' + 'library. See https://fb.me/react-warning-dont-call-proptypes ' + 'for details.', propFullName, componentName);
+            printWarning('You are manually calling a React.PropTypes validation ' + 'function for the `' + propFullName + '` prop on `' + componentName + '`. This is deprecated ' + 'and will throw in the standalone `prop-types` package. ' + 'You may be seeing this warning due to a third-party PropTypes ' + 'library. See https://fb.me/react-warning-dont-call-proptypes ' + 'for details.');
             manualPropTypeCallCache[cacheKey] = true;
             manualPropTypeWarningCount++;
           }
@@ -2719,7 +3038,7 @@ module.exports = function (isValidElement, throwOnDirectAccess) {
   }
 
   function createAnyTypeChecker() {
-    return createChainableTypeChecker(emptyFunction.thatReturnsNull);
+    return createChainableTypeChecker(emptyFunctionThatReturnsNull);
   }
 
   function createArrayOfTypeChecker(typeChecker) {
@@ -2764,6 +3083,21 @@ module.exports = function (isValidElement, throwOnDirectAccess) {
     return createChainableTypeChecker(validate);
   }
 
+  function createElementTypeTypeChecker() {
+    function validate(props, propName, componentName, location, propFullName) {
+      var propValue = props[propName];
+
+      if (!ReactIs.isValidElementType(propValue)) {
+        var propType = getPropType(propValue);
+        return new PropTypeError('Invalid ' + location + ' `' + propFullName + '` of type ' + ('`' + propType + '` supplied to `' + componentName + '`, expected a single ReactElement type.'));
+      }
+
+      return null;
+    }
+
+    return createChainableTypeChecker(validate);
+  }
+
   function createInstanceTypeChecker(expectedClass) {
     function validate(props, propName, componentName, location, propFullName) {
       if (!(props[propName] instanceof expectedClass)) {
@@ -2780,8 +3114,15 @@ module.exports = function (isValidElement, throwOnDirectAccess) {
 
   function createEnumTypeChecker(expectedValues) {
     if (!Array.isArray(expectedValues)) {
-      undefined !== 'production' ? warning(false, 'Invalid argument supplied to oneOf, expected an instance of array.') : void 0;
-      return emptyFunction.thatReturnsNull;
+      if (undefined !== 'production') {
+        if (arguments.length > 1) {
+          printWarning('Invalid arguments supplied to oneOf, expected an array, got ' + arguments.length + ' arguments. ' + 'A common mistake is to write oneOf(x, y, z) instead of oneOf([x, y, z]).');
+        } else {
+          printWarning('Invalid argument supplied to oneOf, expected an array.');
+        }
+      }
+
+      return emptyFunctionThatReturnsNull;
     }
 
     function validate(props, propName, componentName, location, propFullName) {
@@ -2793,8 +3134,16 @@ module.exports = function (isValidElement, throwOnDirectAccess) {
         }
       }
 
-      var valuesString = JSON.stringify(expectedValues);
-      return new PropTypeError('Invalid ' + location + ' `' + propFullName + '` of value `' + propValue + '` ' + ('supplied to `' + componentName + '`, expected one of ' + valuesString + '.'));
+      var valuesString = JSON.stringify(expectedValues, function replacer(key, value) {
+        var type = getPreciseType(value);
+
+        if (type === 'symbol') {
+          return String(value);
+        }
+
+        return value;
+      });
+      return new PropTypeError('Invalid ' + location + ' `' + propFullName + '` of value `' + String(propValue) + '` ' + ('supplied to `' + componentName + '`, expected one of ' + valuesString + '.'));
     }
 
     return createChainableTypeChecker(validate);
@@ -2814,7 +3163,7 @@ module.exports = function (isValidElement, throwOnDirectAccess) {
       }
 
       for (var key in propValue) {
-        if (propValue.hasOwnProperty(key)) {
+        if (has(propValue, key)) {
           var error = typeChecker(propValue, key, componentName, location, propFullName + '.' + key, ReactPropTypesSecret);
 
           if (error instanceof Error) {
@@ -2831,16 +3180,16 @@ module.exports = function (isValidElement, throwOnDirectAccess) {
 
   function createUnionTypeChecker(arrayOfTypeCheckers) {
     if (!Array.isArray(arrayOfTypeCheckers)) {
-      undefined !== 'production' ? warning(false, 'Invalid argument supplied to oneOfType, expected an instance of array.') : void 0;
-      return emptyFunction.thatReturnsNull;
+      undefined !== 'production' ? printWarning('Invalid argument supplied to oneOfType, expected an instance of array.') : void 0;
+      return emptyFunctionThatReturnsNull;
     }
 
     for (var i = 0; i < arrayOfTypeCheckers.length; i++) {
       var checker = arrayOfTypeCheckers[i];
 
       if (typeof checker !== 'function') {
-        warning(false, 'Invalid argument supplied to oneOfType. Expected an array of check functions, but ' + 'received %s at index %s.', getPostfixForTypeWarning(checker), i);
-        return emptyFunction.thatReturnsNull;
+        printWarning('Invalid argument supplied to oneOfType. Expected an array of check functions, but ' + 'received ' + getPostfixForTypeWarning(checker) + ' at index ' + i + '.');
+        return emptyFunctionThatReturnsNull;
       }
     }
 
@@ -2991,6 +3340,11 @@ module.exports = function (isValidElement, throwOnDirectAccess) {
     // Native Symbol.
     if (propType === 'symbol') {
       return true;
+    } // falsy value can't be a Symbol
+
+
+    if (!propValue) {
+      return false;
     } // 19.4.3.5 Symbol.prototype[@@toStringTag] === 'Symbol'
 
 
@@ -3078,10 +3432,11 @@ module.exports = function (isValidElement, throwOnDirectAccess) {
   }
 
   ReactPropTypes.checkPropTypes = checkPropTypes;
+  ReactPropTypes.resetWarningCache = checkPropTypes.resetWarningCache;
   ReactPropTypes.PropTypes = ReactPropTypes;
   return ReactPropTypes;
 };
-},{"fbjs/lib/emptyFunction":"../node_modules/fbjs/lib/emptyFunction.js","fbjs/lib/invariant":"../node_modules/fbjs/lib/invariant.js","fbjs/lib/warning":"../node_modules/fbjs/lib/warning.js","object-assign":"../node_modules/object-assign/index.js","./lib/ReactPropTypesSecret":"../node_modules/prop-types/lib/ReactPropTypesSecret.js","./checkPropTypes":"../node_modules/prop-types/checkPropTypes.js"}],"../node_modules/prop-types/index.js":[function(require,module,exports) {
+},{"react-is":"../node_modules/react-is/index.js","object-assign":"../node_modules/object-assign/index.js","./lib/ReactPropTypesSecret":"../node_modules/prop-types/lib/ReactPropTypesSecret.js","./checkPropTypes":"../node_modules/prop-types/checkPropTypes.js"}],"../node_modules/prop-types/index.js":[function(require,module,exports) {
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -3089,22 +3444,18 @@ module.exports = function (isValidElement, throwOnDirectAccess) {
  * LICENSE file in the root directory of this source tree.
  */
 if (undefined !== 'production') {
-  var REACT_ELEMENT_TYPE = typeof Symbol === 'function' && Symbol.for && Symbol.for('react.element') || 0xeac7;
-
-  var isValidElement = function (object) {
-    return typeof object === 'object' && object !== null && object.$$typeof === REACT_ELEMENT_TYPE;
-  }; // By explicitly using `prop-types` you are opting into new development behavior.
+  var ReactIs = require('react-is'); // By explicitly using `prop-types` you are opting into new development behavior.
   // http://fb.me/prop-types-in-prod
 
 
   var throwOnDirectAccess = true;
-  module.exports = require('./factoryWithTypeCheckers')(isValidElement, throwOnDirectAccess);
+  module.exports = require('./factoryWithTypeCheckers')(ReactIs.isElement, throwOnDirectAccess);
 } else {
   // By explicitly using `prop-types` you are opting into new production behavior.
   // http://fb.me/prop-types-in-prod
   module.exports = require('./factoryWithThrowingShims')();
 }
-},{"./factoryWithTypeCheckers":"../node_modules/prop-types/factoryWithTypeCheckers.js"}],"../node_modules/fbjs/lib/shallowEqual.js":[function(require,module,exports) {
+},{"react-is":"../node_modules/react-is/index.js","./factoryWithTypeCheckers":"../node_modules/prop-types/factoryWithTypeCheckers.js"}],"../node_modules/fbjs/lib/shallowEqual.js":[function(require,module,exports) {
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -20833,7 +21184,20 @@ if (undefined === 'production') {
 } else {
   module.exports = require('./cjs/react-dom.development.js');
 }
-},{"./cjs/react-dom.development.js":"../node_modules/react-dom/cjs/react-dom.development.js"}],"../node_modules/react-redux/es/utils/PropTypes.js":[function(require,module,exports) {
+},{"./cjs/react-dom.development.js":"../node_modules/react-dom/cjs/react-dom.development.js"}],"../node_modules/@babel/runtime/helpers/esm/inheritsLoose.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = _inheritsLoose;
+
+function _inheritsLoose(subClass, superClass) {
+  subClass.prototype = Object.create(superClass.prototype);
+  subClass.prototype.constructor = subClass;
+  subClass.__proto__ = superClass;
+}
+},{}],"../node_modules/react-redux/es/utils/PropTypes.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -20902,6 +21266,8 @@ Object.defineProperty(exports, "__esModule", {
 exports.createProvider = createProvider;
 exports.default = void 0;
 
+var _inheritsLoose2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/inheritsLoose"));
+
 var _react = require("react");
 
 var _propTypes = _interopRequireDefault(require("prop-types"));
@@ -20912,36 +21278,6 @@ var _warning = _interopRequireDefault(require("../utils/warning"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-function _classCallCheck(instance, Constructor) {
-  if (!(instance instanceof Constructor)) {
-    throw new TypeError("Cannot call a class as a function");
-  }
-}
-
-function _possibleConstructorReturn(self, call) {
-  if (!self) {
-    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-  }
-
-  return call && (typeof call === "object" || typeof call === "function") ? call : self;
-}
-
-function _inherits(subClass, superClass) {
-  if (typeof superClass !== "function" && superClass !== null) {
-    throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
-  }
-
-  subClass.prototype = Object.create(superClass && superClass.prototype, {
-    constructor: {
-      value: subClass,
-      enumerable: false,
-      writable: true,
-      configurable: true
-    }
-  });
-  if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
-}
-
 var didWarnAboutReceivingStore = false;
 
 function warnAboutReceivingStore() {
@@ -20950,35 +21286,39 @@ function warnAboutReceivingStore() {
   }
 
   didWarnAboutReceivingStore = true;
-  (0, _warning.default)('<Provider> does not support changing `store` on the fly. ' + 'It is most likely that you see this error because you updated to ' + 'Redux 2.x and React Redux 2.x which no longer hot reload reducers ' + 'automatically. See https://github.com/reactjs/react-redux/releases/' + 'tag/v2.0.0 for the migration instructions.');
+  (0, _warning.default)('<Provider> does not support changing `store` on the fly. ' + 'It is most likely that you see this error because you updated to ' + 'Redux 2.x and React Redux 2.x which no longer hot reload reducers ' + 'automatically. See https://github.com/reduxjs/react-redux/releases/' + 'tag/v2.0.0 for the migration instructions.');
 }
 
-function createProvider() {
+function createProvider(storeKey) {
   var _Provider$childContex;
 
-  var storeKey = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 'store';
-  var subKey = arguments[1];
-  var subscriptionKey = subKey || storeKey + 'Subscription';
+  if (storeKey === void 0) {
+    storeKey = 'store';
+  }
 
-  var Provider = function (_Component) {
-    _inherits(Provider, _Component);
+  var subscriptionKey = storeKey + "Subscription";
 
-    Provider.prototype.getChildContext = function getChildContext() {
+  var Provider =
+  /*#__PURE__*/
+  function (_Component) {
+    (0, _inheritsLoose2.default)(Provider, _Component);
+    var _proto = Provider.prototype;
+
+    _proto.getChildContext = function getChildContext() {
       var _ref;
 
       return _ref = {}, _ref[storeKey] = this[storeKey], _ref[subscriptionKey] = null, _ref;
     };
 
     function Provider(props, context) {
-      _classCallCheck(this, Provider);
+      var _this;
 
-      var _this = _possibleConstructorReturn(this, _Component.call(this, props, context));
-
+      _this = _Component.call(this, props, context) || this;
       _this[storeKey] = props.store;
       return _this;
     }
 
-    Provider.prototype.render = function render() {
+    _proto.render = function render() {
       return _react.Children.only(this.props.children);
     };
 
@@ -21004,83 +21344,174 @@ function createProvider() {
 var _default = createProvider();
 
 exports.default = _default;
-},{"react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","../utils/PropTypes":"../node_modules/react-redux/es/utils/PropTypes.js","../utils/warning":"../node_modules/react-redux/es/utils/warning.js"}],"../node_modules/hoist-non-react-statics/index.js":[function(require,module,exports) {
-var define;
-var global = arguments[3];
+},{"@babel/runtime/helpers/esm/inheritsLoose":"../node_modules/@babel/runtime/helpers/esm/inheritsLoose.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","../utils/PropTypes":"../node_modules/react-redux/es/utils/PropTypes.js","../utils/warning":"../node_modules/react-redux/es/utils/warning.js"}],"../node_modules/@babel/runtime/helpers/esm/assertThisInitialized.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = _assertThisInitialized;
+
+function _assertThisInitialized(self) {
+  if (self === void 0) {
+    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+  }
+
+  return self;
+}
+},{}],"../node_modules/@babel/runtime/helpers/esm/extends.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = _extends;
+
+function _extends() {
+  exports.default = _extends = Object.assign || function (target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i];
+
+      for (var key in source) {
+        if (Object.prototype.hasOwnProperty.call(source, key)) {
+          target[key] = source[key];
+        }
+      }
+    }
+
+    return target;
+  };
+
+  return _extends.apply(this, arguments);
+}
+},{}],"../node_modules/@babel/runtime/helpers/esm/objectWithoutPropertiesLoose.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = _objectWithoutPropertiesLoose;
+
+function _objectWithoutPropertiesLoose(source, excluded) {
+  if (source == null) return {};
+  var target = {};
+  var sourceKeys = Object.keys(source);
+  var key, i;
+
+  for (i = 0; i < sourceKeys.length; i++) {
+    key = sourceKeys[i];
+    if (excluded.indexOf(key) >= 0) continue;
+    target[key] = source[key];
+  }
+
+  return target;
+}
+},{}],"../node_modules/hoist-non-react-statics/dist/hoist-non-react-statics.cjs.js":[function(require,module,exports) {
+'use strict';
+
 /**
  * Copyright 2015, Yahoo! Inc.
  * Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
  */
-(function (global, factory) {
-    typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
-    typeof define === 'function' && define.amd ? define(factory) :
-    (global.hoistNonReactStatics = factory());
-}(this, (function () {
-    'use strict';
-    
-    var REACT_STATICS = {
-        childContextTypes: true,
-        contextTypes: true,
-        defaultProps: true,
-        displayName: true,
-        getDefaultProps: true,
-        getDerivedStateFromProps: true,
-        mixins: true,
-        propTypes: true,
-        type: true
-    };
-    
-    var KNOWN_STATICS = {
-        name: true,
-        length: true,
-        prototype: true,
-        caller: true,
-        callee: true,
-        arguments: true,
-        arity: true
-    };
-    
-    var defineProperty = Object.defineProperty;
-    var getOwnPropertyNames = Object.getOwnPropertyNames;
-    var getOwnPropertySymbols = Object.getOwnPropertySymbols;
-    var getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
-    var getPrototypeOf = Object.getPrototypeOf;
-    var objectPrototype = getPrototypeOf && getPrototypeOf(Object);
-    
-    return function hoistNonReactStatics(targetComponent, sourceComponent, blacklist) {
-        if (typeof sourceComponent !== 'string') { // don't hoist over string (html) components
-            
-            if (objectPrototype) {
-                var inheritedComponent = getPrototypeOf(sourceComponent);
-                if (inheritedComponent && inheritedComponent !== objectPrototype) {
-                    hoistNonReactStatics(targetComponent, inheritedComponent, blacklist);
-                }
-            }
-            
-            var keys = getOwnPropertyNames(sourceComponent);
-            
-            if (getOwnPropertySymbols) {
-                keys = keys.concat(getOwnPropertySymbols(sourceComponent));
-            }
-            
-            for (var i = 0; i < keys.length; ++i) {
-                var key = keys[i];
-                if (!REACT_STATICS[key] && !KNOWN_STATICS[key] && (!blacklist || !blacklist[key])) {
-                    var descriptor = getOwnPropertyDescriptor(sourceComponent, key);
-                    try { // Avoid failures from read-only properties
-                        defineProperty(targetComponent, key, descriptor);
-                    } catch (e) {}
-                }
-            }
-            
-            return targetComponent;
-        }
-        
-        return targetComponent;
-    };
-})));
+var ReactIs = require('react-is');
+var REACT_STATICS = {
+    childContextTypes: true,
+    contextType: true,
+    contextTypes: true,
+    defaultProps: true,
+    displayName: true,
+    getDefaultProps: true,
+    getDerivedStateFromError: true,
+    getDerivedStateFromProps: true,
+    mixins: true,
+    propTypes: true,
+    type: true
+};
 
-},{}],"../node_modules/react-redux/node_modules/invariant/browser.js":[function(require,module,exports) {
+var KNOWN_STATICS = {
+    name: true,
+    length: true,
+    prototype: true,
+    caller: true,
+    callee: true,
+    arguments: true,
+    arity: true
+};
+
+var FORWARD_REF_STATICS = {
+    '$$typeof': true,
+    render: true,
+    defaultProps: true,
+    displayName: true,
+    propTypes: true
+};
+
+var MEMO_STATICS = {
+    '$$typeof': true,
+    compare: true,
+    defaultProps: true,
+    displayName: true,
+    propTypes: true,
+    type: true
+};
+
+var TYPE_STATICS = {};
+TYPE_STATICS[ReactIs.ForwardRef] = FORWARD_REF_STATICS;
+
+function getStatics(component) {
+    if (ReactIs.isMemo(component)) {
+        return MEMO_STATICS;
+    }
+    return TYPE_STATICS[component['$$typeof']] || REACT_STATICS;
+}
+
+var defineProperty = Object.defineProperty;
+var getOwnPropertyNames = Object.getOwnPropertyNames;
+var getOwnPropertySymbols = Object.getOwnPropertySymbols;
+var getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
+var getPrototypeOf = Object.getPrototypeOf;
+var objectPrototype = Object.prototype;
+
+function hoistNonReactStatics(targetComponent, sourceComponent, blacklist) {
+    if (typeof sourceComponent !== 'string') {
+        // don't hoist over string (html) components
+
+        if (objectPrototype) {
+            var inheritedComponent = getPrototypeOf(sourceComponent);
+            if (inheritedComponent && inheritedComponent !== objectPrototype) {
+                hoistNonReactStatics(targetComponent, inheritedComponent, blacklist);
+            }
+        }
+
+        var keys = getOwnPropertyNames(sourceComponent);
+
+        if (getOwnPropertySymbols) {
+            keys = keys.concat(getOwnPropertySymbols(sourceComponent));
+        }
+
+        var targetStatics = getStatics(targetComponent);
+        var sourceStatics = getStatics(sourceComponent);
+
+        for (var i = 0; i < keys.length; ++i) {
+            var key = keys[i];
+            if (!KNOWN_STATICS[key] && !(blacklist && blacklist[key]) && !(sourceStatics && sourceStatics[key]) && !(targetStatics && targetStatics[key])) {
+                var descriptor = getOwnPropertyDescriptor(sourceComponent, key);
+                try {
+                    // Avoid failures from read-only properties
+                    defineProperty(targetComponent, key, descriptor);
+                } catch (e) {}
+            }
+        }
+
+        return targetComponent;
+    }
+
+    return targetComponent;
+}
+
+module.exports = hoistNonReactStatics;
+
+},{"react-is":"../node_modules/react-is/index.js"}],"../node_modules/invariant/browser.js":[function(require,module,exports) {
 /**
  * Copyright (c) 2013-present, Facebook, Inc.
  *
@@ -21134,16 +21565,9 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
-
-function _classCallCheck(instance, Constructor) {
-  if (!(instance instanceof Constructor)) {
-    throw new TypeError("Cannot call a class as a function");
-  }
-} // encapsulates the subscription logic for connecting a component to the redux store, as
+// encapsulates the subscription logic for connecting a component to the redux store, as
 // well as nesting subscriptions of descendant components, so that we can ensure the
 // ancestor components re-render before descendants
-
-
 var CLEARED = null;
 var nullListeners = {
   notify: function notify() {}
@@ -21183,10 +21607,10 @@ function createListenerCollection() {
   };
 }
 
-var Subscription = function () {
+var Subscription =
+/*#__PURE__*/
+function () {
   function Subscription(store, parentSub, onStateChange) {
-    _classCallCheck(this, Subscription);
-
     this.store = store;
     this.parentSub = parentSub;
     this.onStateChange = onStateChange;
@@ -21194,27 +21618,29 @@ var Subscription = function () {
     this.listeners = nullListeners;
   }
 
-  Subscription.prototype.addNestedSub = function addNestedSub(listener) {
+  var _proto = Subscription.prototype;
+
+  _proto.addNestedSub = function addNestedSub(listener) {
     this.trySubscribe();
     return this.listeners.subscribe(listener);
   };
 
-  Subscription.prototype.notifyNestedSubs = function notifyNestedSubs() {
+  _proto.notifyNestedSubs = function notifyNestedSubs() {
     this.listeners.notify();
   };
 
-  Subscription.prototype.isSubscribed = function isSubscribed() {
+  _proto.isSubscribed = function isSubscribed() {
     return Boolean(this.unsubscribe);
   };
 
-  Subscription.prototype.trySubscribe = function trySubscribe() {
+  _proto.trySubscribe = function trySubscribe() {
     if (!this.unsubscribe) {
       this.unsubscribe = this.parentSub ? this.parentSub.addNestedSub(this.onStateChange) : this.store.subscribe(this.onStateChange);
       this.listeners = createListenerCollection();
     }
   };
 
-  Subscription.prototype.tryUnsubscribe = function tryUnsubscribe() {
+  _proto.tryUnsubscribe = function tryUnsubscribe() {
     if (this.unsubscribe) {
       this.unsubscribe();
       this.unsubscribe = null;
@@ -21235,73 +21661,27 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = connectAdvanced;
 
+var _inheritsLoose2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/inheritsLoose"));
+
+var _assertThisInitialized2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/assertThisInitialized"));
+
+var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/extends"));
+
+var _objectWithoutPropertiesLoose2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/objectWithoutPropertiesLoose"));
+
 var _hoistNonReactStatics = _interopRequireDefault(require("hoist-non-react-statics"));
 
 var _invariant = _interopRequireDefault(require("invariant"));
 
 var _react = require("react");
 
+var _reactIs = require("react-is");
+
 var _Subscription = _interopRequireDefault(require("../utils/Subscription"));
 
 var _PropTypes = require("../utils/PropTypes");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var _extends = Object.assign || function (target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i];
-
-    for (var key in source) {
-      if (Object.prototype.hasOwnProperty.call(source, key)) {
-        target[key] = source[key];
-      }
-    }
-  }
-
-  return target;
-};
-
-function _classCallCheck(instance, Constructor) {
-  if (!(instance instanceof Constructor)) {
-    throw new TypeError("Cannot call a class as a function");
-  }
-}
-
-function _possibleConstructorReturn(self, call) {
-  if (!self) {
-    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-  }
-
-  return call && (typeof call === "object" || typeof call === "function") ? call : self;
-}
-
-function _inherits(subClass, superClass) {
-  if (typeof superClass !== "function" && superClass !== null) {
-    throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
-  }
-
-  subClass.prototype = Object.create(superClass && superClass.prototype, {
-    constructor: {
-      value: subClass,
-      enumerable: false,
-      writable: true,
-      configurable: true
-    }
-  });
-  if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
-}
-
-function _objectWithoutProperties(obj, keys) {
-  var target = {};
-
-  for (var i in obj) {
-    if (keys.indexOf(i) >= 0) continue;
-    if (!Object.prototype.hasOwnProperty.call(obj, i)) continue;
-    target[i] = obj[i];
-  }
-
-  return target;
-}
 
 var hotReloadingVersion = 0;
 var dummyState = {};
@@ -21344,36 +21724,39 @@ function connectAdvanced(
   props. Do not use connectAdvanced directly without memoizing results between calls to your
   selector, otherwise the Connect component will re-render on every state or props change.
 */
-selectorFactory) {
+selectorFactory, // options object:
+_ref) {
   var _contextTypes, _childContextTypes;
 
-  var _ref = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {},
-      _ref$getDisplayName = _ref.getDisplayName,
-      getDisplayName = _ref$getDisplayName === undefined ? function (name) {
-    return 'ConnectAdvanced(' + name + ')';
-  } : _ref$getDisplayName,
-      _ref$methodName = _ref.methodName,
-      methodName = _ref$methodName === undefined ? 'connectAdvanced' : _ref$methodName,
-      _ref$renderCountProp = _ref.renderCountProp,
-      renderCountProp = _ref$renderCountProp === undefined ? undefined : _ref$renderCountProp,
-      _ref$shouldHandleStat = _ref.shouldHandleStateChanges,
-      shouldHandleStateChanges = _ref$shouldHandleStat === undefined ? true : _ref$shouldHandleStat,
-      _ref$storeKey = _ref.storeKey,
-      storeKey = _ref$storeKey === undefined ? 'store' : _ref$storeKey,
-      _ref$withRef = _ref.withRef,
-      withRef = _ref$withRef === undefined ? false : _ref$withRef,
-      connectOptions = _objectWithoutProperties(_ref, ['getDisplayName', 'methodName', 'renderCountProp', 'shouldHandleStateChanges', 'storeKey', 'withRef']);
+  if (_ref === void 0) {
+    _ref = {};
+  }
 
+  var _ref2 = _ref,
+      _ref2$getDisplayName = _ref2.getDisplayName,
+      getDisplayName = _ref2$getDisplayName === void 0 ? function (name) {
+    return "ConnectAdvanced(" + name + ")";
+  } : _ref2$getDisplayName,
+      _ref2$methodName = _ref2.methodName,
+      methodName = _ref2$methodName === void 0 ? 'connectAdvanced' : _ref2$methodName,
+      _ref2$renderCountProp = _ref2.renderCountProp,
+      renderCountProp = _ref2$renderCountProp === void 0 ? undefined : _ref2$renderCountProp,
+      _ref2$shouldHandleSta = _ref2.shouldHandleStateChanges,
+      shouldHandleStateChanges = _ref2$shouldHandleSta === void 0 ? true : _ref2$shouldHandleSta,
+      _ref2$storeKey = _ref2.storeKey,
+      storeKey = _ref2$storeKey === void 0 ? 'store' : _ref2$storeKey,
+      _ref2$withRef = _ref2.withRef,
+      withRef = _ref2$withRef === void 0 ? false : _ref2$withRef,
+      connectOptions = (0, _objectWithoutPropertiesLoose2.default)(_ref2, ["getDisplayName", "methodName", "renderCountProp", "shouldHandleStateChanges", "storeKey", "withRef"]);
   var subscriptionKey = storeKey + 'Subscription';
   var version = hotReloadingVersion++;
   var contextTypes = (_contextTypes = {}, _contextTypes[storeKey] = _PropTypes.storeShape, _contextTypes[subscriptionKey] = _PropTypes.subscriptionShape, _contextTypes);
   var childContextTypes = (_childContextTypes = {}, _childContextTypes[subscriptionKey] = _PropTypes.subscriptionShape, _childContextTypes);
   return function wrapWithConnect(WrappedComponent) {
-    (0, _invariant.default)(typeof WrappedComponent == 'function', 'You must pass a component to the function returned by ' + (methodName + '. Instead received ' + JSON.stringify(WrappedComponent)));
+    (0, _invariant.default)((0, _reactIs.isValidElementType)(WrappedComponent), "You must pass a component to the function returned by " + (methodName + ". Instead received " + JSON.stringify(WrappedComponent)));
     var wrappedComponentName = WrappedComponent.displayName || WrappedComponent.name || 'Component';
     var displayName = getDisplayName(wrappedComponentName);
-
-    var selectorFactoryOptions = _extends({}, connectOptions, {
+    var selectorFactoryOptions = (0, _extends2.default)({}, connectOptions, {
       getDisplayName: getDisplayName,
       methodName: methodName,
       renderCountProp: renderCountProp,
@@ -21382,24 +21765,28 @@ selectorFactory) {
       withRef: withRef,
       displayName: displayName,
       wrappedComponentName: wrappedComponentName,
-      WrappedComponent: WrappedComponent
+      WrappedComponent: WrappedComponent // TODO Actually fix our use of componentWillReceiveProps
+
+      /* eslint-disable react/no-deprecated */
+
     });
 
-    var Connect = function (_Component) {
-      _inherits(Connect, _Component);
+    var Connect =
+    /*#__PURE__*/
+    function (_Component) {
+      (0, _inheritsLoose2.default)(Connect, _Component);
 
       function Connect(props, context) {
-        _classCallCheck(this, Connect);
+        var _this;
 
-        var _this = _possibleConstructorReturn(this, _Component.call(this, props, context));
-
+        _this = _Component.call(this, props, context) || this;
         _this.version = version;
         _this.state = {};
         _this.renderCount = 0;
         _this.store = props[storeKey] || context[storeKey];
         _this.propsMode = Boolean(props[storeKey]);
-        _this.setWrappedInstance = _this.setWrappedInstance.bind(_this);
-        (0, _invariant.default)(_this.store, 'Could not find "' + storeKey + '" in either the context or props of ' + ('"' + displayName + '". Either wrap the root component in a <Provider>, ') + ('or explicitly pass "' + storeKey + '" as a prop to "' + displayName + '".'));
+        _this.setWrappedInstance = _this.setWrappedInstance.bind((0, _assertThisInitialized2.default)((0, _assertThisInitialized2.default)(_this)));
+        (0, _invariant.default)(_this.store, "Could not find \"" + storeKey + "\" in either the context or props of " + ("\"" + displayName + "\". Either wrap the root component in a <Provider>, ") + ("or explicitly pass \"" + storeKey + "\" as a prop to \"" + displayName + "\"."));
 
         _this.initSelector();
 
@@ -21408,18 +21795,20 @@ selectorFactory) {
         return _this;
       }
 
-      Connect.prototype.getChildContext = function getChildContext() {
-        var _ref2; // If this component received store from props, its subscription should be transparent
+      var _proto = Connect.prototype;
+
+      _proto.getChildContext = function getChildContext() {
+        var _ref3; // If this component received store from props, its subscription should be transparent
         // to any descendants receiving store+subscription from context; it passes along
         // subscription passed to it. Otherwise, it shadows the parent subscription, which allows
         // Connect to control ordering of notifications to flow top-down.
 
 
         var subscription = this.propsMode ? null : this.subscription;
-        return _ref2 = {}, _ref2[subscriptionKey] = subscription || this.context[subscriptionKey], _ref2;
+        return _ref3 = {}, _ref3[subscriptionKey] = subscription || this.context[subscriptionKey], _ref3;
       };
 
-      Connect.prototype.componentDidMount = function componentDidMount() {
+      _proto.componentDidMount = function componentDidMount() {
         if (!shouldHandleStateChanges) return; // componentWillMount fires during server side rendering, but componentDidMount and
         // componentWillUnmount do not. Because of this, trySubscribe happens during ...didMount.
         // Otherwise, unsubscription would never take place during SSR, causing a memory leak.
@@ -21432,15 +21821,15 @@ selectorFactory) {
         if (this.selector.shouldComponentUpdate) this.forceUpdate();
       };
 
-      Connect.prototype.componentWillReceiveProps = function componentWillReceiveProps(nextProps) {
+      _proto.componentWillReceiveProps = function componentWillReceiveProps(nextProps) {
         this.selector.run(nextProps);
       };
 
-      Connect.prototype.shouldComponentUpdate = function shouldComponentUpdate() {
+      _proto.shouldComponentUpdate = function shouldComponentUpdate() {
         return this.selector.shouldComponentUpdate;
       };
 
-      Connect.prototype.componentWillUnmount = function componentWillUnmount() {
+      _proto.componentWillUnmount = function componentWillUnmount() {
         if (this.subscription) this.subscription.tryUnsubscribe();
         this.subscription = null;
         this.notifyNestedSubs = noop;
@@ -21449,27 +21838,27 @@ selectorFactory) {
         this.selector.shouldComponentUpdate = false;
       };
 
-      Connect.prototype.getWrappedInstance = function getWrappedInstance() {
-        (0, _invariant.default)(withRef, 'To access the wrapped instance, you need to specify ' + ('{ withRef: true } in the options argument of the ' + methodName + '() call.'));
+      _proto.getWrappedInstance = function getWrappedInstance() {
+        (0, _invariant.default)(withRef, "To access the wrapped instance, you need to specify " + ("{ withRef: true } in the options argument of the " + methodName + "() call."));
         return this.wrappedInstance;
       };
 
-      Connect.prototype.setWrappedInstance = function setWrappedInstance(ref) {
+      _proto.setWrappedInstance = function setWrappedInstance(ref) {
         this.wrappedInstance = ref;
       };
 
-      Connect.prototype.initSelector = function initSelector() {
+      _proto.initSelector = function initSelector() {
         var sourceSelector = selectorFactory(this.store.dispatch, selectorFactoryOptions);
         this.selector = makeSelectorStateful(sourceSelector, this.store);
         this.selector.run(this.props);
       };
 
-      Connect.prototype.initSubscription = function initSubscription() {
+      _proto.initSubscription = function initSubscription() {
         if (!shouldHandleStateChanges) return; // parentSub's source should match where store came from: props vs. context. A component
         // connected to the store via props shouldn't use subscription from context, or vice versa.
 
         var parentSub = (this.propsMode ? this.props : this.context)[subscriptionKey];
-        this.subscription = new _Subscription.default(this.store, parentSub, this.onStateChange.bind(this)); // `notifyNestedSubs` is duplicated to handle the case where the component is  unmounted in
+        this.subscription = new _Subscription.default(this.store, parentSub, this.onStateChange.bind(this)); // `notifyNestedSubs` is duplicated to handle the case where the component is unmounted in
         // the middle of the notification loop, where `this.subscription` will then be null. An
         // extra null check every change can be avoided by copying the method onto `this` and then
         // replacing it with a no-op on unmount. This can probably be avoided if Subscription's
@@ -21479,7 +21868,7 @@ selectorFactory) {
         this.notifyNestedSubs = this.subscription.notifyNestedSubs.bind(this.subscription);
       };
 
-      Connect.prototype.onStateChange = function onStateChange() {
+      _proto.onStateChange = function onStateChange() {
         this.selector.run(this.props);
 
         if (!this.selector.shouldComponentUpdate) {
@@ -21490,7 +21879,7 @@ selectorFactory) {
         }
       };
 
-      Connect.prototype.notifyNestedSubsOnComponentDidUpdate = function notifyNestedSubsOnComponentDidUpdate() {
+      _proto.notifyNestedSubsOnComponentDidUpdate = function notifyNestedSubsOnComponentDidUpdate() {
         // `componentDidUpdate` is conditionally implemented when `onStateChange` determines it
         // needs to notify nested subs. Once called, it unimplements itself until further state
         // changes occur. Doing it this way vs having a permanent `componentDidUpdate` that does
@@ -21500,25 +21889,24 @@ selectorFactory) {
         this.notifyNestedSubs();
       };
 
-      Connect.prototype.isSubscribed = function isSubscribed() {
+      _proto.isSubscribed = function isSubscribed() {
         return Boolean(this.subscription) && this.subscription.isSubscribed();
       };
 
-      Connect.prototype.addExtraProps = function addExtraProps(props) {
+      _proto.addExtraProps = function addExtraProps(props) {
         if (!withRef && !renderCountProp && !(this.propsMode && this.subscription)) return props; // make a shallow copy so that fields added don't leak to the original selector.
         // this is especially important for 'ref' since that's a reference back to the component
         // instance. a singleton memoized selector would then be holding a reference to the
         // instance, preventing the instance from being garbage collected, and that would be bad
 
-        var withExtras = _extends({}, props);
-
+        var withExtras = (0, _extends2.default)({}, props);
         if (withRef) withExtras.ref = this.setWrappedInstance;
         if (renderCountProp) withExtras[renderCountProp] = this.renderCount++;
         if (this.propsMode && this.subscription) withExtras[subscriptionKey] = this.subscription;
         return withExtras;
       };
 
-      Connect.prototype.render = function render() {
+      _proto.render = function render() {
         var selector = this.selector;
         selector.shouldComponentUpdate = false;
 
@@ -21531,6 +21919,8 @@ selectorFactory) {
 
       return Connect;
     }(_react.Component);
+    /* eslint-enable react/no-deprecated */
+
 
     Connect.WrappedComponent = WrappedComponent;
     Connect.displayName = displayName;
@@ -21573,7 +21963,7 @@ selectorFactory) {
     return (0, _hoistNonReactStatics.default)(Connect, WrappedComponent);
   };
 }
-},{"hoist-non-react-statics":"../node_modules/hoist-non-react-statics/index.js","invariant":"../node_modules/react-redux/node_modules/invariant/browser.js","react":"../node_modules/react/index.js","../utils/Subscription":"../node_modules/react-redux/es/utils/Subscription.js","../utils/PropTypes":"../node_modules/react-redux/es/utils/PropTypes.js"}],"../node_modules/react-redux/es/utils/shallowEqual.js":[function(require,module,exports) {
+},{"@babel/runtime/helpers/esm/inheritsLoose":"../node_modules/@babel/runtime/helpers/esm/inheritsLoose.js","@babel/runtime/helpers/esm/assertThisInitialized":"../node_modules/@babel/runtime/helpers/esm/assertThisInitialized.js","@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/objectWithoutPropertiesLoose":"../node_modules/@babel/runtime/helpers/esm/objectWithoutPropertiesLoose.js","hoist-non-react-statics":"../node_modules/hoist-non-react-statics/dist/hoist-non-react-statics.cjs.js","invariant":"../node_modules/invariant/browser.js","react":"../node_modules/react/index.js","react-is":"../node_modules/react-is/index.js","../utils/Subscription":"../node_modules/react-redux/es/utils/Subscription.js","../utils/PropTypes":"../node_modules/react-redux/es/utils/PropTypes.js"}],"../node_modules/react-redux/es/utils/shallowEqual.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -21609,1081 +21999,7 @@ function shallowEqual(objA, objB) {
 
   return true;
 }
-},{}],"../node_modules/redux/node_modules/lodash-es/_freeGlobal.js":[function(require,module,exports) {
-var global = arguments[3];
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-/** Detect free variable `global` from Node.js. */
-var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
-var _default = freeGlobal;
-exports.default = _default;
-},{}],"../node_modules/redux/node_modules/lodash-es/_root.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _freeGlobal = _interopRequireDefault(require("./_freeGlobal.js"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/** Detect free variable `self`. */
-var freeSelf = typeof self == 'object' && self && self.Object === Object && self;
-/** Used as a reference to the global object. */
-
-var root = _freeGlobal.default || freeSelf || Function('return this')();
-var _default = root;
-exports.default = _default;
-},{"./_freeGlobal.js":"../node_modules/redux/node_modules/lodash-es/_freeGlobal.js"}],"../node_modules/redux/node_modules/lodash-es/_Symbol.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _root = _interopRequireDefault(require("./_root.js"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/** Built-in value references. */
-var Symbol = _root.default.Symbol;
-var _default = Symbol;
-exports.default = _default;
-},{"./_root.js":"../node_modules/redux/node_modules/lodash-es/_root.js"}],"../node_modules/redux/node_modules/lodash-es/_getRawTag.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _Symbol = _interopRequireDefault(require("./_Symbol.js"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/** Used for built-in method references. */
-var objectProto = Object.prototype;
-/** Used to check objects for own properties. */
-
-var hasOwnProperty = objectProto.hasOwnProperty;
-/**
- * Used to resolve the
- * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
- * of values.
- */
-
-var nativeObjectToString = objectProto.toString;
-/** Built-in value references. */
-
-var symToStringTag = _Symbol.default ? _Symbol.default.toStringTag : undefined;
-/**
- * A specialized version of `baseGetTag` which ignores `Symbol.toStringTag` values.
- *
- * @private
- * @param {*} value The value to query.
- * @returns {string} Returns the raw `toStringTag`.
- */
-
-function getRawTag(value) {
-  var isOwn = hasOwnProperty.call(value, symToStringTag),
-      tag = value[symToStringTag];
-
-  try {
-    value[symToStringTag] = undefined;
-    var unmasked = true;
-  } catch (e) {}
-
-  var result = nativeObjectToString.call(value);
-
-  if (unmasked) {
-    if (isOwn) {
-      value[symToStringTag] = tag;
-    } else {
-      delete value[symToStringTag];
-    }
-  }
-
-  return result;
-}
-
-var _default = getRawTag;
-exports.default = _default;
-},{"./_Symbol.js":"../node_modules/redux/node_modules/lodash-es/_Symbol.js"}],"../node_modules/redux/node_modules/lodash-es/_objectToString.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-/** Used for built-in method references. */
-var objectProto = Object.prototype;
-/**
- * Used to resolve the
- * [`toStringTag`](http://ecma-international.org/ecma-262/7.0/#sec-object.prototype.tostring)
- * of values.
- */
-
-var nativeObjectToString = objectProto.toString;
-/**
- * Converts `value` to a string using `Object.prototype.toString`.
- *
- * @private
- * @param {*} value The value to convert.
- * @returns {string} Returns the converted string.
- */
-
-function objectToString(value) {
-  return nativeObjectToString.call(value);
-}
-
-var _default = objectToString;
-exports.default = _default;
-},{}],"../node_modules/redux/node_modules/lodash-es/_baseGetTag.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _Symbol = _interopRequireDefault(require("./_Symbol.js"));
-
-var _getRawTag = _interopRequireDefault(require("./_getRawTag.js"));
-
-var _objectToString = _interopRequireDefault(require("./_objectToString.js"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/** `Object#toString` result references. */
-var nullTag = '[object Null]',
-    undefinedTag = '[object Undefined]';
-/** Built-in value references. */
-
-var symToStringTag = _Symbol.default ? _Symbol.default.toStringTag : undefined;
-/**
- * The base implementation of `getTag` without fallbacks for buggy environments.
- *
- * @private
- * @param {*} value The value to query.
- * @returns {string} Returns the `toStringTag`.
- */
-
-function baseGetTag(value) {
-  if (value == null) {
-    return value === undefined ? undefinedTag : nullTag;
-  }
-
-  return symToStringTag && symToStringTag in Object(value) ? (0, _getRawTag.default)(value) : (0, _objectToString.default)(value);
-}
-
-var _default = baseGetTag;
-exports.default = _default;
-},{"./_Symbol.js":"../node_modules/redux/node_modules/lodash-es/_Symbol.js","./_getRawTag.js":"../node_modules/redux/node_modules/lodash-es/_getRawTag.js","./_objectToString.js":"../node_modules/redux/node_modules/lodash-es/_objectToString.js"}],"../node_modules/redux/node_modules/lodash-es/_overArg.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-/**
- * Creates a unary function that invokes `func` with its argument transformed.
- *
- * @private
- * @param {Function} func The function to wrap.
- * @param {Function} transform The argument transform.
- * @returns {Function} Returns the new function.
- */
-function overArg(func, transform) {
-  return function (arg) {
-    return func(transform(arg));
-  };
-}
-
-var _default = overArg;
-exports.default = _default;
-},{}],"../node_modules/redux/node_modules/lodash-es/_getPrototype.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _overArg = _interopRequireDefault(require("./_overArg.js"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/** Built-in value references. */
-var getPrototype = (0, _overArg.default)(Object.getPrototypeOf, Object);
-var _default = getPrototype;
-exports.default = _default;
-},{"./_overArg.js":"../node_modules/redux/node_modules/lodash-es/_overArg.js"}],"../node_modules/redux/node_modules/lodash-es/isObjectLike.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-/**
- * Checks if `value` is object-like. A value is object-like if it's not `null`
- * and has a `typeof` result of "object".
- *
- * @static
- * @memberOf _
- * @since 4.0.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is object-like, else `false`.
- * @example
- *
- * _.isObjectLike({});
- * // => true
- *
- * _.isObjectLike([1, 2, 3]);
- * // => true
- *
- * _.isObjectLike(_.noop);
- * // => false
- *
- * _.isObjectLike(null);
- * // => false
- */
-function isObjectLike(value) {
-  return value != null && typeof value == 'object';
-}
-
-var _default = isObjectLike;
-exports.default = _default;
-},{}],"../node_modules/redux/node_modules/lodash-es/isPlainObject.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _baseGetTag = _interopRequireDefault(require("./_baseGetTag.js"));
-
-var _getPrototype = _interopRequireDefault(require("./_getPrototype.js"));
-
-var _isObjectLike = _interopRequireDefault(require("./isObjectLike.js"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/** `Object#toString` result references. */
-var objectTag = '[object Object]';
-/** Used for built-in method references. */
-
-var funcProto = Function.prototype,
-    objectProto = Object.prototype;
-/** Used to resolve the decompiled source of functions. */
-
-var funcToString = funcProto.toString;
-/** Used to check objects for own properties. */
-
-var hasOwnProperty = objectProto.hasOwnProperty;
-/** Used to infer the `Object` constructor. */
-
-var objectCtorString = funcToString.call(Object);
-/**
- * Checks if `value` is a plain object, that is, an object created by the
- * `Object` constructor or one with a `[[Prototype]]` of `null`.
- *
- * @static
- * @memberOf _
- * @since 0.8.0
- * @category Lang
- * @param {*} value The value to check.
- * @returns {boolean} Returns `true` if `value` is a plain object, else `false`.
- * @example
- *
- * function Foo() {
- *   this.a = 1;
- * }
- *
- * _.isPlainObject(new Foo);
- * // => false
- *
- * _.isPlainObject([1, 2, 3]);
- * // => false
- *
- * _.isPlainObject({ 'x': 0, 'y': 0 });
- * // => true
- *
- * _.isPlainObject(Object.create(null));
- * // => true
- */
-
-function isPlainObject(value) {
-  if (!(0, _isObjectLike.default)(value) || (0, _baseGetTag.default)(value) != objectTag) {
-    return false;
-  }
-
-  var proto = (0, _getPrototype.default)(value);
-
-  if (proto === null) {
-    return true;
-  }
-
-  var Ctor = hasOwnProperty.call(proto, 'constructor') && proto.constructor;
-  return typeof Ctor == 'function' && Ctor instanceof Ctor && funcToString.call(Ctor) == objectCtorString;
-}
-
-var _default = isPlainObject;
-exports.default = _default;
-},{"./_baseGetTag.js":"../node_modules/redux/node_modules/lodash-es/_baseGetTag.js","./_getPrototype.js":"../node_modules/redux/node_modules/lodash-es/_getPrototype.js","./isObjectLike.js":"../node_modules/redux/node_modules/lodash-es/isObjectLike.js"}],"../node_modules/symbol-observable/es/ponyfill.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = symbolObservablePonyfill;
-
-function symbolObservablePonyfill(root) {
-  var result;
-  var Symbol = root.Symbol;
-
-  if (typeof Symbol === 'function') {
-    if (Symbol.observable) {
-      result = Symbol.observable;
-    } else {
-      result = Symbol('observable');
-      Symbol.observable = result;
-    }
-  } else {
-    result = '@@observable';
-  }
-
-  return result;
-}
-
-;
-},{}],"../node_modules/symbol-observable/es/index.js":[function(require,module,exports) {
-var global = arguments[3];
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _ponyfill = _interopRequireDefault(require("./ponyfill.js"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/* global window */
-var root;
-
-if (typeof self !== 'undefined') {
-  root = self;
-} else if (typeof window !== 'undefined') {
-  root = window;
-} else if (typeof global !== 'undefined') {
-  root = global;
-} else if (typeof module !== 'undefined') {
-  root = module;
-} else {
-  root = Function('return this')();
-}
-
-var result = (0, _ponyfill.default)(root);
-var _default = result;
-exports.default = _default;
-},{"./ponyfill.js":"../node_modules/symbol-observable/es/ponyfill.js"}],"../node_modules/redux/es/createStore.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = createStore;
-exports.ActionTypes = void 0;
-
-var _isPlainObject = _interopRequireDefault(require("lodash-es/isPlainObject"));
-
-var _symbolObservable = _interopRequireDefault(require("symbol-observable"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/**
- * These are private action types reserved by Redux.
- * For any unknown actions, you must return the current state.
- * If the current state is undefined, you must return the initial state.
- * Do not reference these action types directly in your code.
- */
-var ActionTypes = {
-  INIT: '@@redux/INIT'
-  /**
-   * Creates a Redux store that holds the state tree.
-   * The only way to change the data in the store is to call `dispatch()` on it.
-   *
-   * There should only be a single store in your app. To specify how different
-   * parts of the state tree respond to actions, you may combine several reducers
-   * into a single reducer function by using `combineReducers`.
-   *
-   * @param {Function} reducer A function that returns the next state tree, given
-   * the current state tree and the action to handle.
-   *
-   * @param {any} [preloadedState] The initial state. You may optionally specify it
-   * to hydrate the state from the server in universal apps, or to restore a
-   * previously serialized user session.
-   * If you use `combineReducers` to produce the root reducer function, this must be
-   * an object with the same shape as `combineReducers` keys.
-   *
-   * @param {Function} [enhancer] The store enhancer. You may optionally specify it
-   * to enhance the store with third-party capabilities such as middleware,
-   * time travel, persistence, etc. The only store enhancer that ships with Redux
-   * is `applyMiddleware()`.
-   *
-   * @returns {Store} A Redux store that lets you read the state, dispatch actions
-   * and subscribe to changes.
-   */
-
-};
-exports.ActionTypes = ActionTypes;
-
-function createStore(reducer, preloadedState, enhancer) {
-  var _ref2;
-
-  if (typeof preloadedState === 'function' && typeof enhancer === 'undefined') {
-    enhancer = preloadedState;
-    preloadedState = undefined;
-  }
-
-  if (typeof enhancer !== 'undefined') {
-    if (typeof enhancer !== 'function') {
-      throw new Error('Expected the enhancer to be a function.');
-    }
-
-    return enhancer(createStore)(reducer, preloadedState);
-  }
-
-  if (typeof reducer !== 'function') {
-    throw new Error('Expected the reducer to be a function.');
-  }
-
-  var currentReducer = reducer;
-  var currentState = preloadedState;
-  var currentListeners = [];
-  var nextListeners = currentListeners;
-  var isDispatching = false;
-
-  function ensureCanMutateNextListeners() {
-    if (nextListeners === currentListeners) {
-      nextListeners = currentListeners.slice();
-    }
-  }
-  /**
-   * Reads the state tree managed by the store.
-   *
-   * @returns {any} The current state tree of your application.
-   */
-
-
-  function getState() {
-    return currentState;
-  }
-  /**
-   * Adds a change listener. It will be called any time an action is dispatched,
-   * and some part of the state tree may potentially have changed. You may then
-   * call `getState()` to read the current state tree inside the callback.
-   *
-   * You may call `dispatch()` from a change listener, with the following
-   * caveats:
-   *
-   * 1. The subscriptions are snapshotted just before every `dispatch()` call.
-   * If you subscribe or unsubscribe while the listeners are being invoked, this
-   * will not have any effect on the `dispatch()` that is currently in progress.
-   * However, the next `dispatch()` call, whether nested or not, will use a more
-   * recent snapshot of the subscription list.
-   *
-   * 2. The listener should not expect to see all state changes, as the state
-   * might have been updated multiple times during a nested `dispatch()` before
-   * the listener is called. It is, however, guaranteed that all subscribers
-   * registered before the `dispatch()` started will be called with the latest
-   * state by the time it exits.
-   *
-   * @param {Function} listener A callback to be invoked on every dispatch.
-   * @returns {Function} A function to remove this change listener.
-   */
-
-
-  function subscribe(listener) {
-    if (typeof listener !== 'function') {
-      throw new Error('Expected listener to be a function.');
-    }
-
-    var isSubscribed = true;
-    ensureCanMutateNextListeners();
-    nextListeners.push(listener);
-    return function unsubscribe() {
-      if (!isSubscribed) {
-        return;
-      }
-
-      isSubscribed = false;
-      ensureCanMutateNextListeners();
-      var index = nextListeners.indexOf(listener);
-      nextListeners.splice(index, 1);
-    };
-  }
-  /**
-   * Dispatches an action. It is the only way to trigger a state change.
-   *
-   * The `reducer` function, used to create the store, will be called with the
-   * current state tree and the given `action`. Its return value will
-   * be considered the **next** state of the tree, and the change listeners
-   * will be notified.
-   *
-   * The base implementation only supports plain object actions. If you want to
-   * dispatch a Promise, an Observable, a thunk, or something else, you need to
-   * wrap your store creating function into the corresponding middleware. For
-   * example, see the documentation for the `redux-thunk` package. Even the
-   * middleware will eventually dispatch plain object actions using this method.
-   *
-   * @param {Object} action A plain object representing “what changed”. It is
-   * a good idea to keep actions serializable so you can record and replay user
-   * sessions, or use the time travelling `redux-devtools`. An action must have
-   * a `type` property which may not be `undefined`. It is a good idea to use
-   * string constants for action types.
-   *
-   * @returns {Object} For convenience, the same action object you dispatched.
-   *
-   * Note that, if you use a custom middleware, it may wrap `dispatch()` to
-   * return something else (for example, a Promise you can await).
-   */
-
-
-  function dispatch(action) {
-    if (!(0, _isPlainObject.default)(action)) {
-      throw new Error('Actions must be plain objects. ' + 'Use custom middleware for async actions.');
-    }
-
-    if (typeof action.type === 'undefined') {
-      throw new Error('Actions may not have an undefined "type" property. ' + 'Have you misspelled a constant?');
-    }
-
-    if (isDispatching) {
-      throw new Error('Reducers may not dispatch actions.');
-    }
-
-    try {
-      isDispatching = true;
-      currentState = currentReducer(currentState, action);
-    } finally {
-      isDispatching = false;
-    }
-
-    var listeners = currentListeners = nextListeners;
-
-    for (var i = 0; i < listeners.length; i++) {
-      var listener = listeners[i];
-      listener();
-    }
-
-    return action;
-  }
-  /**
-   * Replaces the reducer currently used by the store to calculate the state.
-   *
-   * You might need this if your app implements code splitting and you want to
-   * load some of the reducers dynamically. You might also need this if you
-   * implement a hot reloading mechanism for Redux.
-   *
-   * @param {Function} nextReducer The reducer for the store to use instead.
-   * @returns {void}
-   */
-
-
-  function replaceReducer(nextReducer) {
-    if (typeof nextReducer !== 'function') {
-      throw new Error('Expected the nextReducer to be a function.');
-    }
-
-    currentReducer = nextReducer;
-    dispatch({
-      type: ActionTypes.INIT
-    });
-  }
-  /**
-   * Interoperability point for observable/reactive libraries.
-   * @returns {observable} A minimal observable of state changes.
-   * For more information, see the observable proposal:
-   * https://github.com/tc39/proposal-observable
-   */
-
-
-  function observable() {
-    var _ref;
-
-    var outerSubscribe = subscribe;
-    return _ref = {
-      /**
-       * The minimal observable subscription method.
-       * @param {Object} observer Any object that can be used as an observer.
-       * The observer object should have a `next` method.
-       * @returns {subscription} An object with an `unsubscribe` method that can
-       * be used to unsubscribe the observable from the store, and prevent further
-       * emission of values from the observable.
-       */
-      subscribe: function subscribe(observer) {
-        if (typeof observer !== 'object') {
-          throw new TypeError('Expected the observer to be an object.');
-        }
-
-        function observeState() {
-          if (observer.next) {
-            observer.next(getState());
-          }
-        }
-
-        observeState();
-        var unsubscribe = outerSubscribe(observeState);
-        return {
-          unsubscribe: unsubscribe
-        };
-      }
-    }, _ref[_symbolObservable.default] = function () {
-      return this;
-    }, _ref;
-  } // When a store is created, an "INIT" action is dispatched so that every
-  // reducer returns their initial state. This effectively populates
-  // the initial state tree.
-
-
-  dispatch({
-    type: ActionTypes.INIT
-  });
-  return _ref2 = {
-    dispatch: dispatch,
-    subscribe: subscribe,
-    getState: getState,
-    replaceReducer: replaceReducer
-  }, _ref2[_symbolObservable.default] = observable, _ref2;
-}
-},{"lodash-es/isPlainObject":"../node_modules/redux/node_modules/lodash-es/isPlainObject.js","symbol-observable":"../node_modules/symbol-observable/es/index.js"}],"../node_modules/redux/es/utils/warning.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = warning;
-
-/**
- * Prints a warning in the console if it exists.
- *
- * @param {String} message The warning message.
- * @returns {void}
- */
-function warning(message) {
-  /* eslint-disable no-console */
-  if (typeof console !== 'undefined' && typeof console.error === 'function') {
-    console.error(message);
-  }
-  /* eslint-enable no-console */
-
-
-  try {
-    // This error was thrown as a convenience so that if you enable
-    // "break on all exceptions" in your console,
-    // it would pause the execution at this line.
-    throw new Error(message);
-    /* eslint-disable no-empty */
-  } catch (e) {}
-  /* eslint-enable no-empty */
-
-}
-},{}],"../node_modules/redux/es/combineReducers.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = combineReducers;
-
-var _createStore = require("./createStore");
-
-var _isPlainObject = _interopRequireDefault(require("lodash-es/isPlainObject"));
-
-var _warning = _interopRequireDefault(require("./utils/warning"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function getUndefinedStateErrorMessage(key, action) {
-  var actionType = action && action.type;
-  var actionName = actionType && '"' + actionType.toString() + '"' || 'an action';
-  return 'Given action ' + actionName + ', reducer "' + key + '" returned undefined. ' + 'To ignore an action, you must explicitly return the previous state. ' + 'If you want this reducer to hold no value, you can return null instead of undefined.';
-}
-
-function getUnexpectedStateShapeWarningMessage(inputState, reducers, action, unexpectedKeyCache) {
-  var reducerKeys = Object.keys(reducers);
-  var argumentName = action && action.type === _createStore.ActionTypes.INIT ? 'preloadedState argument passed to createStore' : 'previous state received by the reducer';
-
-  if (reducerKeys.length === 0) {
-    return 'Store does not have a valid reducer. Make sure the argument passed ' + 'to combineReducers is an object whose values are reducers.';
-  }
-
-  if (!(0, _isPlainObject.default)(inputState)) {
-    return 'The ' + argumentName + ' has unexpected type of "' + {}.toString.call(inputState).match(/\s([a-z|A-Z]+)/)[1] + '". Expected argument to be an object with the following ' + ('keys: "' + reducerKeys.join('", "') + '"');
-  }
-
-  var unexpectedKeys = Object.keys(inputState).filter(function (key) {
-    return !reducers.hasOwnProperty(key) && !unexpectedKeyCache[key];
-  });
-  unexpectedKeys.forEach(function (key) {
-    unexpectedKeyCache[key] = true;
-  });
-
-  if (unexpectedKeys.length > 0) {
-    return 'Unexpected ' + (unexpectedKeys.length > 1 ? 'keys' : 'key') + ' ' + ('"' + unexpectedKeys.join('", "') + '" found in ' + argumentName + '. ') + 'Expected to find one of the known reducer keys instead: ' + ('"' + reducerKeys.join('", "') + '". Unexpected keys will be ignored.');
-  }
-}
-
-function assertReducerShape(reducers) {
-  Object.keys(reducers).forEach(function (key) {
-    var reducer = reducers[key];
-    var initialState = reducer(undefined, {
-      type: _createStore.ActionTypes.INIT
-    });
-
-    if (typeof initialState === 'undefined') {
-      throw new Error('Reducer "' + key + '" returned undefined during initialization. ' + 'If the state passed to the reducer is undefined, you must ' + 'explicitly return the initial state. The initial state may ' + 'not be undefined. If you don\'t want to set a value for this reducer, ' + 'you can use null instead of undefined.');
-    }
-
-    var type = '@@redux/PROBE_UNKNOWN_ACTION_' + Math.random().toString(36).substring(7).split('').join('.');
-
-    if (typeof reducer(undefined, {
-      type: type
-    }) === 'undefined') {
-      throw new Error('Reducer "' + key + '" returned undefined when probed with a random type. ' + ('Don\'t try to handle ' + _createStore.ActionTypes.INIT + ' or other actions in "redux/*" ') + 'namespace. They are considered private. Instead, you must return the ' + 'current state for any unknown actions, unless it is undefined, ' + 'in which case you must return the initial state, regardless of the ' + 'action type. The initial state may not be undefined, but can be null.');
-    }
-  });
-}
-/**
- * Turns an object whose values are different reducer functions, into a single
- * reducer function. It will call every child reducer, and gather their results
- * into a single state object, whose keys correspond to the keys of the passed
- * reducer functions.
- *
- * @param {Object} reducers An object whose values correspond to different
- * reducer functions that need to be combined into one. One handy way to obtain
- * it is to use ES6 `import * as reducers` syntax. The reducers may never return
- * undefined for any action. Instead, they should return their initial state
- * if the state passed to them was undefined, and the current state for any
- * unrecognized action.
- *
- * @returns {Function} A reducer function that invokes every reducer inside the
- * passed object, and builds a state object with the same shape.
- */
-
-
-function combineReducers(reducers) {
-  var reducerKeys = Object.keys(reducers);
-  var finalReducers = {};
-
-  for (var i = 0; i < reducerKeys.length; i++) {
-    var key = reducerKeys[i];
-
-    if (undefined !== 'production') {
-      if (typeof reducers[key] === 'undefined') {
-        (0, _warning.default)('No reducer provided for key "' + key + '"');
-      }
-    }
-
-    if (typeof reducers[key] === 'function') {
-      finalReducers[key] = reducers[key];
-    }
-  }
-
-  var finalReducerKeys = Object.keys(finalReducers);
-  var unexpectedKeyCache = void 0;
-
-  if (undefined !== 'production') {
-    unexpectedKeyCache = {};
-  }
-
-  var shapeAssertionError = void 0;
-
-  try {
-    assertReducerShape(finalReducers);
-  } catch (e) {
-    shapeAssertionError = e;
-  }
-
-  return function combination() {
-    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-    var action = arguments[1];
-
-    if (shapeAssertionError) {
-      throw shapeAssertionError;
-    }
-
-    if (undefined !== 'production') {
-      var warningMessage = getUnexpectedStateShapeWarningMessage(state, finalReducers, action, unexpectedKeyCache);
-
-      if (warningMessage) {
-        (0, _warning.default)(warningMessage);
-      }
-    }
-
-    var hasChanged = false;
-    var nextState = {};
-
-    for (var _i = 0; _i < finalReducerKeys.length; _i++) {
-      var _key = finalReducerKeys[_i];
-      var reducer = finalReducers[_key];
-      var previousStateForKey = state[_key];
-      var nextStateForKey = reducer(previousStateForKey, action);
-
-      if (typeof nextStateForKey === 'undefined') {
-        var errorMessage = getUndefinedStateErrorMessage(_key, action);
-        throw new Error(errorMessage);
-      }
-
-      nextState[_key] = nextStateForKey;
-      hasChanged = hasChanged || nextStateForKey !== previousStateForKey;
-    }
-
-    return hasChanged ? nextState : state;
-  };
-}
-},{"./createStore":"../node_modules/redux/es/createStore.js","lodash-es/isPlainObject":"../node_modules/redux/node_modules/lodash-es/isPlainObject.js","./utils/warning":"../node_modules/redux/es/utils/warning.js"}],"../node_modules/redux/es/bindActionCreators.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = bindActionCreators;
-
-function bindActionCreator(actionCreator, dispatch) {
-  return function () {
-    return dispatch(actionCreator.apply(undefined, arguments));
-  };
-}
-/**
- * Turns an object whose values are action creators, into an object with the
- * same keys, but with every function wrapped into a `dispatch` call so they
- * may be invoked directly. This is just a convenience method, as you can call
- * `store.dispatch(MyActionCreators.doSomething())` yourself just fine.
- *
- * For convenience, you can also pass a single function as the first argument,
- * and get a function in return.
- *
- * @param {Function|Object} actionCreators An object whose values are action
- * creator functions. One handy way to obtain it is to use ES6 `import * as`
- * syntax. You may also pass a single function.
- *
- * @param {Function} dispatch The `dispatch` function available on your Redux
- * store.
- *
- * @returns {Function|Object} The object mimicking the original object, but with
- * every action creator wrapped into the `dispatch` call. If you passed a
- * function as `actionCreators`, the return value will also be a single
- * function.
- */
-
-
-function bindActionCreators(actionCreators, dispatch) {
-  if (typeof actionCreators === 'function') {
-    return bindActionCreator(actionCreators, dispatch);
-  }
-
-  if (typeof actionCreators !== 'object' || actionCreators === null) {
-    throw new Error('bindActionCreators expected an object or a function, instead received ' + (actionCreators === null ? 'null' : typeof actionCreators) + '. ' + 'Did you write "import ActionCreators from" instead of "import * as ActionCreators from"?');
-  }
-
-  var keys = Object.keys(actionCreators);
-  var boundActionCreators = {};
-
-  for (var i = 0; i < keys.length; i++) {
-    var key = keys[i];
-    var actionCreator = actionCreators[key];
-
-    if (typeof actionCreator === 'function') {
-      boundActionCreators[key] = bindActionCreator(actionCreator, dispatch);
-    }
-  }
-
-  return boundActionCreators;
-}
-},{}],"../node_modules/redux/es/compose.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = compose;
-
-/**
- * Composes single-argument functions from right to left. The rightmost
- * function can take multiple arguments as it provides the signature for
- * the resulting composite function.
- *
- * @param {...Function} funcs The functions to compose.
- * @returns {Function} A function obtained by composing the argument functions
- * from right to left. For example, compose(f, g, h) is identical to doing
- * (...args) => f(g(h(...args))).
- */
-function compose() {
-  for (var _len = arguments.length, funcs = Array(_len), _key = 0; _key < _len; _key++) {
-    funcs[_key] = arguments[_key];
-  }
-
-  if (funcs.length === 0) {
-    return function (arg) {
-      return arg;
-    };
-  }
-
-  if (funcs.length === 1) {
-    return funcs[0];
-  }
-
-  return funcs.reduce(function (a, b) {
-    return function () {
-      return a(b.apply(undefined, arguments));
-    };
-  });
-}
-},{}],"../node_modules/redux/es/applyMiddleware.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = applyMiddleware;
-
-var _compose = _interopRequireDefault(require("./compose"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var _extends = Object.assign || function (target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i];
-
-    for (var key in source) {
-      if (Object.prototype.hasOwnProperty.call(source, key)) {
-        target[key] = source[key];
-      }
-    }
-  }
-
-  return target;
-};
-
-/**
- * Creates a store enhancer that applies middleware to the dispatch method
- * of the Redux store. This is handy for a variety of tasks, such as expressing
- * asynchronous actions in a concise manner, or logging every action payload.
- *
- * See `redux-thunk` package as an example of the Redux middleware.
- *
- * Because middleware is potentially asynchronous, this should be the first
- * store enhancer in the composition chain.
- *
- * Note that each middleware will be given the `dispatch` and `getState` functions
- * as named arguments.
- *
- * @param {...Function} middlewares The middleware chain to be applied.
- * @returns {Function} A store enhancer applying the middleware.
- */
-function applyMiddleware() {
-  for (var _len = arguments.length, middlewares = Array(_len), _key = 0; _key < _len; _key++) {
-    middlewares[_key] = arguments[_key];
-  }
-
-  return function (createStore) {
-    return function (reducer, preloadedState, enhancer) {
-      var store = createStore(reducer, preloadedState, enhancer);
-      var _dispatch = store.dispatch;
-      var chain = [];
-      var middlewareAPI = {
-        getState: store.getState,
-        dispatch: function dispatch(action) {
-          return _dispatch(action);
-        }
-      };
-      chain = middlewares.map(function (middleware) {
-        return middleware(middlewareAPI);
-      });
-      _dispatch = _compose.default.apply(undefined, chain)(store.dispatch);
-      return _extends({}, store, {
-        dispatch: _dispatch
-      });
-    };
-  };
-}
-},{"./compose":"../node_modules/redux/es/compose.js"}],"../node_modules/redux/es/index.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-Object.defineProperty(exports, "createStore", {
-  enumerable: true,
-  get: function () {
-    return _createStore.default;
-  }
-});
-Object.defineProperty(exports, "combineReducers", {
-  enumerable: true,
-  get: function () {
-    return _combineReducers.default;
-  }
-});
-Object.defineProperty(exports, "bindActionCreators", {
-  enumerable: true,
-  get: function () {
-    return _bindActionCreators.default;
-  }
-});
-Object.defineProperty(exports, "applyMiddleware", {
-  enumerable: true,
-  get: function () {
-    return _applyMiddleware.default;
-  }
-});
-Object.defineProperty(exports, "compose", {
-  enumerable: true,
-  get: function () {
-    return _compose.default;
-  }
-});
-
-var _createStore = _interopRequireDefault(require("./createStore"));
-
-var _combineReducers = _interopRequireDefault(require("./combineReducers"));
-
-var _bindActionCreators = _interopRequireDefault(require("./bindActionCreators"));
-
-var _applyMiddleware = _interopRequireDefault(require("./applyMiddleware"));
-
-var _compose = _interopRequireDefault(require("./compose"));
-
-var _warning = _interopRequireDefault(require("./utils/warning"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-/*
-* This is a dummy function to check if the function name has been altered by minification.
-* If the function has been minified and NODE_ENV !== 'production', warn the user.
-*/
-function isCrushed() {}
-
-if (undefined !== 'production' && typeof isCrushed.name === 'string' && isCrushed.name !== 'isCrushed') {
-  (0, _warning.default)('You are currently using minified code outside of NODE_ENV === \'production\'. ' + 'This means that you are running a slower development build of Redux. ' + 'You can use loose-envify (https://github.com/zertosh/loose-envify) for browserify ' + 'or DefinePlugin for webpack (http://stackoverflow.com/questions/30030031) ' + 'to ensure you have the correct code for your production build.');
-}
-},{"./createStore":"../node_modules/redux/es/createStore.js","./combineReducers":"../node_modules/redux/es/combineReducers.js","./bindActionCreators":"../node_modules/redux/es/bindActionCreators.js","./applyMiddleware":"../node_modules/redux/es/applyMiddleware.js","./compose":"../node_modules/redux/es/compose.js","./utils/warning":"../node_modules/redux/es/utils/warning.js"}],"../node_modules/lodash-es/_freeGlobal.js":[function(require,module,exports) {
+},{}],"../node_modules/lodash-es/_freeGlobal.js":[function(require,module,exports) {
 var global = arguments[3];
 "use strict";
 
@@ -23016,7 +22332,772 @@ function isPlainObject(value) {
 
 var _default = isPlainObject;
 exports.default = _default;
-},{"./_baseGetTag.js":"../node_modules/lodash-es/_baseGetTag.js","./_getPrototype.js":"../node_modules/lodash-es/_getPrototype.js","./isObjectLike.js":"../node_modules/lodash-es/isObjectLike.js"}],"../node_modules/react-redux/es/utils/verifyPlainObject.js":[function(require,module,exports) {
+},{"./_baseGetTag.js":"../node_modules/lodash-es/_baseGetTag.js","./_getPrototype.js":"../node_modules/lodash-es/_getPrototype.js","./isObjectLike.js":"../node_modules/lodash-es/isObjectLike.js"}],"../node_modules/symbol-observable/es/ponyfill.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = symbolObservablePonyfill;
+
+function symbolObservablePonyfill(root) {
+  var result;
+  var Symbol = root.Symbol;
+
+  if (typeof Symbol === 'function') {
+    if (Symbol.observable) {
+      result = Symbol.observable;
+    } else {
+      result = Symbol('observable');
+      Symbol.observable = result;
+    }
+  } else {
+    result = '@@observable';
+  }
+
+  return result;
+}
+
+;
+},{}],"../node_modules/symbol-observable/es/index.js":[function(require,module,exports) {
+var global = arguments[3];
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _ponyfill = _interopRequireDefault(require("./ponyfill.js"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/* global window */
+var root;
+
+if (typeof self !== 'undefined') {
+  root = self;
+} else if (typeof window !== 'undefined') {
+  root = window;
+} else if (typeof global !== 'undefined') {
+  root = global;
+} else if (typeof module !== 'undefined') {
+  root = module;
+} else {
+  root = Function('return this')();
+}
+
+var result = (0, _ponyfill.default)(root);
+var _default = result;
+exports.default = _default;
+},{"./ponyfill.js":"../node_modules/symbol-observable/es/ponyfill.js"}],"../node_modules/redux/es/createStore.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = createStore;
+exports.ActionTypes = void 0;
+
+var _isPlainObject = _interopRequireDefault(require("lodash-es/isPlainObject"));
+
+var _symbolObservable = _interopRequireDefault(require("symbol-observable"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/**
+ * These are private action types reserved by Redux.
+ * For any unknown actions, you must return the current state.
+ * If the current state is undefined, you must return the initial state.
+ * Do not reference these action types directly in your code.
+ */
+var ActionTypes = {
+  INIT: '@@redux/INIT'
+  /**
+   * Creates a Redux store that holds the state tree.
+   * The only way to change the data in the store is to call `dispatch()` on it.
+   *
+   * There should only be a single store in your app. To specify how different
+   * parts of the state tree respond to actions, you may combine several reducers
+   * into a single reducer function by using `combineReducers`.
+   *
+   * @param {Function} reducer A function that returns the next state tree, given
+   * the current state tree and the action to handle.
+   *
+   * @param {any} [preloadedState] The initial state. You may optionally specify it
+   * to hydrate the state from the server in universal apps, or to restore a
+   * previously serialized user session.
+   * If you use `combineReducers` to produce the root reducer function, this must be
+   * an object with the same shape as `combineReducers` keys.
+   *
+   * @param {Function} [enhancer] The store enhancer. You may optionally specify it
+   * to enhance the store with third-party capabilities such as middleware,
+   * time travel, persistence, etc. The only store enhancer that ships with Redux
+   * is `applyMiddleware()`.
+   *
+   * @returns {Store} A Redux store that lets you read the state, dispatch actions
+   * and subscribe to changes.
+   */
+
+};
+exports.ActionTypes = ActionTypes;
+
+function createStore(reducer, preloadedState, enhancer) {
+  var _ref2;
+
+  if (typeof preloadedState === 'function' && typeof enhancer === 'undefined') {
+    enhancer = preloadedState;
+    preloadedState = undefined;
+  }
+
+  if (typeof enhancer !== 'undefined') {
+    if (typeof enhancer !== 'function') {
+      throw new Error('Expected the enhancer to be a function.');
+    }
+
+    return enhancer(createStore)(reducer, preloadedState);
+  }
+
+  if (typeof reducer !== 'function') {
+    throw new Error('Expected the reducer to be a function.');
+  }
+
+  var currentReducer = reducer;
+  var currentState = preloadedState;
+  var currentListeners = [];
+  var nextListeners = currentListeners;
+  var isDispatching = false;
+
+  function ensureCanMutateNextListeners() {
+    if (nextListeners === currentListeners) {
+      nextListeners = currentListeners.slice();
+    }
+  }
+  /**
+   * Reads the state tree managed by the store.
+   *
+   * @returns {any} The current state tree of your application.
+   */
+
+
+  function getState() {
+    return currentState;
+  }
+  /**
+   * Adds a change listener. It will be called any time an action is dispatched,
+   * and some part of the state tree may potentially have changed. You may then
+   * call `getState()` to read the current state tree inside the callback.
+   *
+   * You may call `dispatch()` from a change listener, with the following
+   * caveats:
+   *
+   * 1. The subscriptions are snapshotted just before every `dispatch()` call.
+   * If you subscribe or unsubscribe while the listeners are being invoked, this
+   * will not have any effect on the `dispatch()` that is currently in progress.
+   * However, the next `dispatch()` call, whether nested or not, will use a more
+   * recent snapshot of the subscription list.
+   *
+   * 2. The listener should not expect to see all state changes, as the state
+   * might have been updated multiple times during a nested `dispatch()` before
+   * the listener is called. It is, however, guaranteed that all subscribers
+   * registered before the `dispatch()` started will be called with the latest
+   * state by the time it exits.
+   *
+   * @param {Function} listener A callback to be invoked on every dispatch.
+   * @returns {Function} A function to remove this change listener.
+   */
+
+
+  function subscribe(listener) {
+    if (typeof listener !== 'function') {
+      throw new Error('Expected listener to be a function.');
+    }
+
+    var isSubscribed = true;
+    ensureCanMutateNextListeners();
+    nextListeners.push(listener);
+    return function unsubscribe() {
+      if (!isSubscribed) {
+        return;
+      }
+
+      isSubscribed = false;
+      ensureCanMutateNextListeners();
+      var index = nextListeners.indexOf(listener);
+      nextListeners.splice(index, 1);
+    };
+  }
+  /**
+   * Dispatches an action. It is the only way to trigger a state change.
+   *
+   * The `reducer` function, used to create the store, will be called with the
+   * current state tree and the given `action`. Its return value will
+   * be considered the **next** state of the tree, and the change listeners
+   * will be notified.
+   *
+   * The base implementation only supports plain object actions. If you want to
+   * dispatch a Promise, an Observable, a thunk, or something else, you need to
+   * wrap your store creating function into the corresponding middleware. For
+   * example, see the documentation for the `redux-thunk` package. Even the
+   * middleware will eventually dispatch plain object actions using this method.
+   *
+   * @param {Object} action A plain object representing “what changed”. It is
+   * a good idea to keep actions serializable so you can record and replay user
+   * sessions, or use the time travelling `redux-devtools`. An action must have
+   * a `type` property which may not be `undefined`. It is a good idea to use
+   * string constants for action types.
+   *
+   * @returns {Object} For convenience, the same action object you dispatched.
+   *
+   * Note that, if you use a custom middleware, it may wrap `dispatch()` to
+   * return something else (for example, a Promise you can await).
+   */
+
+
+  function dispatch(action) {
+    if (!(0, _isPlainObject.default)(action)) {
+      throw new Error('Actions must be plain objects. ' + 'Use custom middleware for async actions.');
+    }
+
+    if (typeof action.type === 'undefined') {
+      throw new Error('Actions may not have an undefined "type" property. ' + 'Have you misspelled a constant?');
+    }
+
+    if (isDispatching) {
+      throw new Error('Reducers may not dispatch actions.');
+    }
+
+    try {
+      isDispatching = true;
+      currentState = currentReducer(currentState, action);
+    } finally {
+      isDispatching = false;
+    }
+
+    var listeners = currentListeners = nextListeners;
+
+    for (var i = 0; i < listeners.length; i++) {
+      var listener = listeners[i];
+      listener();
+    }
+
+    return action;
+  }
+  /**
+   * Replaces the reducer currently used by the store to calculate the state.
+   *
+   * You might need this if your app implements code splitting and you want to
+   * load some of the reducers dynamically. You might also need this if you
+   * implement a hot reloading mechanism for Redux.
+   *
+   * @param {Function} nextReducer The reducer for the store to use instead.
+   * @returns {void}
+   */
+
+
+  function replaceReducer(nextReducer) {
+    if (typeof nextReducer !== 'function') {
+      throw new Error('Expected the nextReducer to be a function.');
+    }
+
+    currentReducer = nextReducer;
+    dispatch({
+      type: ActionTypes.INIT
+    });
+  }
+  /**
+   * Interoperability point for observable/reactive libraries.
+   * @returns {observable} A minimal observable of state changes.
+   * For more information, see the observable proposal:
+   * https://github.com/tc39/proposal-observable
+   */
+
+
+  function observable() {
+    var _ref;
+
+    var outerSubscribe = subscribe;
+    return _ref = {
+      /**
+       * The minimal observable subscription method.
+       * @param {Object} observer Any object that can be used as an observer.
+       * The observer object should have a `next` method.
+       * @returns {subscription} An object with an `unsubscribe` method that can
+       * be used to unsubscribe the observable from the store, and prevent further
+       * emission of values from the observable.
+       */
+      subscribe: function subscribe(observer) {
+        if (typeof observer !== 'object') {
+          throw new TypeError('Expected the observer to be an object.');
+        }
+
+        function observeState() {
+          if (observer.next) {
+            observer.next(getState());
+          }
+        }
+
+        observeState();
+        var unsubscribe = outerSubscribe(observeState);
+        return {
+          unsubscribe: unsubscribe
+        };
+      }
+    }, _ref[_symbolObservable.default] = function () {
+      return this;
+    }, _ref;
+  } // When a store is created, an "INIT" action is dispatched so that every
+  // reducer returns their initial state. This effectively populates
+  // the initial state tree.
+
+
+  dispatch({
+    type: ActionTypes.INIT
+  });
+  return _ref2 = {
+    dispatch: dispatch,
+    subscribe: subscribe,
+    getState: getState,
+    replaceReducer: replaceReducer
+  }, _ref2[_symbolObservable.default] = observable, _ref2;
+}
+},{"lodash-es/isPlainObject":"../node_modules/lodash-es/isPlainObject.js","symbol-observable":"../node_modules/symbol-observable/es/index.js"}],"../node_modules/redux/es/utils/warning.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = warning;
+
+/**
+ * Prints a warning in the console if it exists.
+ *
+ * @param {String} message The warning message.
+ * @returns {void}
+ */
+function warning(message) {
+  /* eslint-disable no-console */
+  if (typeof console !== 'undefined' && typeof console.error === 'function') {
+    console.error(message);
+  }
+  /* eslint-enable no-console */
+
+
+  try {
+    // This error was thrown as a convenience so that if you enable
+    // "break on all exceptions" in your console,
+    // it would pause the execution at this line.
+    throw new Error(message);
+    /* eslint-disable no-empty */
+  } catch (e) {}
+  /* eslint-enable no-empty */
+
+}
+},{}],"../node_modules/redux/es/combineReducers.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = combineReducers;
+
+var _createStore = require("./createStore");
+
+var _isPlainObject = _interopRequireDefault(require("lodash-es/isPlainObject"));
+
+var _warning = _interopRequireDefault(require("./utils/warning"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function getUndefinedStateErrorMessage(key, action) {
+  var actionType = action && action.type;
+  var actionName = actionType && '"' + actionType.toString() + '"' || 'an action';
+  return 'Given action ' + actionName + ', reducer "' + key + '" returned undefined. ' + 'To ignore an action, you must explicitly return the previous state. ' + 'If you want this reducer to hold no value, you can return null instead of undefined.';
+}
+
+function getUnexpectedStateShapeWarningMessage(inputState, reducers, action, unexpectedKeyCache) {
+  var reducerKeys = Object.keys(reducers);
+  var argumentName = action && action.type === _createStore.ActionTypes.INIT ? 'preloadedState argument passed to createStore' : 'previous state received by the reducer';
+
+  if (reducerKeys.length === 0) {
+    return 'Store does not have a valid reducer. Make sure the argument passed ' + 'to combineReducers is an object whose values are reducers.';
+  }
+
+  if (!(0, _isPlainObject.default)(inputState)) {
+    return 'The ' + argumentName + ' has unexpected type of "' + {}.toString.call(inputState).match(/\s([a-z|A-Z]+)/)[1] + '". Expected argument to be an object with the following ' + ('keys: "' + reducerKeys.join('", "') + '"');
+  }
+
+  var unexpectedKeys = Object.keys(inputState).filter(function (key) {
+    return !reducers.hasOwnProperty(key) && !unexpectedKeyCache[key];
+  });
+  unexpectedKeys.forEach(function (key) {
+    unexpectedKeyCache[key] = true;
+  });
+
+  if (unexpectedKeys.length > 0) {
+    return 'Unexpected ' + (unexpectedKeys.length > 1 ? 'keys' : 'key') + ' ' + ('"' + unexpectedKeys.join('", "') + '" found in ' + argumentName + '. ') + 'Expected to find one of the known reducer keys instead: ' + ('"' + reducerKeys.join('", "') + '". Unexpected keys will be ignored.');
+  }
+}
+
+function assertReducerShape(reducers) {
+  Object.keys(reducers).forEach(function (key) {
+    var reducer = reducers[key];
+    var initialState = reducer(undefined, {
+      type: _createStore.ActionTypes.INIT
+    });
+
+    if (typeof initialState === 'undefined') {
+      throw new Error('Reducer "' + key + '" returned undefined during initialization. ' + 'If the state passed to the reducer is undefined, you must ' + 'explicitly return the initial state. The initial state may ' + 'not be undefined. If you don\'t want to set a value for this reducer, ' + 'you can use null instead of undefined.');
+    }
+
+    var type = '@@redux/PROBE_UNKNOWN_ACTION_' + Math.random().toString(36).substring(7).split('').join('.');
+
+    if (typeof reducer(undefined, {
+      type: type
+    }) === 'undefined') {
+      throw new Error('Reducer "' + key + '" returned undefined when probed with a random type. ' + ('Don\'t try to handle ' + _createStore.ActionTypes.INIT + ' or other actions in "redux/*" ') + 'namespace. They are considered private. Instead, you must return the ' + 'current state for any unknown actions, unless it is undefined, ' + 'in which case you must return the initial state, regardless of the ' + 'action type. The initial state may not be undefined, but can be null.');
+    }
+  });
+}
+/**
+ * Turns an object whose values are different reducer functions, into a single
+ * reducer function. It will call every child reducer, and gather their results
+ * into a single state object, whose keys correspond to the keys of the passed
+ * reducer functions.
+ *
+ * @param {Object} reducers An object whose values correspond to different
+ * reducer functions that need to be combined into one. One handy way to obtain
+ * it is to use ES6 `import * as reducers` syntax. The reducers may never return
+ * undefined for any action. Instead, they should return their initial state
+ * if the state passed to them was undefined, and the current state for any
+ * unrecognized action.
+ *
+ * @returns {Function} A reducer function that invokes every reducer inside the
+ * passed object, and builds a state object with the same shape.
+ */
+
+
+function combineReducers(reducers) {
+  var reducerKeys = Object.keys(reducers);
+  var finalReducers = {};
+
+  for (var i = 0; i < reducerKeys.length; i++) {
+    var key = reducerKeys[i];
+
+    if (undefined !== 'production') {
+      if (typeof reducers[key] === 'undefined') {
+        (0, _warning.default)('No reducer provided for key "' + key + '"');
+      }
+    }
+
+    if (typeof reducers[key] === 'function') {
+      finalReducers[key] = reducers[key];
+    }
+  }
+
+  var finalReducerKeys = Object.keys(finalReducers);
+  var unexpectedKeyCache = void 0;
+
+  if (undefined !== 'production') {
+    unexpectedKeyCache = {};
+  }
+
+  var shapeAssertionError = void 0;
+
+  try {
+    assertReducerShape(finalReducers);
+  } catch (e) {
+    shapeAssertionError = e;
+  }
+
+  return function combination() {
+    var state = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
+    var action = arguments[1];
+
+    if (shapeAssertionError) {
+      throw shapeAssertionError;
+    }
+
+    if (undefined !== 'production') {
+      var warningMessage = getUnexpectedStateShapeWarningMessage(state, finalReducers, action, unexpectedKeyCache);
+
+      if (warningMessage) {
+        (0, _warning.default)(warningMessage);
+      }
+    }
+
+    var hasChanged = false;
+    var nextState = {};
+
+    for (var _i = 0; _i < finalReducerKeys.length; _i++) {
+      var _key = finalReducerKeys[_i];
+      var reducer = finalReducers[_key];
+      var previousStateForKey = state[_key];
+      var nextStateForKey = reducer(previousStateForKey, action);
+
+      if (typeof nextStateForKey === 'undefined') {
+        var errorMessage = getUndefinedStateErrorMessage(_key, action);
+        throw new Error(errorMessage);
+      }
+
+      nextState[_key] = nextStateForKey;
+      hasChanged = hasChanged || nextStateForKey !== previousStateForKey;
+    }
+
+    return hasChanged ? nextState : state;
+  };
+}
+},{"./createStore":"../node_modules/redux/es/createStore.js","lodash-es/isPlainObject":"../node_modules/lodash-es/isPlainObject.js","./utils/warning":"../node_modules/redux/es/utils/warning.js"}],"../node_modules/redux/es/bindActionCreators.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = bindActionCreators;
+
+function bindActionCreator(actionCreator, dispatch) {
+  return function () {
+    return dispatch(actionCreator.apply(undefined, arguments));
+  };
+}
+/**
+ * Turns an object whose values are action creators, into an object with the
+ * same keys, but with every function wrapped into a `dispatch` call so they
+ * may be invoked directly. This is just a convenience method, as you can call
+ * `store.dispatch(MyActionCreators.doSomething())` yourself just fine.
+ *
+ * For convenience, you can also pass a single function as the first argument,
+ * and get a function in return.
+ *
+ * @param {Function|Object} actionCreators An object whose values are action
+ * creator functions. One handy way to obtain it is to use ES6 `import * as`
+ * syntax. You may also pass a single function.
+ *
+ * @param {Function} dispatch The `dispatch` function available on your Redux
+ * store.
+ *
+ * @returns {Function|Object} The object mimicking the original object, but with
+ * every action creator wrapped into the `dispatch` call. If you passed a
+ * function as `actionCreators`, the return value will also be a single
+ * function.
+ */
+
+
+function bindActionCreators(actionCreators, dispatch) {
+  if (typeof actionCreators === 'function') {
+    return bindActionCreator(actionCreators, dispatch);
+  }
+
+  if (typeof actionCreators !== 'object' || actionCreators === null) {
+    throw new Error('bindActionCreators expected an object or a function, instead received ' + (actionCreators === null ? 'null' : typeof actionCreators) + '. ' + 'Did you write "import ActionCreators from" instead of "import * as ActionCreators from"?');
+  }
+
+  var keys = Object.keys(actionCreators);
+  var boundActionCreators = {};
+
+  for (var i = 0; i < keys.length; i++) {
+    var key = keys[i];
+    var actionCreator = actionCreators[key];
+
+    if (typeof actionCreator === 'function') {
+      boundActionCreators[key] = bindActionCreator(actionCreator, dispatch);
+    }
+  }
+
+  return boundActionCreators;
+}
+},{}],"../node_modules/redux/es/compose.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = compose;
+
+/**
+ * Composes single-argument functions from right to left. The rightmost
+ * function can take multiple arguments as it provides the signature for
+ * the resulting composite function.
+ *
+ * @param {...Function} funcs The functions to compose.
+ * @returns {Function} A function obtained by composing the argument functions
+ * from right to left. For example, compose(f, g, h) is identical to doing
+ * (...args) => f(g(h(...args))).
+ */
+function compose() {
+  for (var _len = arguments.length, funcs = Array(_len), _key = 0; _key < _len; _key++) {
+    funcs[_key] = arguments[_key];
+  }
+
+  if (funcs.length === 0) {
+    return function (arg) {
+      return arg;
+    };
+  }
+
+  if (funcs.length === 1) {
+    return funcs[0];
+  }
+
+  return funcs.reduce(function (a, b) {
+    return function () {
+      return a(b.apply(undefined, arguments));
+    };
+  });
+}
+},{}],"../node_modules/redux/es/applyMiddleware.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = applyMiddleware;
+
+var _compose = _interopRequireDefault(require("./compose"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var _extends = Object.assign || function (target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i];
+
+    for (var key in source) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        target[key] = source[key];
+      }
+    }
+  }
+
+  return target;
+};
+
+/**
+ * Creates a store enhancer that applies middleware to the dispatch method
+ * of the Redux store. This is handy for a variety of tasks, such as expressing
+ * asynchronous actions in a concise manner, or logging every action payload.
+ *
+ * See `redux-thunk` package as an example of the Redux middleware.
+ *
+ * Because middleware is potentially asynchronous, this should be the first
+ * store enhancer in the composition chain.
+ *
+ * Note that each middleware will be given the `dispatch` and `getState` functions
+ * as named arguments.
+ *
+ * @param {...Function} middlewares The middleware chain to be applied.
+ * @returns {Function} A store enhancer applying the middleware.
+ */
+function applyMiddleware() {
+  for (var _len = arguments.length, middlewares = Array(_len), _key = 0; _key < _len; _key++) {
+    middlewares[_key] = arguments[_key];
+  }
+
+  return function (createStore) {
+    return function (reducer, preloadedState, enhancer) {
+      var store = createStore(reducer, preloadedState, enhancer);
+      var _dispatch = store.dispatch;
+      var chain = [];
+      var middlewareAPI = {
+        getState: store.getState,
+        dispatch: function dispatch(action) {
+          return _dispatch(action);
+        }
+      };
+      chain = middlewares.map(function (middleware) {
+        return middleware(middlewareAPI);
+      });
+      _dispatch = _compose.default.apply(undefined, chain)(store.dispatch);
+      return _extends({}, store, {
+        dispatch: _dispatch
+      });
+    };
+  };
+}
+},{"./compose":"../node_modules/redux/es/compose.js"}],"../node_modules/redux/es/index.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+Object.defineProperty(exports, "createStore", {
+  enumerable: true,
+  get: function () {
+    return _createStore.default;
+  }
+});
+Object.defineProperty(exports, "combineReducers", {
+  enumerable: true,
+  get: function () {
+    return _combineReducers.default;
+  }
+});
+Object.defineProperty(exports, "bindActionCreators", {
+  enumerable: true,
+  get: function () {
+    return _bindActionCreators.default;
+  }
+});
+Object.defineProperty(exports, "applyMiddleware", {
+  enumerable: true,
+  get: function () {
+    return _applyMiddleware.default;
+  }
+});
+Object.defineProperty(exports, "compose", {
+  enumerable: true,
+  get: function () {
+    return _compose.default;
+  }
+});
+
+var _createStore = _interopRequireDefault(require("./createStore"));
+
+var _combineReducers = _interopRequireDefault(require("./combineReducers"));
+
+var _bindActionCreators = _interopRequireDefault(require("./bindActionCreators"));
+
+var _applyMiddleware = _interopRequireDefault(require("./applyMiddleware"));
+
+var _compose = _interopRequireDefault(require("./compose"));
+
+var _warning = _interopRequireDefault(require("./utils/warning"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+/*
+* This is a dummy function to check if the function name has been altered by minification.
+* If the function has been minified and NODE_ENV !== 'production', warn the user.
+*/
+function isCrushed() {}
+
+if (undefined !== 'production' && typeof isCrushed.name === 'string' && isCrushed.name !== 'isCrushed') {
+  (0, _warning.default)('You are currently using minified code outside of NODE_ENV === \'production\'. ' + 'This means that you are running a slower development build of Redux. ' + 'You can use loose-envify (https://github.com/zertosh/loose-envify) for browserify ' + 'or DefinePlugin for webpack (http://stackoverflow.com/questions/30030031) ' + 'to ensure you have the correct code for your production build.');
+}
+},{"./createStore":"../node_modules/redux/es/createStore.js","./combineReducers":"../node_modules/redux/es/combineReducers.js","./bindActionCreators":"../node_modules/redux/es/bindActionCreators.js","./applyMiddleware":"../node_modules/redux/es/applyMiddleware.js","./compose":"../node_modules/redux/es/compose.js","./utils/warning":"../node_modules/redux/es/utils/warning.js"}],"../node_modules/react-redux/es/utils/isPlainObject.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = isPlainObject;
+
+/**
+ * @param {any} obj The object to inspect.
+ * @returns {boolean} True if the argument appears to be a plain object.
+ */
+function isPlainObject(obj) {
+  if (typeof obj !== 'object' || obj === null) return false;
+  var proto = Object.getPrototypeOf(obj);
+  if (proto === null) return true;
+  var baseProto = proto;
+
+  while (Object.getPrototypeOf(baseProto) !== null) {
+    baseProto = Object.getPrototypeOf(baseProto);
+  }
+
+  return proto === baseProto;
+}
+},{}],"../node_modules/react-redux/es/utils/verifyPlainObject.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -23024,7 +23105,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = verifyPlainObject;
 
-var _isPlainObject = _interopRequireDefault(require("lodash-es/isPlainObject"));
+var _isPlainObject = _interopRequireDefault(require("./isPlainObject"));
 
 var _warning = _interopRequireDefault(require("./warning"));
 
@@ -23032,10 +23113,10 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function verifyPlainObject(value, displayName, methodName) {
   if (!(0, _isPlainObject.default)(value)) {
-    (0, _warning.default)(methodName + '() in ' + displayName + ' must return a plain object. Instead received ' + value + '.');
+    (0, _warning.default)(methodName + "() in " + displayName + " must return a plain object. Instead received " + value + ".");
   }
 }
-},{"lodash-es/isPlainObject":"../node_modules/lodash-es/isPlainObject.js","./warning":"../node_modules/react-redux/es/utils/warning.js"}],"../node_modules/react-redux/es/connect/wrapMapToProps.js":[function(require,module,exports) {
+},{"./isPlainObject":"../node_modules/react-redux/es/utils/isPlainObject.js","./warning":"../node_modules/react-redux/es/utils/warning.js"}],"../node_modules/react-redux/es/connect/wrapMapToProps.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -23185,26 +23266,14 @@ exports.whenMergePropsIsFunction = whenMergePropsIsFunction;
 exports.whenMergePropsIsOmitted = whenMergePropsIsOmitted;
 exports.default = void 0;
 
+var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/extends"));
+
 var _verifyPlainObject = _interopRequireDefault(require("../utils/verifyPlainObject"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var _extends = Object.assign || function (target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i];
-
-    for (var key in source) {
-      if (Object.prototype.hasOwnProperty.call(source, key)) {
-        target[key] = source[key];
-      }
-    }
-  }
-
-  return target;
-};
-
 function defaultMergeProps(stateProps, dispatchProps, ownProps) {
-  return _extends({}, ownProps, stateProps, dispatchProps);
+  return (0, _extends2.default)({}, ownProps, stateProps, dispatchProps);
 }
 
 function wrapMergePropsFunc(mergeProps) {
@@ -23213,7 +23282,7 @@ function wrapMergePropsFunc(mergeProps) {
         pure = _ref.pure,
         areMergedPropsEqual = _ref.areMergedPropsEqual;
     var hasRunOnce = false;
-    var mergedProps = void 0;
+    var mergedProps;
     return function mergePropsProxy(stateProps, dispatchProps, ownProps) {
       var nextMergedProps = mergeProps(stateProps, dispatchProps, ownProps);
 
@@ -23242,7 +23311,7 @@ function whenMergePropsIsOmitted(mergeProps) {
 
 var _default = [whenMergePropsIsFunction, whenMergePropsIsOmitted];
 exports.default = _default;
-},{"../utils/verifyPlainObject":"../node_modules/react-redux/es/utils/verifyPlainObject.js"}],"../node_modules/react-redux/es/connect/verifySubselectors.js":[function(require,module,exports) {
+},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","../utils/verifyPlainObject":"../node_modules/react-redux/es/utils/verifyPlainObject.js"}],"../node_modules/react-redux/es/connect/verifySubselectors.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -23256,10 +23325,10 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 function verify(selector, methodName, displayName) {
   if (!selector) {
-    throw new Error('Unexpected value for ' + methodName + ' in ' + displayName + '.');
+    throw new Error("Unexpected value for " + methodName + " in " + displayName + ".");
   } else if (methodName === 'mapStateToProps' || methodName === 'mapDispatchToProps') {
     if (!selector.hasOwnProperty('dependsOnOwnProps')) {
-      (0, _warning.default)('The selector for ' + methodName + ' of ' + displayName + ' did not specify a value for dependsOnOwnProps.');
+      (0, _warning.default)("The selector for " + methodName + " of " + displayName + " did not specify a value for dependsOnOwnProps.");
     }
   }
 }
@@ -23279,21 +23348,11 @@ exports.impureFinalPropsSelectorFactory = impureFinalPropsSelectorFactory;
 exports.pureFinalPropsSelectorFactory = pureFinalPropsSelectorFactory;
 exports.default = finalPropsSelectorFactory;
 
+var _objectWithoutPropertiesLoose2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/objectWithoutPropertiesLoose"));
+
 var _verifySubselectors = _interopRequireDefault(require("./verifySubselectors"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _objectWithoutProperties(obj, keys) {
-  var target = {};
-
-  for (var i in obj) {
-    if (keys.indexOf(i) >= 0) continue;
-    if (!Object.prototype.hasOwnProperty.call(obj, i)) continue;
-    target[i] = obj[i];
-  }
-
-  return target;
-}
 
 function impureFinalPropsSelectorFactory(mapStateToProps, mapDispatchToProps, mergeProps, dispatch) {
   return function impureFinalPropsSelector(state, ownProps) {
@@ -23306,11 +23365,11 @@ function pureFinalPropsSelectorFactory(mapStateToProps, mapDispatchToProps, merg
       areOwnPropsEqual = _ref.areOwnPropsEqual,
       areStatePropsEqual = _ref.areStatePropsEqual;
   var hasRunAtLeastOnce = false;
-  var state = void 0;
-  var ownProps = void 0;
-  var stateProps = void 0;
-  var dispatchProps = void 0;
-  var mergedProps = void 0;
+  var state;
+  var ownProps;
+  var stateProps;
+  var dispatchProps;
+  var mergedProps;
 
   function handleFirstCall(firstState, firstOwnProps) {
     state = firstState;
@@ -23369,8 +23428,7 @@ function finalPropsSelectorFactory(dispatch, _ref2) {
   var initMapStateToProps = _ref2.initMapStateToProps,
       initMapDispatchToProps = _ref2.initMapDispatchToProps,
       initMergeProps = _ref2.initMergeProps,
-      options = _objectWithoutProperties(_ref2, ['initMapStateToProps', 'initMapDispatchToProps', 'initMergeProps']);
-
+      options = (0, _objectWithoutPropertiesLoose2.default)(_ref2, ["initMapStateToProps", "initMapDispatchToProps", "initMergeProps"]);
   var mapStateToProps = initMapStateToProps(dispatch, options);
   var mapDispatchToProps = initMapDispatchToProps(dispatch, options);
   var mergeProps = initMergeProps(dispatch, options);
@@ -23382,7 +23440,7 @@ function finalPropsSelectorFactory(dispatch, _ref2) {
   var selectorFactory = options.pure ? pureFinalPropsSelectorFactory : impureFinalPropsSelectorFactory;
   return selectorFactory(mapStateToProps, mapDispatchToProps, mergeProps, dispatch, options);
 }
-},{"./verifySubselectors":"../node_modules/react-redux/es/connect/verifySubselectors.js"}],"../node_modules/react-redux/es/connect/connect.js":[function(require,module,exports) {
+},{"@babel/runtime/helpers/esm/objectWithoutPropertiesLoose":"../node_modules/@babel/runtime/helpers/esm/objectWithoutPropertiesLoose.js","./verifySubselectors":"../node_modules/react-redux/es/connect/verifySubselectors.js"}],"../node_modules/react-redux/es/connect/connect.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -23390,6 +23448,10 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.createConnect = createConnect;
 exports.default = void 0;
+
+var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/extends"));
+
+var _objectWithoutPropertiesLoose2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/objectWithoutPropertiesLoose"));
 
 var _connectAdvanced = _interopRequireDefault(require("../components/connectAdvanced"));
 
@@ -23404,32 +23466,6 @@ var _mergeProps = _interopRequireDefault(require("./mergeProps"));
 var _selectorFactory = _interopRequireDefault(require("./selectorFactory"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var _extends = Object.assign || function (target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i];
-
-    for (var key in source) {
-      if (Object.prototype.hasOwnProperty.call(source, key)) {
-        target[key] = source[key];
-      }
-    }
-  }
-
-  return target;
-};
-
-function _objectWithoutProperties(obj, keys) {
-  var target = {};
-
-  for (var i in obj) {
-    if (keys.indexOf(i) >= 0) continue;
-    if (!Object.prototype.hasOwnProperty.call(obj, i)) continue;
-    target[i] = obj[i];
-  }
-
-  return target;
-}
 
 /*
   connect is a facade over connectAdvanced. It turns its args into a compatible
@@ -23454,7 +23490,7 @@ function match(arg, factories, name) {
   }
 
   return function (dispatch, options) {
-    throw new Error('Invalid value of type ' + typeof arg + ' for ' + name + ' argument when connecting component ' + options.wrappedComponentName + '.');
+    throw new Error("Invalid value of type " + typeof arg + " for " + name + " argument when connecting component " + options.wrappedComponentName + ".");
   };
 }
 
@@ -23464,42 +23500,45 @@ function strictEqual(a, b) {
 // different options opens up some testing and extensibility scenarios
 
 
-function createConnect() {
-  var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+function createConnect(_temp) {
+  var _ref = _temp === void 0 ? {} : _temp,
       _ref$connectHOC = _ref.connectHOC,
-      connectHOC = _ref$connectHOC === undefined ? _connectAdvanced.default : _ref$connectHOC,
+      connectHOC = _ref$connectHOC === void 0 ? _connectAdvanced.default : _ref$connectHOC,
       _ref$mapStateToPropsF = _ref.mapStateToPropsFactories,
-      mapStateToPropsFactories = _ref$mapStateToPropsF === undefined ? _mapStateToProps.default : _ref$mapStateToPropsF,
+      mapStateToPropsFactories = _ref$mapStateToPropsF === void 0 ? _mapStateToProps.default : _ref$mapStateToPropsF,
       _ref$mapDispatchToPro = _ref.mapDispatchToPropsFactories,
-      mapDispatchToPropsFactories = _ref$mapDispatchToPro === undefined ? _mapDispatchToProps.default : _ref$mapDispatchToPro,
+      mapDispatchToPropsFactories = _ref$mapDispatchToPro === void 0 ? _mapDispatchToProps.default : _ref$mapDispatchToPro,
       _ref$mergePropsFactor = _ref.mergePropsFactories,
-      mergePropsFactories = _ref$mergePropsFactor === undefined ? _mergeProps.default : _ref$mergePropsFactor,
+      mergePropsFactories = _ref$mergePropsFactor === void 0 ? _mergeProps.default : _ref$mergePropsFactor,
       _ref$selectorFactory = _ref.selectorFactory,
-      selectorFactory = _ref$selectorFactory === undefined ? _selectorFactory.default : _ref$selectorFactory;
+      selectorFactory = _ref$selectorFactory === void 0 ? _selectorFactory.default : _ref$selectorFactory;
 
-  return function connect(mapStateToProps, mapDispatchToProps, mergeProps) {
-    var _ref2 = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : {},
-        _ref2$pure = _ref2.pure,
-        pure = _ref2$pure === undefined ? true : _ref2$pure,
-        _ref2$areStatesEqual = _ref2.areStatesEqual,
-        areStatesEqual = _ref2$areStatesEqual === undefined ? strictEqual : _ref2$areStatesEqual,
-        _ref2$areOwnPropsEqua = _ref2.areOwnPropsEqual,
-        areOwnPropsEqual = _ref2$areOwnPropsEqua === undefined ? _shallowEqual.default : _ref2$areOwnPropsEqua,
-        _ref2$areStatePropsEq = _ref2.areStatePropsEqual,
-        areStatePropsEqual = _ref2$areStatePropsEq === undefined ? _shallowEqual.default : _ref2$areStatePropsEq,
-        _ref2$areMergedPropsE = _ref2.areMergedPropsEqual,
-        areMergedPropsEqual = _ref2$areMergedPropsE === undefined ? _shallowEqual.default : _ref2$areMergedPropsE,
-        extraOptions = _objectWithoutProperties(_ref2, ['pure', 'areStatesEqual', 'areOwnPropsEqual', 'areStatePropsEqual', 'areMergedPropsEqual']);
+  return function connect(mapStateToProps, mapDispatchToProps, mergeProps, _ref2) {
+    if (_ref2 === void 0) {
+      _ref2 = {};
+    }
 
+    var _ref3 = _ref2,
+        _ref3$pure = _ref3.pure,
+        pure = _ref3$pure === void 0 ? true : _ref3$pure,
+        _ref3$areStatesEqual = _ref3.areStatesEqual,
+        areStatesEqual = _ref3$areStatesEqual === void 0 ? strictEqual : _ref3$areStatesEqual,
+        _ref3$areOwnPropsEqua = _ref3.areOwnPropsEqual,
+        areOwnPropsEqual = _ref3$areOwnPropsEqua === void 0 ? _shallowEqual.default : _ref3$areOwnPropsEqua,
+        _ref3$areStatePropsEq = _ref3.areStatePropsEqual,
+        areStatePropsEqual = _ref3$areStatePropsEq === void 0 ? _shallowEqual.default : _ref3$areStatePropsEq,
+        _ref3$areMergedPropsE = _ref3.areMergedPropsEqual,
+        areMergedPropsEqual = _ref3$areMergedPropsE === void 0 ? _shallowEqual.default : _ref3$areMergedPropsE,
+        extraOptions = (0, _objectWithoutPropertiesLoose2.default)(_ref3, ["pure", "areStatesEqual", "areOwnPropsEqual", "areStatePropsEqual", "areMergedPropsEqual"]);
     var initMapStateToProps = match(mapStateToProps, mapStateToPropsFactories, 'mapStateToProps');
     var initMapDispatchToProps = match(mapDispatchToProps, mapDispatchToPropsFactories, 'mapDispatchToProps');
     var initMergeProps = match(mergeProps, mergePropsFactories, 'mergeProps');
-    return connectHOC(selectorFactory, _extends({
+    return connectHOC(selectorFactory, (0, _extends2.default)({
       // used in error messages
       methodName: 'connect',
       // used to compute Connect's displayName from the wrapped component's displayName.
       getDisplayName: function getDisplayName(name) {
-        return 'Connect(' + name + ')';
+        return "Connect(" + name + ")";
       },
       // if mapStateToProps is falsy, the Connect component doesn't subscribe to store state changes
       shouldHandleStateChanges: Boolean(mapStateToProps),
@@ -23519,7 +23558,7 @@ function createConnect() {
 var _default = createConnect();
 
 exports.default = _default;
-},{"../components/connectAdvanced":"../node_modules/react-redux/es/components/connectAdvanced.js","../utils/shallowEqual":"../node_modules/react-redux/es/utils/shallowEqual.js","./mapDispatchToProps":"../node_modules/react-redux/es/connect/mapDispatchToProps.js","./mapStateToProps":"../node_modules/react-redux/es/connect/mapStateToProps.js","./mergeProps":"../node_modules/react-redux/es/connect/mergeProps.js","./selectorFactory":"../node_modules/react-redux/es/connect/selectorFactory.js"}],"../node_modules/react-redux/es/index.js":[function(require,module,exports) {
+},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","@babel/runtime/helpers/esm/objectWithoutPropertiesLoose":"../node_modules/@babel/runtime/helpers/esm/objectWithoutPropertiesLoose.js","../components/connectAdvanced":"../node_modules/react-redux/es/components/connectAdvanced.js","../utils/shallowEqual":"../node_modules/react-redux/es/utils/shallowEqual.js","./mapDispatchToProps":"../node_modules/react-redux/es/connect/mapDispatchToProps.js","./mapStateToProps":"../node_modules/react-redux/es/connect/mapStateToProps.js","./mergeProps":"../node_modules/react-redux/es/connect/mergeProps.js","./selectorFactory":"../node_modules/react-redux/es/connect/selectorFactory.js"}],"../node_modules/react-redux/es/index.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -23827,53 +23866,6 @@ if (undefined !== 'production') {
 }
 
 module.exports = warning;
-},{}],"../node_modules/history/node_modules/invariant/browser.js":[function(require,module,exports) {
-/**
- * Copyright (c) 2013-present, Facebook, Inc.
- *
- * This source code is licensed under the MIT license found in the
- * LICENSE file in the root directory of this source tree.
- */
-'use strict';
-/**
- * Use invariant() to assert state which your program assumes to be true.
- *
- * Provide sprintf-style format (only %s is supported) and arguments
- * to provide information about what broke and what you were
- * expecting.
- *
- * The invariant message will be stripped in production, but the invariant
- * will remain to ensure logic does not differ in production.
- */
-
-var invariant = function (condition, format, a, b, c, d, e, f) {
-  if (undefined !== 'production') {
-    if (format === undefined) {
-      throw new Error('invariant requires an error message argument');
-    }
-  }
-
-  if (!condition) {
-    var error;
-
-    if (format === undefined) {
-      error = new Error('Minified exception occurred; use the non-minified dev environment ' + 'for the full error message and additional helpful warnings.');
-    } else {
-      var args = [a, b, c, d, e, f];
-      var argIndex = 0;
-      error = new Error(format.replace(/%s/g, function () {
-        return args[argIndex++];
-      }));
-      error.name = 'Invariant Violation';
-    }
-
-    error.framesToPop = 1; // we don't care about invariant's own frame
-
-    throw error;
-  }
-};
-
-module.exports = invariant;
 },{}],"../node_modules/resolve-pathname/index.js":[function(require,module,exports) {
 "use strict";
 
@@ -24586,53 +24578,70 @@ var createBrowserHistory = function createBrowserHistory() {
 };
 
 exports.default = createBrowserHistory;
-},{"warning":"../node_modules/warning/browser.js","invariant":"../node_modules/history/node_modules/invariant/browser.js","./LocationUtils":"../node_modules/history/LocationUtils.js","./PathUtils":"../node_modules/history/PathUtils.js","./createTransitionManager":"../node_modules/history/createTransitionManager.js","./DOMUtils":"../node_modules/history/DOMUtils.js"}],"../node_modules/invariant/browser.js":[function(require,module,exports) {
+},{"warning":"../node_modules/warning/browser.js","invariant":"../node_modules/invariant/browser.js","./LocationUtils":"../node_modules/history/LocationUtils.js","./PathUtils":"../node_modules/history/PathUtils.js","./createTransitionManager":"../node_modules/history/createTransitionManager.js","./DOMUtils":"../node_modules/history/DOMUtils.js"}],"../node_modules/react-router/node_modules/warning/warning.js":[function(require,module,exports) {
 /**
- * Copyright (c) 2013-present, Facebook, Inc.
+ * Copyright (c) 2014-present, Facebook, Inc.
  *
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
 'use strict';
 /**
- * Use invariant() to assert state which your program assumes to be true.
- *
- * Provide sprintf-style format (only %s is supported) and arguments
- * to provide information about what broke and what you were
- * expecting.
- *
- * The invariant message will be stripped in production, but the invariant
- * will remain to ensure logic does not differ in production.
+ * Similar to invariant but only logs a warning if the condition is not met.
+ * This can be used to log issues in development environments in critical
+ * paths. Removing the logging code for production environments will keep the
+ * same logic and follow the same code paths.
  */
 
-var invariant = function (condition, format, a, b, c, d, e, f) {
-  if (undefined !== 'production') {
-    if (format === undefined) {
-      throw new Error('invariant requires an error message argument');
-    }
-  }
+var __DEV__ = undefined !== 'production';
 
-  if (!condition) {
-    var error;
+var warning = function () {};
 
-    if (format === undefined) {
-      error = new Error('Minified exception occurred; use the non-minified dev environment ' + 'for the full error message and additional helpful warnings.');
-    } else {
-      var args = [a, b, c, d, e, f];
-      var argIndex = 0;
-      error = new Error(format.replace(/%s/g, function () {
-        return args[argIndex++];
-      }));
-      error.name = 'Invariant Violation';
+if (__DEV__) {
+  var printWarning = function printWarning(format, args) {
+    var len = arguments.length;
+    args = new Array(len > 1 ? len - 1 : 0);
+
+    for (var key = 1; key < len; key++) {
+      args[key - 1] = arguments[key];
     }
 
-    error.framesToPop = 1; // we don't care about invariant's own frame
+    var argIndex = 0;
+    var message = 'Warning: ' + format.replace(/%s/g, function () {
+      return args[argIndex++];
+    });
 
-    throw error;
-  }
-};
+    if (typeof console !== 'undefined') {
+      console.error(message);
+    }
 
-module.exports = invariant;
+    try {
+      // --- Welcome to debugging React ---
+      // This error was thrown as a convenience so that you can use this stack
+      // to find the callsite that caused this warning to fire.
+      throw new Error(message);
+    } catch (x) {}
+  };
+
+  warning = function (condition, format, args) {
+    var len = arguments.length;
+    args = new Array(len > 2 ? len - 2 : 0);
+
+    for (var key = 2; key < len; key++) {
+      args[key - 2] = arguments[key];
+    }
+
+    if (format === undefined) {
+      throw new Error('`warning(condition, format, ...args)` requires a warning ' + 'message argument');
+    }
+
+    if (!condition) {
+      printWarning.apply(null, [format].concat(args));
+    }
+  };
+}
+
+module.exports = warning;
 },{}],"../node_modules/react-router/es/Router.js":[function(require,module,exports) {
 "use strict";
 
@@ -24729,10 +24738,10 @@ var Router = function (_React$Component) {
 
   Router.prototype.computeMatch = function computeMatch(pathname) {
     return {
-      path: '/',
-      url: '/',
+      path: "/",
+      url: "/",
       params: {},
-      isExact: pathname === '/'
+      isExact: pathname === "/"
     };
   };
 
@@ -24742,7 +24751,7 @@ var Router = function (_React$Component) {
     var _props = this.props,
         children = _props.children,
         history = _props.history;
-    (0, _invariant.default)(children == null || _react.default.Children.count(children) === 1, 'A <Router> may have only one child element'); // Do this here so we can setState when a <Redirect> changes the
+    (0, _invariant.default)(children == null || _react.default.Children.count(children) === 1, "A <Router> may have only one child element"); // Do this here so we can setState when a <Redirect> changes the
     // location in componentWillMount. This happens e.g. when doing
     // server rendering using a <StaticRouter>.
 
@@ -24754,7 +24763,7 @@ var Router = function (_React$Component) {
   };
 
   Router.prototype.componentWillReceiveProps = function componentWillReceiveProps(nextProps) {
-    (0, _warning.default)(this.props.history === nextProps.history, 'You cannot change <Router history>');
+    (0, _warning.default)(this.props.history === nextProps.history, "You cannot change <Router history>");
   };
 
   Router.prototype.componentWillUnmount = function componentWillUnmount() {
@@ -24781,7 +24790,7 @@ Router.childContextTypes = {
 };
 var _default = Router;
 exports.default = _default;
-},{"warning":"../node_modules/warning/browser.js","invariant":"../node_modules/invariant/browser.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js"}],"../node_modules/react-router-dom/es/Router.js":[function(require,module,exports) {
+},{"warning":"../node_modules/react-router/node_modules/warning/warning.js","invariant":"../node_modules/invariant/browser.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js"}],"../node_modules/react-router-dom/es/Router.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -25212,7 +25221,7 @@ var createHashHistory = function createHashHistory() {
 };
 
 exports.default = createHashHistory;
-},{"warning":"../node_modules/warning/browser.js","invariant":"../node_modules/history/node_modules/invariant/browser.js","./LocationUtils":"../node_modules/history/LocationUtils.js","./PathUtils":"../node_modules/history/PathUtils.js","./createTransitionManager":"../node_modules/history/createTransitionManager.js","./DOMUtils":"../node_modules/history/DOMUtils.js"}],"../node_modules/react-router-dom/es/HashRouter.js":[function(require,module,exports) {
+},{"warning":"../node_modules/warning/browser.js","invariant":"../node_modules/invariant/browser.js","./LocationUtils":"../node_modules/history/LocationUtils.js","./PathUtils":"../node_modules/history/PathUtils.js","./createTransitionManager":"../node_modules/history/createTransitionManager.js","./DOMUtils":"../node_modules/history/DOMUtils.js"}],"../node_modules/react-router-dom/es/HashRouter.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -25460,1231 +25469,7 @@ Link.contextTypes = {
 };
 var _default = Link;
 exports.default = _default;
-},{"react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","invariant":"../node_modules/invariant/browser.js"}],"../node_modules/history/createMemoryHistory.js":[function(require,module,exports) {
-'use strict';
-
-exports.__esModule = true;
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-var _warning = require('warning');
-
-var _warning2 = _interopRequireDefault(_warning);
-
-var _PathUtils = require('./PathUtils');
-
-var _LocationUtils = require('./LocationUtils');
-
-var _createTransitionManager = require('./createTransitionManager');
-
-var _createTransitionManager2 = _interopRequireDefault(_createTransitionManager);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var clamp = function clamp(n, lowerBound, upperBound) {
-  return Math.min(Math.max(n, lowerBound), upperBound);
-};
-
-/**
- * Creates a history object that stores locations in memory.
- */
-var createMemoryHistory = function createMemoryHistory() {
-  var props = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-  var getUserConfirmation = props.getUserConfirmation,
-      _props$initialEntries = props.initialEntries,
-      initialEntries = _props$initialEntries === undefined ? ['/'] : _props$initialEntries,
-      _props$initialIndex = props.initialIndex,
-      initialIndex = _props$initialIndex === undefined ? 0 : _props$initialIndex,
-      _props$keyLength = props.keyLength,
-      keyLength = _props$keyLength === undefined ? 6 : _props$keyLength;
-
-
-  var transitionManager = (0, _createTransitionManager2.default)();
-
-  var setState = function setState(nextState) {
-    _extends(history, nextState);
-
-    history.length = history.entries.length;
-
-    transitionManager.notifyListeners(history.location, history.action);
-  };
-
-  var createKey = function createKey() {
-    return Math.random().toString(36).substr(2, keyLength);
-  };
-
-  var index = clamp(initialIndex, 0, initialEntries.length - 1);
-  var entries = initialEntries.map(function (entry) {
-    return typeof entry === 'string' ? (0, _LocationUtils.createLocation)(entry, undefined, createKey()) : (0, _LocationUtils.createLocation)(entry, undefined, entry.key || createKey());
-  });
-
-  // Public interface
-
-  var createHref = _PathUtils.createPath;
-
-  var push = function push(path, state) {
-    (0, _warning2.default)(!((typeof path === 'undefined' ? 'undefined' : _typeof(path)) === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to push when the 1st ' + 'argument is a location-like object that already has state; it is ignored');
-
-    var action = 'PUSH';
-    var location = (0, _LocationUtils.createLocation)(path, state, createKey(), history.location);
-
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (!ok) return;
-
-      var prevIndex = history.index;
-      var nextIndex = prevIndex + 1;
-
-      var nextEntries = history.entries.slice(0);
-      if (nextEntries.length > nextIndex) {
-        nextEntries.splice(nextIndex, nextEntries.length - nextIndex, location);
-      } else {
-        nextEntries.push(location);
-      }
-
-      setState({
-        action: action,
-        location: location,
-        index: nextIndex,
-        entries: nextEntries
-      });
-    });
-  };
-
-  var replace = function replace(path, state) {
-    (0, _warning2.default)(!((typeof path === 'undefined' ? 'undefined' : _typeof(path)) === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to replace when the 1st ' + 'argument is a location-like object that already has state; it is ignored');
-
-    var action = 'REPLACE';
-    var location = (0, _LocationUtils.createLocation)(path, state, createKey(), history.location);
-
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (!ok) return;
-
-      history.entries[history.index] = location;
-
-      setState({ action: action, location: location });
-    });
-  };
-
-  var go = function go(n) {
-    var nextIndex = clamp(history.index + n, 0, history.entries.length - 1);
-
-    var action = 'POP';
-    var location = history.entries[nextIndex];
-
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (ok) {
-        setState({
-          action: action,
-          location: location,
-          index: nextIndex
-        });
-      } else {
-        // Mimic the behavior of DOM histories by
-        // causing a render after a cancelled POP.
-        setState();
-      }
-    });
-  };
-
-  var goBack = function goBack() {
-    return go(-1);
-  };
-
-  var goForward = function goForward() {
-    return go(1);
-  };
-
-  var canGo = function canGo(n) {
-    var nextIndex = history.index + n;
-    return nextIndex >= 0 && nextIndex < history.entries.length;
-  };
-
-  var block = function block() {
-    var prompt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-    return transitionManager.setPrompt(prompt);
-  };
-
-  var listen = function listen(listener) {
-    return transitionManager.appendListener(listener);
-  };
-
-  var history = {
-    length: entries.length,
-    action: 'POP',
-    location: entries[index],
-    index: index,
-    entries: entries,
-    createHref: createHref,
-    push: push,
-    replace: replace,
-    go: go,
-    goBack: goBack,
-    goForward: goForward,
-    canGo: canGo,
-    block: block,
-    listen: listen
-  };
-
-  return history;
-};
-
-exports.default = createMemoryHistory;
-},{"warning":"../node_modules/warning/browser.js","./PathUtils":"../node_modules/history/PathUtils.js","./LocationUtils":"../node_modules/history/LocationUtils.js","./createTransitionManager":"../node_modules/history/createTransitionManager.js"}],"../node_modules/react-router/es/MemoryRouter.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _warning = _interopRequireDefault(require("warning"));
-
-var _react = _interopRequireDefault(require("react"));
-
-var _propTypes = _interopRequireDefault(require("prop-types"));
-
-var _createMemoryHistory = _interopRequireDefault(require("history/createMemoryHistory"));
-
-var _Router = _interopRequireDefault(require("./Router"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) {
-  if (!(instance instanceof Constructor)) {
-    throw new TypeError("Cannot call a class as a function");
-  }
-}
-
-function _possibleConstructorReturn(self, call) {
-  if (!self) {
-    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-  }
-
-  return call && (typeof call === "object" || typeof call === "function") ? call : self;
-}
-
-function _inherits(subClass, superClass) {
-  if (typeof superClass !== "function" && superClass !== null) {
-    throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
-  }
-
-  subClass.prototype = Object.create(superClass && superClass.prototype, {
-    constructor: {
-      value: subClass,
-      enumerable: false,
-      writable: true,
-      configurable: true
-    }
-  });
-  if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
-}
-
-/**
- * The public API for a <Router> that stores location in memory.
- */
-var MemoryRouter = function (_React$Component) {
-  _inherits(MemoryRouter, _React$Component);
-
-  function MemoryRouter() {
-    var _temp, _this, _ret;
-
-    _classCallCheck(this, MemoryRouter);
-
-    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    return _ret = (_temp = (_this = _possibleConstructorReturn(this, _React$Component.call.apply(_React$Component, [this].concat(args))), _this), _this.history = (0, _createMemoryHistory.default)(_this.props), _temp), _possibleConstructorReturn(_this, _ret);
-  }
-
-  MemoryRouter.prototype.componentWillMount = function componentWillMount() {
-    (0, _warning.default)(!this.props.history, '<MemoryRouter> ignores the history prop. To use a custom history, ' + 'use `import { Router }` instead of `import { MemoryRouter as Router }`.');
-  };
-
-  MemoryRouter.prototype.render = function render() {
-    return _react.default.createElement(_Router.default, {
-      history: this.history,
-      children: this.props.children
-    });
-  };
-
-  return MemoryRouter;
-}(_react.default.Component);
-
-MemoryRouter.propTypes = {
-  initialEntries: _propTypes.default.array,
-  initialIndex: _propTypes.default.number,
-  getUserConfirmation: _propTypes.default.func,
-  keyLength: _propTypes.default.number,
-  children: _propTypes.default.node
-};
-var _default = MemoryRouter;
-exports.default = _default;
-},{"warning":"../node_modules/warning/browser.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","history/createMemoryHistory":"../node_modules/history/createMemoryHistory.js","./Router":"../node_modules/react-router/es/Router.js"}],"../node_modules/react-router-dom/es/MemoryRouter.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _MemoryRouter = _interopRequireDefault(require("react-router/es/MemoryRouter"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-// Written in this round about way for babel-transform-imports
-var _default = _MemoryRouter.default;
-exports.default = _default;
-},{"react-router/es/MemoryRouter":"../node_modules/react-router/es/MemoryRouter.js"}],"../node_modules/react-router/node_modules/isarray/index.js":[function(require,module,exports) {
-module.exports = Array.isArray || function (arr) {
-  return Object.prototype.toString.call(arr) == '[object Array]';
-};
-
-},{}],"../node_modules/react-router/node_modules/path-to-regexp/index.js":[function(require,module,exports) {
-var isarray = require('isarray')
-
-/**
- * Expose `pathToRegexp`.
- */
-module.exports = pathToRegexp
-module.exports.parse = parse
-module.exports.compile = compile
-module.exports.tokensToFunction = tokensToFunction
-module.exports.tokensToRegExp = tokensToRegExp
-
-/**
- * The main path matching regexp utility.
- *
- * @type {RegExp}
- */
-var PATH_REGEXP = new RegExp([
-  // Match escaped characters that would otherwise appear in future matches.
-  // This allows the user to escape special characters that won't transform.
-  '(\\\\.)',
-  // Match Express-style parameters and un-named parameters with a prefix
-  // and optional suffixes. Matches appear as:
-  //
-  // "/:test(\\d+)?" => ["/", "test", "\d+", undefined, "?", undefined]
-  // "/route(\\d+)"  => [undefined, undefined, undefined, "\d+", undefined, undefined]
-  // "/*"            => ["/", undefined, undefined, undefined, undefined, "*"]
-  '([\\/.])?(?:(?:\\:(\\w+)(?:\\(((?:\\\\.|[^\\\\()])+)\\))?|\\(((?:\\\\.|[^\\\\()])+)\\))([+*?])?|(\\*))'
-].join('|'), 'g')
-
-/**
- * Parse a string for the raw tokens.
- *
- * @param  {string}  str
- * @param  {Object=} options
- * @return {!Array}
- */
-function parse (str, options) {
-  var tokens = []
-  var key = 0
-  var index = 0
-  var path = ''
-  var defaultDelimiter = options && options.delimiter || '/'
-  var res
-
-  while ((res = PATH_REGEXP.exec(str)) != null) {
-    var m = res[0]
-    var escaped = res[1]
-    var offset = res.index
-    path += str.slice(index, offset)
-    index = offset + m.length
-
-    // Ignore already escaped sequences.
-    if (escaped) {
-      path += escaped[1]
-      continue
-    }
-
-    var next = str[index]
-    var prefix = res[2]
-    var name = res[3]
-    var capture = res[4]
-    var group = res[5]
-    var modifier = res[6]
-    var asterisk = res[7]
-
-    // Push the current path onto the tokens.
-    if (path) {
-      tokens.push(path)
-      path = ''
-    }
-
-    var partial = prefix != null && next != null && next !== prefix
-    var repeat = modifier === '+' || modifier === '*'
-    var optional = modifier === '?' || modifier === '*'
-    var delimiter = res[2] || defaultDelimiter
-    var pattern = capture || group
-
-    tokens.push({
-      name: name || key++,
-      prefix: prefix || '',
-      delimiter: delimiter,
-      optional: optional,
-      repeat: repeat,
-      partial: partial,
-      asterisk: !!asterisk,
-      pattern: pattern ? escapeGroup(pattern) : (asterisk ? '.*' : '[^' + escapeString(delimiter) + ']+?')
-    })
-  }
-
-  // Match any characters still remaining.
-  if (index < str.length) {
-    path += str.substr(index)
-  }
-
-  // If the path exists, push it onto the end.
-  if (path) {
-    tokens.push(path)
-  }
-
-  return tokens
-}
-
-/**
- * Compile a string to a template function for the path.
- *
- * @param  {string}             str
- * @param  {Object=}            options
- * @return {!function(Object=, Object=)}
- */
-function compile (str, options) {
-  return tokensToFunction(parse(str, options))
-}
-
-/**
- * Prettier encoding of URI path segments.
- *
- * @param  {string}
- * @return {string}
- */
-function encodeURIComponentPretty (str) {
-  return encodeURI(str).replace(/[\/?#]/g, function (c) {
-    return '%' + c.charCodeAt(0).toString(16).toUpperCase()
-  })
-}
-
-/**
- * Encode the asterisk parameter. Similar to `pretty`, but allows slashes.
- *
- * @param  {string}
- * @return {string}
- */
-function encodeAsterisk (str) {
-  return encodeURI(str).replace(/[?#]/g, function (c) {
-    return '%' + c.charCodeAt(0).toString(16).toUpperCase()
-  })
-}
-
-/**
- * Expose a method for transforming tokens into the path function.
- */
-function tokensToFunction (tokens) {
-  // Compile all the tokens into regexps.
-  var matches = new Array(tokens.length)
-
-  // Compile all the patterns before compilation.
-  for (var i = 0; i < tokens.length; i++) {
-    if (typeof tokens[i] === 'object') {
-      matches[i] = new RegExp('^(?:' + tokens[i].pattern + ')$')
-    }
-  }
-
-  return function (obj, opts) {
-    var path = ''
-    var data = obj || {}
-    var options = opts || {}
-    var encode = options.pretty ? encodeURIComponentPretty : encodeURIComponent
-
-    for (var i = 0; i < tokens.length; i++) {
-      var token = tokens[i]
-
-      if (typeof token === 'string') {
-        path += token
-
-        continue
-      }
-
-      var value = data[token.name]
-      var segment
-
-      if (value == null) {
-        if (token.optional) {
-          // Prepend partial segment prefixes.
-          if (token.partial) {
-            path += token.prefix
-          }
-
-          continue
-        } else {
-          throw new TypeError('Expected "' + token.name + '" to be defined')
-        }
-      }
-
-      if (isarray(value)) {
-        if (!token.repeat) {
-          throw new TypeError('Expected "' + token.name + '" to not repeat, but received `' + JSON.stringify(value) + '`')
-        }
-
-        if (value.length === 0) {
-          if (token.optional) {
-            continue
-          } else {
-            throw new TypeError('Expected "' + token.name + '" to not be empty')
-          }
-        }
-
-        for (var j = 0; j < value.length; j++) {
-          segment = encode(value[j])
-
-          if (!matches[i].test(segment)) {
-            throw new TypeError('Expected all "' + token.name + '" to match "' + token.pattern + '", but received `' + JSON.stringify(segment) + '`')
-          }
-
-          path += (j === 0 ? token.prefix : token.delimiter) + segment
-        }
-
-        continue
-      }
-
-      segment = token.asterisk ? encodeAsterisk(value) : encode(value)
-
-      if (!matches[i].test(segment)) {
-        throw new TypeError('Expected "' + token.name + '" to match "' + token.pattern + '", but received "' + segment + '"')
-      }
-
-      path += token.prefix + segment
-    }
-
-    return path
-  }
-}
-
-/**
- * Escape a regular expression string.
- *
- * @param  {string} str
- * @return {string}
- */
-function escapeString (str) {
-  return str.replace(/([.+*?=^!:${}()[\]|\/\\])/g, '\\$1')
-}
-
-/**
- * Escape the capturing group by escaping special characters and meaning.
- *
- * @param  {string} group
- * @return {string}
- */
-function escapeGroup (group) {
-  return group.replace(/([=!:$\/()])/g, '\\$1')
-}
-
-/**
- * Attach the keys as a property of the regexp.
- *
- * @param  {!RegExp} re
- * @param  {Array}   keys
- * @return {!RegExp}
- */
-function attachKeys (re, keys) {
-  re.keys = keys
-  return re
-}
-
-/**
- * Get the flags for a regexp from the options.
- *
- * @param  {Object} options
- * @return {string}
- */
-function flags (options) {
-  return options.sensitive ? '' : 'i'
-}
-
-/**
- * Pull out keys from a regexp.
- *
- * @param  {!RegExp} path
- * @param  {!Array}  keys
- * @return {!RegExp}
- */
-function regexpToRegexp (path, keys) {
-  // Use a negative lookahead to match only capturing groups.
-  var groups = path.source.match(/\((?!\?)/g)
-
-  if (groups) {
-    for (var i = 0; i < groups.length; i++) {
-      keys.push({
-        name: i,
-        prefix: null,
-        delimiter: null,
-        optional: false,
-        repeat: false,
-        partial: false,
-        asterisk: false,
-        pattern: null
-      })
-    }
-  }
-
-  return attachKeys(path, keys)
-}
-
-/**
- * Transform an array into a regexp.
- *
- * @param  {!Array}  path
- * @param  {Array}   keys
- * @param  {!Object} options
- * @return {!RegExp}
- */
-function arrayToRegexp (path, keys, options) {
-  var parts = []
-
-  for (var i = 0; i < path.length; i++) {
-    parts.push(pathToRegexp(path[i], keys, options).source)
-  }
-
-  var regexp = new RegExp('(?:' + parts.join('|') + ')', flags(options))
-
-  return attachKeys(regexp, keys)
-}
-
-/**
- * Create a path regexp from string input.
- *
- * @param  {string}  path
- * @param  {!Array}  keys
- * @param  {!Object} options
- * @return {!RegExp}
- */
-function stringToRegexp (path, keys, options) {
-  return tokensToRegExp(parse(path, options), keys, options)
-}
-
-/**
- * Expose a function for taking tokens and returning a RegExp.
- *
- * @param  {!Array}          tokens
- * @param  {(Array|Object)=} keys
- * @param  {Object=}         options
- * @return {!RegExp}
- */
-function tokensToRegExp (tokens, keys, options) {
-  if (!isarray(keys)) {
-    options = /** @type {!Object} */ (keys || options)
-    keys = []
-  }
-
-  options = options || {}
-
-  var strict = options.strict
-  var end = options.end !== false
-  var route = ''
-
-  // Iterate over the tokens and create our regexp string.
-  for (var i = 0; i < tokens.length; i++) {
-    var token = tokens[i]
-
-    if (typeof token === 'string') {
-      route += escapeString(token)
-    } else {
-      var prefix = escapeString(token.prefix)
-      var capture = '(?:' + token.pattern + ')'
-
-      keys.push(token)
-
-      if (token.repeat) {
-        capture += '(?:' + prefix + capture + ')*'
-      }
-
-      if (token.optional) {
-        if (!token.partial) {
-          capture = '(?:' + prefix + '(' + capture + '))?'
-        } else {
-          capture = prefix + '(' + capture + ')?'
-        }
-      } else {
-        capture = prefix + '(' + capture + ')'
-      }
-
-      route += capture
-    }
-  }
-
-  var delimiter = escapeString(options.delimiter || '/')
-  var endsWithDelimiter = route.slice(-delimiter.length) === delimiter
-
-  // In non-strict mode we allow a slash at the end of match. If the path to
-  // match already ends with a slash, we remove it for consistency. The slash
-  // is valid at the end of a path match, not in the middle. This is important
-  // in non-ending mode, where "/test/" shouldn't match "/test//route".
-  if (!strict) {
-    route = (endsWithDelimiter ? route.slice(0, -delimiter.length) : route) + '(?:' + delimiter + '(?=$))?'
-  }
-
-  if (end) {
-    route += '$'
-  } else {
-    // In non-ending mode, we need the capturing groups to match as much as
-    // possible by using a positive lookahead to the end or next path segment.
-    route += strict && endsWithDelimiter ? '' : '(?=' + delimiter + '|$)'
-  }
-
-  return attachKeys(new RegExp('^' + route, flags(options)), keys)
-}
-
-/**
- * Normalize the given path string, returning a regular expression.
- *
- * An empty array can be passed in for the keys, which will hold the
- * placeholder key descriptions. For example, using `/user/:id`, `keys` will
- * contain `[{ name: 'id', delimiter: '/', optional: false, repeat: false }]`.
- *
- * @param  {(string|RegExp|Array)} path
- * @param  {(Array|Object)=}       keys
- * @param  {Object=}               options
- * @return {!RegExp}
- */
-function pathToRegexp (path, keys, options) {
-  if (!isarray(keys)) {
-    options = /** @type {!Object} */ (keys || options)
-    keys = []
-  }
-
-  options = options || {}
-
-  if (path instanceof RegExp) {
-    return regexpToRegexp(path, /** @type {!Array} */ (keys))
-  }
-
-  if (isarray(path)) {
-    return arrayToRegexp(/** @type {!Array} */ (path), /** @type {!Array} */ (keys), options)
-  }
-
-  return stringToRegexp(/** @type {string} */ (path), /** @type {!Array} */ (keys), options)
-}
-
-},{"isarray":"../node_modules/react-router/node_modules/isarray/index.js"}],"../node_modules/react-router/es/matchPath.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _pathToRegexp = _interopRequireDefault(require("path-to-regexp"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var patternCache = {};
-var cacheLimit = 10000;
-var cacheCount = 0;
-
-var compilePath = function compilePath(pattern, options) {
-  var cacheKey = '' + options.end + options.strict + options.sensitive;
-  var cache = patternCache[cacheKey] || (patternCache[cacheKey] = {});
-  if (cache[pattern]) return cache[pattern];
-  var keys = [];
-  var re = (0, _pathToRegexp.default)(pattern, keys, options);
-  var compiledPattern = {
-    re: re,
-    keys: keys
-  };
-
-  if (cacheCount < cacheLimit) {
-    cache[pattern] = compiledPattern;
-    cacheCount++;
-  }
-
-  return compiledPattern;
-};
-/**
- * Public API for matching a URL pathname to a path pattern.
- */
-
-
-var matchPath = function matchPath(pathname) {
-  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
-  if (typeof options === 'string') options = {
-    path: options
-  };
-  var _options = options,
-      _options$path = _options.path,
-      path = _options$path === undefined ? '/' : _options$path,
-      _options$exact = _options.exact,
-      exact = _options$exact === undefined ? false : _options$exact,
-      _options$strict = _options.strict,
-      strict = _options$strict === undefined ? false : _options$strict,
-      _options$sensitive = _options.sensitive,
-      sensitive = _options$sensitive === undefined ? false : _options$sensitive;
-
-  var _compilePath = compilePath(path, {
-    end: exact,
-    strict: strict,
-    sensitive: sensitive
-  }),
-      re = _compilePath.re,
-      keys = _compilePath.keys;
-
-  var match = re.exec(pathname);
-  if (!match) return null;
-  var url = match[0],
-      values = match.slice(1);
-  var isExact = pathname === url;
-  if (exact && !isExact) return null;
-  return {
-    path: path,
-    // the path pattern used to match
-    url: path === '/' && url === '' ? '/' : url,
-    // the matched portion of the URL
-    isExact: isExact,
-    // whether or not we matched exactly
-    params: keys.reduce(function (memo, key, index) {
-      memo[key.name] = values[index];
-      return memo;
-    }, {})
-  };
-};
-
-var _default = matchPath;
-exports.default = _default;
-},{"path-to-regexp":"../node_modules/react-router/node_modules/path-to-regexp/index.js"}],"../node_modules/react-router/es/Route.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _warning = _interopRequireDefault(require("warning"));
-
-var _invariant = _interopRequireDefault(require("invariant"));
-
-var _react = _interopRequireDefault(require("react"));
-
-var _propTypes = _interopRequireDefault(require("prop-types"));
-
-var _matchPath = _interopRequireDefault(require("./matchPath"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var _extends = Object.assign || function (target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i];
-
-    for (var key in source) {
-      if (Object.prototype.hasOwnProperty.call(source, key)) {
-        target[key] = source[key];
-      }
-    }
-  }
-
-  return target;
-};
-
-function _classCallCheck(instance, Constructor) {
-  if (!(instance instanceof Constructor)) {
-    throw new TypeError("Cannot call a class as a function");
-  }
-}
-
-function _possibleConstructorReturn(self, call) {
-  if (!self) {
-    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-  }
-
-  return call && (typeof call === "object" || typeof call === "function") ? call : self;
-}
-
-function _inherits(subClass, superClass) {
-  if (typeof superClass !== "function" && superClass !== null) {
-    throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
-  }
-
-  subClass.prototype = Object.create(superClass && superClass.prototype, {
-    constructor: {
-      value: subClass,
-      enumerable: false,
-      writable: true,
-      configurable: true
-    }
-  });
-  if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
-}
-
-var isEmptyChildren = function isEmptyChildren(children) {
-  return _react.default.Children.count(children) === 0;
-};
-/**
- * The public API for matching a single path and rendering.
- */
-
-
-var Route = function (_React$Component) {
-  _inherits(Route, _React$Component);
-
-  function Route() {
-    var _temp, _this, _ret;
-
-    _classCallCheck(this, Route);
-
-    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    return _ret = (_temp = (_this = _possibleConstructorReturn(this, _React$Component.call.apply(_React$Component, [this].concat(args))), _this), _this.state = {
-      match: _this.computeMatch(_this.props, _this.context.router)
-    }, _temp), _possibleConstructorReturn(_this, _ret);
-  }
-
-  Route.prototype.getChildContext = function getChildContext() {
-    return {
-      router: _extends({}, this.context.router, {
-        route: {
-          location: this.props.location || this.context.router.route.location,
-          match: this.state.match
-        }
-      })
-    };
-  };
-
-  Route.prototype.computeMatch = function computeMatch(_ref, router) {
-    var computedMatch = _ref.computedMatch,
-        location = _ref.location,
-        path = _ref.path,
-        strict = _ref.strict,
-        exact = _ref.exact,
-        sensitive = _ref.sensitive;
-    if (computedMatch) return computedMatch; // <Switch> already computed the match for us
-
-    (0, _invariant.default)(router, 'You should not use <Route> or withRouter() outside a <Router>');
-    var route = router.route;
-    var pathname = (location || route.location).pathname;
-    return path ? (0, _matchPath.default)(pathname, {
-      path: path,
-      strict: strict,
-      exact: exact,
-      sensitive: sensitive
-    }) : route.match;
-  };
-
-  Route.prototype.componentWillMount = function componentWillMount() {
-    (0, _warning.default)(!(this.props.component && this.props.render), 'You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored');
-    (0, _warning.default)(!(this.props.component && this.props.children && !isEmptyChildren(this.props.children)), 'You should not use <Route component> and <Route children> in the same route; <Route children> will be ignored');
-    (0, _warning.default)(!(this.props.render && this.props.children && !isEmptyChildren(this.props.children)), 'You should not use <Route render> and <Route children> in the same route; <Route children> will be ignored');
-  };
-
-  Route.prototype.componentWillReceiveProps = function componentWillReceiveProps(nextProps, nextContext) {
-    (0, _warning.default)(!(nextProps.location && !this.props.location), '<Route> elements should not change from uncontrolled to controlled (or vice versa). You initially used no "location" prop and then provided one on a subsequent render.');
-    (0, _warning.default)(!(!nextProps.location && this.props.location), '<Route> elements should not change from controlled to uncontrolled (or vice versa). You provided a "location" prop initially but omitted it on a subsequent render.');
-    this.setState({
-      match: this.computeMatch(nextProps, nextContext.router)
-    });
-  };
-
-  Route.prototype.render = function render() {
-    var match = this.state.match;
-    var _props = this.props,
-        children = _props.children,
-        component = _props.component,
-        render = _props.render;
-    var _context$router = this.context.router,
-        history = _context$router.history,
-        route = _context$router.route,
-        staticContext = _context$router.staticContext;
-    var location = this.props.location || route.location;
-    var props = {
-      match: match,
-      location: location,
-      history: history,
-      staticContext: staticContext
-    };
-    return component ? // component prop gets first priority, only called if there's a match
-    match ? _react.default.createElement(component, props) : null : render ? // render prop is next, only called if there's a match
-    match ? render(props) : null : children ? // children come last, always called
-    typeof children === 'function' ? children(props) : !isEmptyChildren(children) ? _react.default.Children.only(children) : null : null;
-  };
-
-  return Route;
-}(_react.default.Component);
-
-Route.propTypes = {
-  computedMatch: _propTypes.default.object,
-  // private, from <Switch>
-  path: _propTypes.default.string,
-  exact: _propTypes.default.bool,
-  strict: _propTypes.default.bool,
-  sensitive: _propTypes.default.bool,
-  component: _propTypes.default.func,
-  render: _propTypes.default.func,
-  children: _propTypes.default.oneOfType([_propTypes.default.func, _propTypes.default.node]),
-  location: _propTypes.default.object
-};
-Route.contextTypes = {
-  router: _propTypes.default.shape({
-    history: _propTypes.default.object.isRequired,
-    route: _propTypes.default.object.isRequired,
-    staticContext: _propTypes.default.object
-  })
-};
-Route.childContextTypes = {
-  router: _propTypes.default.object.isRequired
-};
-var _default = Route;
-exports.default = _default;
-},{"warning":"../node_modules/warning/browser.js","invariant":"../node_modules/invariant/browser.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","./matchPath":"../node_modules/react-router/es/matchPath.js"}],"../node_modules/react-router-dom/es/Route.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _Route = _interopRequireDefault(require("react-router/es/Route"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-// Written in this round about way for babel-transform-imports
-var _default = _Route.default;
-exports.default = _default;
-},{"react-router/es/Route":"../node_modules/react-router/es/Route.js"}],"../node_modules/react-router-dom/es/NavLink.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _react = _interopRequireDefault(require("react"));
-
-var _propTypes = _interopRequireDefault(require("prop-types"));
-
-var _Route = _interopRequireDefault(require("./Route"));
-
-var _Link = _interopRequireDefault(require("./Link"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var _extends = Object.assign || function (target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i];
-
-    for (var key in source) {
-      if (Object.prototype.hasOwnProperty.call(source, key)) {
-        target[key] = source[key];
-      }
-    }
-  }
-
-  return target;
-};
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
-  return typeof obj;
-} : function (obj) {
-  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-};
-
-function _objectWithoutProperties(obj, keys) {
-  var target = {};
-
-  for (var i in obj) {
-    if (keys.indexOf(i) >= 0) continue;
-    if (!Object.prototype.hasOwnProperty.call(obj, i)) continue;
-    target[i] = obj[i];
-  }
-
-  return target;
-}
-
-/**
- * A <Link> wrapper that knows if it's "active" or not.
- */
-var NavLink = function NavLink(_ref) {
-  var to = _ref.to,
-      exact = _ref.exact,
-      strict = _ref.strict,
-      location = _ref.location,
-      activeClassName = _ref.activeClassName,
-      className = _ref.className,
-      activeStyle = _ref.activeStyle,
-      style = _ref.style,
-      getIsActive = _ref.isActive,
-      ariaCurrent = _ref.ariaCurrent,
-      rest = _objectWithoutProperties(_ref, ['to', 'exact', 'strict', 'location', 'activeClassName', 'className', 'activeStyle', 'style', 'isActive', 'ariaCurrent']);
-
-  return _react.default.createElement(_Route.default, {
-    path: (typeof to === 'undefined' ? 'undefined' : _typeof(to)) === 'object' ? to.pathname : to,
-    exact: exact,
-    strict: strict,
-    location: location,
-    children: function children(_ref2) {
-      var location = _ref2.location,
-          match = _ref2.match;
-      var isActive = !!(getIsActive ? getIsActive(match, location) : match);
-      return _react.default.createElement(_Link.default, _extends({
-        to: to,
-        className: isActive ? [className, activeClassName].filter(function (i) {
-          return i;
-        }).join(' ') : className,
-        style: isActive ? _extends({}, style, activeStyle) : style,
-        'aria-current': isActive && ariaCurrent
-      }, rest));
-    }
-  });
-};
-
-NavLink.propTypes = {
-  to: _Link.default.propTypes.to,
-  exact: _propTypes.default.bool,
-  strict: _propTypes.default.bool,
-  location: _propTypes.default.object,
-  activeClassName: _propTypes.default.string,
-  className: _propTypes.default.string,
-  activeStyle: _propTypes.default.object,
-  style: _propTypes.default.object,
-  isActive: _propTypes.default.func,
-  ariaCurrent: _propTypes.default.oneOf(['page', 'step', 'location', 'true'])
-};
-NavLink.defaultProps = {
-  activeClassName: 'active',
-  ariaCurrent: 'true'
-};
-var _default = NavLink;
-exports.default = _default;
-},{"react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","./Route":"../node_modules/react-router-dom/es/Route.js","./Link":"../node_modules/react-router-dom/es/Link.js"}],"../node_modules/react-router/es/Prompt.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _react = _interopRequireDefault(require("react"));
-
-var _propTypes = _interopRequireDefault(require("prop-types"));
-
-var _invariant = _interopRequireDefault(require("invariant"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _classCallCheck(instance, Constructor) {
-  if (!(instance instanceof Constructor)) {
-    throw new TypeError("Cannot call a class as a function");
-  }
-}
-
-function _possibleConstructorReturn(self, call) {
-  if (!self) {
-    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
-  }
-
-  return call && (typeof call === "object" || typeof call === "function") ? call : self;
-}
-
-function _inherits(subClass, superClass) {
-  if (typeof superClass !== "function" && superClass !== null) {
-    throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
-  }
-
-  subClass.prototype = Object.create(superClass && superClass.prototype, {
-    constructor: {
-      value: subClass,
-      enumerable: false,
-      writable: true,
-      configurable: true
-    }
-  });
-  if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
-}
-
-/**
- * The public API for prompting the user before navigating away
- * from a screen with a component.
- */
-var Prompt = function (_React$Component) {
-  _inherits(Prompt, _React$Component);
-
-  function Prompt() {
-    _classCallCheck(this, Prompt);
-
-    return _possibleConstructorReturn(this, _React$Component.apply(this, arguments));
-  }
-
-  Prompt.prototype.enable = function enable(message) {
-    if (this.unblock) this.unblock();
-    this.unblock = this.context.router.history.block(message);
-  };
-
-  Prompt.prototype.disable = function disable() {
-    if (this.unblock) {
-      this.unblock();
-      this.unblock = null;
-    }
-  };
-
-  Prompt.prototype.componentWillMount = function componentWillMount() {
-    (0, _invariant.default)(this.context.router, 'You should not use <Prompt> outside a <Router>');
-    if (this.props.when) this.enable(this.props.message);
-  };
-
-  Prompt.prototype.componentWillReceiveProps = function componentWillReceiveProps(nextProps) {
-    if (nextProps.when) {
-      if (!this.props.when || this.props.message !== nextProps.message) this.enable(nextProps.message);
-    } else {
-      this.disable();
-    }
-  };
-
-  Prompt.prototype.componentWillUnmount = function componentWillUnmount() {
-    this.disable();
-  };
-
-  Prompt.prototype.render = function render() {
-    return null;
-  };
-
-  return Prompt;
-}(_react.default.Component);
-
-Prompt.propTypes = {
-  when: _propTypes.default.bool,
-  message: _propTypes.default.oneOfType([_propTypes.default.func, _propTypes.default.string]).isRequired
-};
-Prompt.defaultProps = {
-  when: true
-};
-Prompt.contextTypes = {
-  router: _propTypes.default.shape({
-    history: _propTypes.default.shape({
-      block: _propTypes.default.func.isRequired
-    }).isRequired
-  }).isRequired
-};
-var _default = Prompt;
-exports.default = _default;
-},{"react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","invariant":"../node_modules/invariant/browser.js"}],"../node_modules/react-router-dom/es/Prompt.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _Prompt = _interopRequireDefault(require("react-router/es/Prompt"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-// Written in this round about way for babel-transform-imports
-var _default = _Prompt.default;
-exports.default = _default;
-},{"react-router/es/Prompt":"../node_modules/react-router/es/Prompt.js"}],"../node_modules/history/es/PathUtils.js":[function(require,module,exports) {
+},{"react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","invariant":"../node_modules/invariant/browser.js"}],"../node_modules/history/es/PathUtils.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -27313,7 +26098,7 @@ var createBrowserHistory = function createBrowserHistory() {
 
 var _default = createBrowserHistory;
 exports.default = _default;
-},{"warning":"../node_modules/warning/browser.js","invariant":"../node_modules/history/node_modules/invariant/browser.js","./LocationUtils":"../node_modules/history/es/LocationUtils.js","./PathUtils":"../node_modules/history/es/PathUtils.js","./createTransitionManager":"../node_modules/history/es/createTransitionManager.js","./DOMUtils":"../node_modules/history/es/DOMUtils.js"}],"../node_modules/history/es/createHashHistory.js":[function(require,module,exports) {
+},{"warning":"../node_modules/warning/browser.js","invariant":"../node_modules/invariant/browser.js","./LocationUtils":"../node_modules/history/es/LocationUtils.js","./PathUtils":"../node_modules/history/es/PathUtils.js","./createTransitionManager":"../node_modules/history/es/createTransitionManager.js","./DOMUtils":"../node_modules/history/es/DOMUtils.js"}],"../node_modules/history/es/createHashHistory.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -27616,7 +26401,7 @@ var createHashHistory = function createHashHistory() {
 
 var _default = createHashHistory;
 exports.default = _default;
-},{"warning":"../node_modules/warning/browser.js","invariant":"../node_modules/history/node_modules/invariant/browser.js","./LocationUtils":"../node_modules/history/es/LocationUtils.js","./PathUtils":"../node_modules/history/es/PathUtils.js","./createTransitionManager":"../node_modules/history/es/createTransitionManager.js","./DOMUtils":"../node_modules/history/es/DOMUtils.js"}],"../node_modules/history/es/createMemoryHistory.js":[function(require,module,exports) {
+},{"warning":"../node_modules/warning/browser.js","invariant":"../node_modules/invariant/browser.js","./LocationUtils":"../node_modules/history/es/LocationUtils.js","./PathUtils":"../node_modules/history/es/PathUtils.js","./createTransitionManager":"../node_modules/history/es/createTransitionManager.js","./DOMUtils":"../node_modules/history/es/DOMUtils.js"}],"../node_modules/history/es/createMemoryHistory.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -27852,7 +26637,1113 @@ var _LocationUtils = require("./LocationUtils");
 var _PathUtils = require("./PathUtils");
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-},{"./createBrowserHistory":"../node_modules/history/es/createBrowserHistory.js","./createHashHistory":"../node_modules/history/es/createHashHistory.js","./createMemoryHistory":"../node_modules/history/es/createMemoryHistory.js","./LocationUtils":"../node_modules/history/es/LocationUtils.js","./PathUtils":"../node_modules/history/es/PathUtils.js"}],"../node_modules/react-router/es/Redirect.js":[function(require,module,exports) {
+},{"./createBrowserHistory":"../node_modules/history/es/createBrowserHistory.js","./createHashHistory":"../node_modules/history/es/createHashHistory.js","./createMemoryHistory":"../node_modules/history/es/createMemoryHistory.js","./LocationUtils":"../node_modules/history/es/LocationUtils.js","./PathUtils":"../node_modules/history/es/PathUtils.js"}],"../node_modules/react-router/es/MemoryRouter.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _warning = _interopRequireDefault(require("warning"));
+
+var _react = _interopRequireDefault(require("react"));
+
+var _propTypes = _interopRequireDefault(require("prop-types"));
+
+var _history = require("history");
+
+var _Router = _interopRequireDefault(require("./Router"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+}
+
+function _possibleConstructorReturn(self, call) {
+  if (!self) {
+    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+  }
+
+  return call && (typeof call === "object" || typeof call === "function") ? call : self;
+}
+
+function _inherits(subClass, superClass) {
+  if (typeof superClass !== "function" && superClass !== null) {
+    throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+  }
+
+  subClass.prototype = Object.create(superClass && superClass.prototype, {
+    constructor: {
+      value: subClass,
+      enumerable: false,
+      writable: true,
+      configurable: true
+    }
+  });
+  if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+}
+
+/**
+ * The public API for a <Router> that stores location in memory.
+ */
+var MemoryRouter = function (_React$Component) {
+  _inherits(MemoryRouter, _React$Component);
+
+  function MemoryRouter() {
+    var _temp, _this, _ret;
+
+    _classCallCheck(this, MemoryRouter);
+
+    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    return _ret = (_temp = (_this = _possibleConstructorReturn(this, _React$Component.call.apply(_React$Component, [this].concat(args))), _this), _this.history = (0, _history.createMemoryHistory)(_this.props), _temp), _possibleConstructorReturn(_this, _ret);
+  }
+
+  MemoryRouter.prototype.componentWillMount = function componentWillMount() {
+    (0, _warning.default)(!this.props.history, "<MemoryRouter> ignores the history prop. To use a custom history, " + "use `import { Router }` instead of `import { MemoryRouter as Router }`.");
+  };
+
+  MemoryRouter.prototype.render = function render() {
+    return _react.default.createElement(_Router.default, {
+      history: this.history,
+      children: this.props.children
+    });
+  };
+
+  return MemoryRouter;
+}(_react.default.Component);
+
+MemoryRouter.propTypes = {
+  initialEntries: _propTypes.default.array,
+  initialIndex: _propTypes.default.number,
+  getUserConfirmation: _propTypes.default.func,
+  keyLength: _propTypes.default.number,
+  children: _propTypes.default.node
+};
+var _default = MemoryRouter;
+exports.default = _default;
+},{"warning":"../node_modules/react-router/node_modules/warning/warning.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","history":"../node_modules/history/es/index.js","./Router":"../node_modules/react-router/es/Router.js"}],"../node_modules/react-router-dom/es/MemoryRouter.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _MemoryRouter = _interopRequireDefault(require("react-router/es/MemoryRouter"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// Written in this round about way for babel-transform-imports
+var _default = _MemoryRouter.default;
+exports.default = _default;
+},{"react-router/es/MemoryRouter":"../node_modules/react-router/es/MemoryRouter.js"}],"../node_modules/react-router/node_modules/isarray/index.js":[function(require,module,exports) {
+module.exports = Array.isArray || function (arr) {
+  return Object.prototype.toString.call(arr) == '[object Array]';
+};
+
+},{}],"../node_modules/react-router/node_modules/path-to-regexp/index.js":[function(require,module,exports) {
+var isarray = require('isarray')
+
+/**
+ * Expose `pathToRegexp`.
+ */
+module.exports = pathToRegexp
+module.exports.parse = parse
+module.exports.compile = compile
+module.exports.tokensToFunction = tokensToFunction
+module.exports.tokensToRegExp = tokensToRegExp
+
+/**
+ * The main path matching regexp utility.
+ *
+ * @type {RegExp}
+ */
+var PATH_REGEXP = new RegExp([
+  // Match escaped characters that would otherwise appear in future matches.
+  // This allows the user to escape special characters that won't transform.
+  '(\\\\.)',
+  // Match Express-style parameters and un-named parameters with a prefix
+  // and optional suffixes. Matches appear as:
+  //
+  // "/:test(\\d+)?" => ["/", "test", "\d+", undefined, "?", undefined]
+  // "/route(\\d+)"  => [undefined, undefined, undefined, "\d+", undefined, undefined]
+  // "/*"            => ["/", undefined, undefined, undefined, undefined, "*"]
+  '([\\/.])?(?:(?:\\:(\\w+)(?:\\(((?:\\\\.|[^\\\\()])+)\\))?|\\(((?:\\\\.|[^\\\\()])+)\\))([+*?])?|(\\*))'
+].join('|'), 'g')
+
+/**
+ * Parse a string for the raw tokens.
+ *
+ * @param  {string}  str
+ * @param  {Object=} options
+ * @return {!Array}
+ */
+function parse (str, options) {
+  var tokens = []
+  var key = 0
+  var index = 0
+  var path = ''
+  var defaultDelimiter = options && options.delimiter || '/'
+  var res
+
+  while ((res = PATH_REGEXP.exec(str)) != null) {
+    var m = res[0]
+    var escaped = res[1]
+    var offset = res.index
+    path += str.slice(index, offset)
+    index = offset + m.length
+
+    // Ignore already escaped sequences.
+    if (escaped) {
+      path += escaped[1]
+      continue
+    }
+
+    var next = str[index]
+    var prefix = res[2]
+    var name = res[3]
+    var capture = res[4]
+    var group = res[5]
+    var modifier = res[6]
+    var asterisk = res[7]
+
+    // Push the current path onto the tokens.
+    if (path) {
+      tokens.push(path)
+      path = ''
+    }
+
+    var partial = prefix != null && next != null && next !== prefix
+    var repeat = modifier === '+' || modifier === '*'
+    var optional = modifier === '?' || modifier === '*'
+    var delimiter = res[2] || defaultDelimiter
+    var pattern = capture || group
+
+    tokens.push({
+      name: name || key++,
+      prefix: prefix || '',
+      delimiter: delimiter,
+      optional: optional,
+      repeat: repeat,
+      partial: partial,
+      asterisk: !!asterisk,
+      pattern: pattern ? escapeGroup(pattern) : (asterisk ? '.*' : '[^' + escapeString(delimiter) + ']+?')
+    })
+  }
+
+  // Match any characters still remaining.
+  if (index < str.length) {
+    path += str.substr(index)
+  }
+
+  // If the path exists, push it onto the end.
+  if (path) {
+    tokens.push(path)
+  }
+
+  return tokens
+}
+
+/**
+ * Compile a string to a template function for the path.
+ *
+ * @param  {string}             str
+ * @param  {Object=}            options
+ * @return {!function(Object=, Object=)}
+ */
+function compile (str, options) {
+  return tokensToFunction(parse(str, options))
+}
+
+/**
+ * Prettier encoding of URI path segments.
+ *
+ * @param  {string}
+ * @return {string}
+ */
+function encodeURIComponentPretty (str) {
+  return encodeURI(str).replace(/[\/?#]/g, function (c) {
+    return '%' + c.charCodeAt(0).toString(16).toUpperCase()
+  })
+}
+
+/**
+ * Encode the asterisk parameter. Similar to `pretty`, but allows slashes.
+ *
+ * @param  {string}
+ * @return {string}
+ */
+function encodeAsterisk (str) {
+  return encodeURI(str).replace(/[?#]/g, function (c) {
+    return '%' + c.charCodeAt(0).toString(16).toUpperCase()
+  })
+}
+
+/**
+ * Expose a method for transforming tokens into the path function.
+ */
+function tokensToFunction (tokens) {
+  // Compile all the tokens into regexps.
+  var matches = new Array(tokens.length)
+
+  // Compile all the patterns before compilation.
+  for (var i = 0; i < tokens.length; i++) {
+    if (typeof tokens[i] === 'object') {
+      matches[i] = new RegExp('^(?:' + tokens[i].pattern + ')$')
+    }
+  }
+
+  return function (obj, opts) {
+    var path = ''
+    var data = obj || {}
+    var options = opts || {}
+    var encode = options.pretty ? encodeURIComponentPretty : encodeURIComponent
+
+    for (var i = 0; i < tokens.length; i++) {
+      var token = tokens[i]
+
+      if (typeof token === 'string') {
+        path += token
+
+        continue
+      }
+
+      var value = data[token.name]
+      var segment
+
+      if (value == null) {
+        if (token.optional) {
+          // Prepend partial segment prefixes.
+          if (token.partial) {
+            path += token.prefix
+          }
+
+          continue
+        } else {
+          throw new TypeError('Expected "' + token.name + '" to be defined')
+        }
+      }
+
+      if (isarray(value)) {
+        if (!token.repeat) {
+          throw new TypeError('Expected "' + token.name + '" to not repeat, but received `' + JSON.stringify(value) + '`')
+        }
+
+        if (value.length === 0) {
+          if (token.optional) {
+            continue
+          } else {
+            throw new TypeError('Expected "' + token.name + '" to not be empty')
+          }
+        }
+
+        for (var j = 0; j < value.length; j++) {
+          segment = encode(value[j])
+
+          if (!matches[i].test(segment)) {
+            throw new TypeError('Expected all "' + token.name + '" to match "' + token.pattern + '", but received `' + JSON.stringify(segment) + '`')
+          }
+
+          path += (j === 0 ? token.prefix : token.delimiter) + segment
+        }
+
+        continue
+      }
+
+      segment = token.asterisk ? encodeAsterisk(value) : encode(value)
+
+      if (!matches[i].test(segment)) {
+        throw new TypeError('Expected "' + token.name + '" to match "' + token.pattern + '", but received "' + segment + '"')
+      }
+
+      path += token.prefix + segment
+    }
+
+    return path
+  }
+}
+
+/**
+ * Escape a regular expression string.
+ *
+ * @param  {string} str
+ * @return {string}
+ */
+function escapeString (str) {
+  return str.replace(/([.+*?=^!:${}()[\]|\/\\])/g, '\\$1')
+}
+
+/**
+ * Escape the capturing group by escaping special characters and meaning.
+ *
+ * @param  {string} group
+ * @return {string}
+ */
+function escapeGroup (group) {
+  return group.replace(/([=!:$\/()])/g, '\\$1')
+}
+
+/**
+ * Attach the keys as a property of the regexp.
+ *
+ * @param  {!RegExp} re
+ * @param  {Array}   keys
+ * @return {!RegExp}
+ */
+function attachKeys (re, keys) {
+  re.keys = keys
+  return re
+}
+
+/**
+ * Get the flags for a regexp from the options.
+ *
+ * @param  {Object} options
+ * @return {string}
+ */
+function flags (options) {
+  return options.sensitive ? '' : 'i'
+}
+
+/**
+ * Pull out keys from a regexp.
+ *
+ * @param  {!RegExp} path
+ * @param  {!Array}  keys
+ * @return {!RegExp}
+ */
+function regexpToRegexp (path, keys) {
+  // Use a negative lookahead to match only capturing groups.
+  var groups = path.source.match(/\((?!\?)/g)
+
+  if (groups) {
+    for (var i = 0; i < groups.length; i++) {
+      keys.push({
+        name: i,
+        prefix: null,
+        delimiter: null,
+        optional: false,
+        repeat: false,
+        partial: false,
+        asterisk: false,
+        pattern: null
+      })
+    }
+  }
+
+  return attachKeys(path, keys)
+}
+
+/**
+ * Transform an array into a regexp.
+ *
+ * @param  {!Array}  path
+ * @param  {Array}   keys
+ * @param  {!Object} options
+ * @return {!RegExp}
+ */
+function arrayToRegexp (path, keys, options) {
+  var parts = []
+
+  for (var i = 0; i < path.length; i++) {
+    parts.push(pathToRegexp(path[i], keys, options).source)
+  }
+
+  var regexp = new RegExp('(?:' + parts.join('|') + ')', flags(options))
+
+  return attachKeys(regexp, keys)
+}
+
+/**
+ * Create a path regexp from string input.
+ *
+ * @param  {string}  path
+ * @param  {!Array}  keys
+ * @param  {!Object} options
+ * @return {!RegExp}
+ */
+function stringToRegexp (path, keys, options) {
+  return tokensToRegExp(parse(path, options), keys, options)
+}
+
+/**
+ * Expose a function for taking tokens and returning a RegExp.
+ *
+ * @param  {!Array}          tokens
+ * @param  {(Array|Object)=} keys
+ * @param  {Object=}         options
+ * @return {!RegExp}
+ */
+function tokensToRegExp (tokens, keys, options) {
+  if (!isarray(keys)) {
+    options = /** @type {!Object} */ (keys || options)
+    keys = []
+  }
+
+  options = options || {}
+
+  var strict = options.strict
+  var end = options.end !== false
+  var route = ''
+
+  // Iterate over the tokens and create our regexp string.
+  for (var i = 0; i < tokens.length; i++) {
+    var token = tokens[i]
+
+    if (typeof token === 'string') {
+      route += escapeString(token)
+    } else {
+      var prefix = escapeString(token.prefix)
+      var capture = '(?:' + token.pattern + ')'
+
+      keys.push(token)
+
+      if (token.repeat) {
+        capture += '(?:' + prefix + capture + ')*'
+      }
+
+      if (token.optional) {
+        if (!token.partial) {
+          capture = '(?:' + prefix + '(' + capture + '))?'
+        } else {
+          capture = prefix + '(' + capture + ')?'
+        }
+      } else {
+        capture = prefix + '(' + capture + ')'
+      }
+
+      route += capture
+    }
+  }
+
+  var delimiter = escapeString(options.delimiter || '/')
+  var endsWithDelimiter = route.slice(-delimiter.length) === delimiter
+
+  // In non-strict mode we allow a slash at the end of match. If the path to
+  // match already ends with a slash, we remove it for consistency. The slash
+  // is valid at the end of a path match, not in the middle. This is important
+  // in non-ending mode, where "/test/" shouldn't match "/test//route".
+  if (!strict) {
+    route = (endsWithDelimiter ? route.slice(0, -delimiter.length) : route) + '(?:' + delimiter + '(?=$))?'
+  }
+
+  if (end) {
+    route += '$'
+  } else {
+    // In non-ending mode, we need the capturing groups to match as much as
+    // possible by using a positive lookahead to the end or next path segment.
+    route += strict && endsWithDelimiter ? '' : '(?=' + delimiter + '|$)'
+  }
+
+  return attachKeys(new RegExp('^' + route, flags(options)), keys)
+}
+
+/**
+ * Normalize the given path string, returning a regular expression.
+ *
+ * An empty array can be passed in for the keys, which will hold the
+ * placeholder key descriptions. For example, using `/user/:id`, `keys` will
+ * contain `[{ name: 'id', delimiter: '/', optional: false, repeat: false }]`.
+ *
+ * @param  {(string|RegExp|Array)} path
+ * @param  {(Array|Object)=}       keys
+ * @param  {Object=}               options
+ * @return {!RegExp}
+ */
+function pathToRegexp (path, keys, options) {
+  if (!isarray(keys)) {
+    options = /** @type {!Object} */ (keys || options)
+    keys = []
+  }
+
+  options = options || {}
+
+  if (path instanceof RegExp) {
+    return regexpToRegexp(path, /** @type {!Array} */ (keys))
+  }
+
+  if (isarray(path)) {
+    return arrayToRegexp(/** @type {!Array} */ (path), /** @type {!Array} */ (keys), options)
+  }
+
+  return stringToRegexp(/** @type {string} */ (path), /** @type {!Array} */ (keys), options)
+}
+
+},{"isarray":"../node_modules/react-router/node_modules/isarray/index.js"}],"../node_modules/react-router/es/matchPath.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _pathToRegexp = _interopRequireDefault(require("path-to-regexp"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var patternCache = {};
+var cacheLimit = 10000;
+var cacheCount = 0;
+
+var compilePath = function compilePath(pattern, options) {
+  var cacheKey = "" + options.end + options.strict + options.sensitive;
+  var cache = patternCache[cacheKey] || (patternCache[cacheKey] = {});
+  if (cache[pattern]) return cache[pattern];
+  var keys = [];
+  var re = (0, _pathToRegexp.default)(pattern, keys, options);
+  var compiledPattern = {
+    re: re,
+    keys: keys
+  };
+
+  if (cacheCount < cacheLimit) {
+    cache[pattern] = compiledPattern;
+    cacheCount++;
+  }
+
+  return compiledPattern;
+};
+/**
+ * Public API for matching a URL pathname to a path pattern.
+ */
+
+
+var matchPath = function matchPath(pathname) {
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  var parent = arguments[2];
+  if (typeof options === "string") options = {
+    path: options
+  };
+  var _options = options,
+      path = _options.path,
+      _options$exact = _options.exact,
+      exact = _options$exact === undefined ? false : _options$exact,
+      _options$strict = _options.strict,
+      strict = _options$strict === undefined ? false : _options$strict,
+      _options$sensitive = _options.sensitive,
+      sensitive = _options$sensitive === undefined ? false : _options$sensitive;
+  if (path == null) return parent;
+
+  var _compilePath = compilePath(path, {
+    end: exact,
+    strict: strict,
+    sensitive: sensitive
+  }),
+      re = _compilePath.re,
+      keys = _compilePath.keys;
+
+  var match = re.exec(pathname);
+  if (!match) return null;
+  var url = match[0],
+      values = match.slice(1);
+  var isExact = pathname === url;
+  if (exact && !isExact) return null;
+  return {
+    path: path,
+    // the path pattern used to match
+    url: path === "/" && url === "" ? "/" : url,
+    // the matched portion of the URL
+    isExact: isExact,
+    // whether or not we matched exactly
+    params: keys.reduce(function (memo, key, index) {
+      memo[key.name] = values[index];
+      return memo;
+    }, {})
+  };
+};
+
+var _default = matchPath;
+exports.default = _default;
+},{"path-to-regexp":"../node_modules/react-router/node_modules/path-to-regexp/index.js"}],"../node_modules/react-router/es/Route.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _warning = _interopRequireDefault(require("warning"));
+
+var _invariant = _interopRequireDefault(require("invariant"));
+
+var _react = _interopRequireDefault(require("react"));
+
+var _propTypes = _interopRequireDefault(require("prop-types"));
+
+var _matchPath = _interopRequireDefault(require("./matchPath"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var _extends = Object.assign || function (target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i];
+
+    for (var key in source) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        target[key] = source[key];
+      }
+    }
+  }
+
+  return target;
+};
+
+function _classCallCheck(instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+}
+
+function _possibleConstructorReturn(self, call) {
+  if (!self) {
+    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+  }
+
+  return call && (typeof call === "object" || typeof call === "function") ? call : self;
+}
+
+function _inherits(subClass, superClass) {
+  if (typeof superClass !== "function" && superClass !== null) {
+    throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+  }
+
+  subClass.prototype = Object.create(superClass && superClass.prototype, {
+    constructor: {
+      value: subClass,
+      enumerable: false,
+      writable: true,
+      configurable: true
+    }
+  });
+  if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+}
+
+var isEmptyChildren = function isEmptyChildren(children) {
+  return _react.default.Children.count(children) === 0;
+};
+/**
+ * The public API for matching a single path and rendering.
+ */
+
+
+var Route = function (_React$Component) {
+  _inherits(Route, _React$Component);
+
+  function Route() {
+    var _temp, _this, _ret;
+
+    _classCallCheck(this, Route);
+
+    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    return _ret = (_temp = (_this = _possibleConstructorReturn(this, _React$Component.call.apply(_React$Component, [this].concat(args))), _this), _this.state = {
+      match: _this.computeMatch(_this.props, _this.context.router)
+    }, _temp), _possibleConstructorReturn(_this, _ret);
+  }
+
+  Route.prototype.getChildContext = function getChildContext() {
+    return {
+      router: _extends({}, this.context.router, {
+        route: {
+          location: this.props.location || this.context.router.route.location,
+          match: this.state.match
+        }
+      })
+    };
+  };
+
+  Route.prototype.computeMatch = function computeMatch(_ref, router) {
+    var computedMatch = _ref.computedMatch,
+        location = _ref.location,
+        path = _ref.path,
+        strict = _ref.strict,
+        exact = _ref.exact,
+        sensitive = _ref.sensitive;
+    if (computedMatch) return computedMatch; // <Switch> already computed the match for us
+
+    (0, _invariant.default)(router, "You should not use <Route> or withRouter() outside a <Router>");
+    var route = router.route;
+    var pathname = (location || route.location).pathname;
+    return (0, _matchPath.default)(pathname, {
+      path: path,
+      strict: strict,
+      exact: exact,
+      sensitive: sensitive
+    }, route.match);
+  };
+
+  Route.prototype.componentWillMount = function componentWillMount() {
+    (0, _warning.default)(!(this.props.component && this.props.render), "You should not use <Route component> and <Route render> in the same route; <Route render> will be ignored");
+    (0, _warning.default)(!(this.props.component && this.props.children && !isEmptyChildren(this.props.children)), "You should not use <Route component> and <Route children> in the same route; <Route children> will be ignored");
+    (0, _warning.default)(!(this.props.render && this.props.children && !isEmptyChildren(this.props.children)), "You should not use <Route render> and <Route children> in the same route; <Route children> will be ignored");
+  };
+
+  Route.prototype.componentWillReceiveProps = function componentWillReceiveProps(nextProps, nextContext) {
+    (0, _warning.default)(!(nextProps.location && !this.props.location), '<Route> elements should not change from uncontrolled to controlled (or vice versa). You initially used no "location" prop and then provided one on a subsequent render.');
+    (0, _warning.default)(!(!nextProps.location && this.props.location), '<Route> elements should not change from controlled to uncontrolled (or vice versa). You provided a "location" prop initially but omitted it on a subsequent render.');
+    this.setState({
+      match: this.computeMatch(nextProps, nextContext.router)
+    });
+  };
+
+  Route.prototype.render = function render() {
+    var match = this.state.match;
+    var _props = this.props,
+        children = _props.children,
+        component = _props.component,
+        render = _props.render;
+    var _context$router = this.context.router,
+        history = _context$router.history,
+        route = _context$router.route,
+        staticContext = _context$router.staticContext;
+    var location = this.props.location || route.location;
+    var props = {
+      match: match,
+      location: location,
+      history: history,
+      staticContext: staticContext
+    };
+    if (component) return match ? _react.default.createElement(component, props) : null;
+    if (render) return match ? render(props) : null;
+    if (typeof children === "function") return children(props);
+    if (children && !isEmptyChildren(children)) return _react.default.Children.only(children);
+    return null;
+  };
+
+  return Route;
+}(_react.default.Component);
+
+Route.propTypes = {
+  computedMatch: _propTypes.default.object,
+  // private, from <Switch>
+  path: _propTypes.default.string,
+  exact: _propTypes.default.bool,
+  strict: _propTypes.default.bool,
+  sensitive: _propTypes.default.bool,
+  component: _propTypes.default.func,
+  render: _propTypes.default.func,
+  children: _propTypes.default.oneOfType([_propTypes.default.func, _propTypes.default.node]),
+  location: _propTypes.default.object
+};
+Route.contextTypes = {
+  router: _propTypes.default.shape({
+    history: _propTypes.default.object.isRequired,
+    route: _propTypes.default.object.isRequired,
+    staticContext: _propTypes.default.object
+  })
+};
+Route.childContextTypes = {
+  router: _propTypes.default.object.isRequired
+};
+var _default = Route;
+exports.default = _default;
+},{"warning":"../node_modules/react-router/node_modules/warning/warning.js","invariant":"../node_modules/invariant/browser.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","./matchPath":"../node_modules/react-router/es/matchPath.js"}],"../node_modules/react-router-dom/es/Route.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _Route = _interopRequireDefault(require("react-router/es/Route"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// Written in this round about way for babel-transform-imports
+var _default = _Route.default;
+exports.default = _default;
+},{"react-router/es/Route":"../node_modules/react-router/es/Route.js"}],"../node_modules/react-router-dom/es/NavLink.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _react = _interopRequireDefault(require("react"));
+
+var _propTypes = _interopRequireDefault(require("prop-types"));
+
+var _Route = _interopRequireDefault(require("./Route"));
+
+var _Link = _interopRequireDefault(require("./Link"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var _extends = Object.assign || function (target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i];
+
+    for (var key in source) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        target[key] = source[key];
+      }
+    }
+  }
+
+  return target;
+};
+
+var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
+  return typeof obj;
+} : function (obj) {
+  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
+};
+
+function _objectWithoutProperties(obj, keys) {
+  var target = {};
+
+  for (var i in obj) {
+    if (keys.indexOf(i) >= 0) continue;
+    if (!Object.prototype.hasOwnProperty.call(obj, i)) continue;
+    target[i] = obj[i];
+  }
+
+  return target;
+}
+
+/**
+ * A <Link> wrapper that knows if it's "active" or not.
+ */
+var NavLink = function NavLink(_ref) {
+  var to = _ref.to,
+      exact = _ref.exact,
+      strict = _ref.strict,
+      location = _ref.location,
+      activeClassName = _ref.activeClassName,
+      className = _ref.className,
+      activeStyle = _ref.activeStyle,
+      style = _ref.style,
+      getIsActive = _ref.isActive,
+      ariaCurrent = _ref.ariaCurrent,
+      rest = _objectWithoutProperties(_ref, ['to', 'exact', 'strict', 'location', 'activeClassName', 'className', 'activeStyle', 'style', 'isActive', 'ariaCurrent']);
+
+  return _react.default.createElement(_Route.default, {
+    path: (typeof to === 'undefined' ? 'undefined' : _typeof(to)) === 'object' ? to.pathname : to,
+    exact: exact,
+    strict: strict,
+    location: location,
+    children: function children(_ref2) {
+      var location = _ref2.location,
+          match = _ref2.match;
+      var isActive = !!(getIsActive ? getIsActive(match, location) : match);
+      return _react.default.createElement(_Link.default, _extends({
+        to: to,
+        className: isActive ? [className, activeClassName].filter(function (i) {
+          return i;
+        }).join(' ') : className,
+        style: isActive ? _extends({}, style, activeStyle) : style,
+        'aria-current': isActive && ariaCurrent
+      }, rest));
+    }
+  });
+};
+
+NavLink.propTypes = {
+  to: _Link.default.propTypes.to,
+  exact: _propTypes.default.bool,
+  strict: _propTypes.default.bool,
+  location: _propTypes.default.object,
+  activeClassName: _propTypes.default.string,
+  className: _propTypes.default.string,
+  activeStyle: _propTypes.default.object,
+  style: _propTypes.default.object,
+  isActive: _propTypes.default.func,
+  ariaCurrent: _propTypes.default.oneOf(['page', 'step', 'location', 'true'])
+};
+NavLink.defaultProps = {
+  activeClassName: 'active',
+  ariaCurrent: 'true'
+};
+var _default = NavLink;
+exports.default = _default;
+},{"react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","./Route":"../node_modules/react-router-dom/es/Route.js","./Link":"../node_modules/react-router-dom/es/Link.js"}],"../node_modules/react-router/es/Prompt.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _react = _interopRequireDefault(require("react"));
+
+var _propTypes = _interopRequireDefault(require("prop-types"));
+
+var _invariant = _interopRequireDefault(require("invariant"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function _classCallCheck(instance, Constructor) {
+  if (!(instance instanceof Constructor)) {
+    throw new TypeError("Cannot call a class as a function");
+  }
+}
+
+function _possibleConstructorReturn(self, call) {
+  if (!self) {
+    throw new ReferenceError("this hasn't been initialised - super() hasn't been called");
+  }
+
+  return call && (typeof call === "object" || typeof call === "function") ? call : self;
+}
+
+function _inherits(subClass, superClass) {
+  if (typeof superClass !== "function" && superClass !== null) {
+    throw new TypeError("Super expression must either be null or a function, not " + typeof superClass);
+  }
+
+  subClass.prototype = Object.create(superClass && superClass.prototype, {
+    constructor: {
+      value: subClass,
+      enumerable: false,
+      writable: true,
+      configurable: true
+    }
+  });
+  if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
+}
+
+/**
+ * The public API for prompting the user before navigating away
+ * from a screen with a component.
+ */
+var Prompt = function (_React$Component) {
+  _inherits(Prompt, _React$Component);
+
+  function Prompt() {
+    _classCallCheck(this, Prompt);
+
+    return _possibleConstructorReturn(this, _React$Component.apply(this, arguments));
+  }
+
+  Prompt.prototype.enable = function enable(message) {
+    if (this.unblock) this.unblock();
+    this.unblock = this.context.router.history.block(message);
+  };
+
+  Prompt.prototype.disable = function disable() {
+    if (this.unblock) {
+      this.unblock();
+      this.unblock = null;
+    }
+  };
+
+  Prompt.prototype.componentWillMount = function componentWillMount() {
+    (0, _invariant.default)(this.context.router, "You should not use <Prompt> outside a <Router>");
+    if (this.props.when) this.enable(this.props.message);
+  };
+
+  Prompt.prototype.componentWillReceiveProps = function componentWillReceiveProps(nextProps) {
+    if (nextProps.when) {
+      if (!this.props.when || this.props.message !== nextProps.message) this.enable(nextProps.message);
+    } else {
+      this.disable();
+    }
+  };
+
+  Prompt.prototype.componentWillUnmount = function componentWillUnmount() {
+    this.disable();
+  };
+
+  Prompt.prototype.render = function render() {
+    return null;
+  };
+
+  return Prompt;
+}(_react.default.Component);
+
+Prompt.propTypes = {
+  when: _propTypes.default.bool,
+  message: _propTypes.default.oneOfType([_propTypes.default.func, _propTypes.default.string]).isRequired
+};
+Prompt.defaultProps = {
+  when: true
+};
+Prompt.contextTypes = {
+  router: _propTypes.default.shape({
+    history: _propTypes.default.shape({
+      block: _propTypes.default.func.isRequired
+    }).isRequired
+  }).isRequired
+};
+var _default = Prompt;
+exports.default = _default;
+},{"react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","invariant":"../node_modules/invariant/browser.js"}],"../node_modules/react-router-dom/es/Prompt.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _Prompt = _interopRequireDefault(require("react-router/es/Prompt"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// Written in this round about way for babel-transform-imports
+var _default = _Prompt.default;
+exports.default = _default;
+},{"react-router/es/Prompt":"../node_modules/react-router/es/Prompt.js"}],"../node_modules/react-router/es/generatePath.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _pathToRegexp = _interopRequireDefault(require("path-to-regexp"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var patternCache = {};
+var cacheLimit = 10000;
+var cacheCount = 0;
+
+var compileGenerator = function compileGenerator(pattern) {
+  var cacheKey = pattern;
+  var cache = patternCache[cacheKey] || (patternCache[cacheKey] = {});
+  if (cache[pattern]) return cache[pattern];
+
+  var compiledGenerator = _pathToRegexp.default.compile(pattern);
+
+  if (cacheCount < cacheLimit) {
+    cache[pattern] = compiledGenerator;
+    cacheCount++;
+  }
+
+  return compiledGenerator;
+};
+/**
+ * Public API for generating a URL pathname from a pattern and parameters.
+ */
+
+
+var generatePath = function generatePath() {
+  var pattern = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : "/";
+  var params = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+  if (pattern === "/") {
+    return pattern;
+  }
+
+  var generator = compileGenerator(pattern);
+  return generator(params, {
+    pretty: true
+  });
+};
+
+var _default = generatePath;
+exports.default = _default;
+},{"path-to-regexp":"../node_modules/react-router/node_modules/path-to-regexp/index.js"}],"../node_modules/react-router/es/Redirect.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -27870,7 +27761,23 @@ var _invariant = _interopRequireDefault(require("invariant"));
 
 var _history = require("history");
 
+var _generatePath = _interopRequireDefault(require("./generatePath"));
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var _extends = Object.assign || function (target) {
+  for (var i = 1; i < arguments.length; i++) {
+    var source = arguments[i];
+
+    for (var key in source) {
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        target[key] = source[key];
+      }
+    }
+  }
+
+  return target;
+};
 
 function _classCallCheck(instance, Constructor) {
   if (!(instance instanceof Constructor)) {
@@ -27920,7 +27827,7 @@ var Redirect = function (_React$Component) {
   };
 
   Redirect.prototype.componentWillMount = function componentWillMount() {
-    (0, _invariant.default)(this.context.router, 'You should not use <Redirect> outside a <Router>');
+    (0, _invariant.default)(this.context.router, "You should not use <Redirect> outside a <Router>");
     if (this.isStatic()) this.perform();
   };
 
@@ -27933,18 +27840,34 @@ var Redirect = function (_React$Component) {
     var nextTo = (0, _history.createLocation)(this.props.to);
 
     if ((0, _history.locationsAreEqual)(prevTo, nextTo)) {
-      (0, _warning.default)(false, 'You tried to redirect to the same route you\'re currently on: ' + ('"' + nextTo.pathname + nextTo.search + '"'));
+      (0, _warning.default)(false, "You tried to redirect to the same route you're currently on: " + ("\"" + nextTo.pathname + nextTo.search + "\""));
       return;
     }
 
     this.perform();
   };
 
+  Redirect.prototype.computeTo = function computeTo(_ref) {
+    var computedMatch = _ref.computedMatch,
+        to = _ref.to;
+
+    if (computedMatch) {
+      if (typeof to === "string") {
+        return (0, _generatePath.default)(to, computedMatch.params);
+      } else {
+        return _extends({}, to, {
+          pathname: (0, _generatePath.default)(to.pathname, computedMatch.params)
+        });
+      }
+    }
+
+    return to;
+  };
+
   Redirect.prototype.perform = function perform() {
     var history = this.context.router.history;
-    var _props = this.props,
-        push = _props.push,
-        to = _props.to;
+    var push = this.props.push;
+    var to = this.computeTo(this.props);
 
     if (push) {
       history.push(to);
@@ -27961,6 +27884,8 @@ var Redirect = function (_React$Component) {
 }(_react.default.Component);
 
 Redirect.propTypes = {
+  computedMatch: _propTypes.default.object,
+  // private, from <Switch>
   push: _propTypes.default.bool,
   from: _propTypes.default.string,
   to: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.object]).isRequired
@@ -27979,7 +27904,7 @@ Redirect.contextTypes = {
 };
 var _default = Redirect;
 exports.default = _default;
-},{"react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","warning":"../node_modules/warning/browser.js","invariant":"../node_modules/invariant/browser.js","history":"../node_modules/history/es/index.js"}],"../node_modules/react-router-dom/es/Redirect.js":[function(require,module,exports) {
+},{"react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","warning":"../node_modules/react-router/node_modules/warning/warning.js","invariant":"../node_modules/invariant/browser.js","history":"../node_modules/history/es/index.js","./generatePath":"../node_modules/react-router/es/generatePath.js"}],"../node_modules/react-router-dom/es/Redirect.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -28010,7 +27935,7 @@ var _react = _interopRequireDefault(require("react"));
 
 var _propTypes = _interopRequireDefault(require("prop-types"));
 
-var _PathUtils = require("history/PathUtils");
+var _history = require("history");
 
 var _Router = _interopRequireDefault(require("./Router"));
 
@@ -28072,47 +27997,33 @@ function _inherits(subClass, superClass) {
   if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass;
 }
 
-var normalizeLocation = function normalizeLocation(object) {
-  var _object$pathname = object.pathname,
-      pathname = _object$pathname === undefined ? '/' : _object$pathname,
-      _object$search = object.search,
-      search = _object$search === undefined ? '' : _object$search,
-      _object$hash = object.hash,
-      hash = _object$hash === undefined ? '' : _object$hash;
-  return {
-    pathname: pathname,
-    search: search === '?' ? '' : search,
-    hash: hash === '#' ? '' : hash
-  };
+var addLeadingSlash = function addLeadingSlash(path) {
+  return path.charAt(0) === "/" ? path : "/" + path;
 };
 
 var addBasename = function addBasename(basename, location) {
   if (!basename) return location;
   return _extends({}, location, {
-    pathname: (0, _PathUtils.addLeadingSlash)(basename) + location.pathname
+    pathname: addLeadingSlash(basename) + location.pathname
   });
 };
 
 var stripBasename = function stripBasename(basename, location) {
   if (!basename) return location;
-  var base = (0, _PathUtils.addLeadingSlash)(basename);
+  var base = addLeadingSlash(basename);
   if (location.pathname.indexOf(base) !== 0) return location;
   return _extends({}, location, {
     pathname: location.pathname.substr(base.length)
   });
 };
 
-var createLocation = function createLocation(location) {
-  return typeof location === 'string' ? (0, _PathUtils.parsePath)(location) : normalizeLocation(location);
-};
-
 var createURL = function createURL(location) {
-  return typeof location === 'string' ? location : (0, _PathUtils.createPath)(location);
+  return typeof location === "string" ? location : (0, _history.createPath)(location);
 };
 
 var staticHandler = function staticHandler(methodName) {
   return function () {
-    (0, _invariant.default)(false, 'You cannot %s with <StaticRouter>', methodName);
+    (0, _invariant.default)(false, "You cannot %s with <StaticRouter>", methodName);
   };
 };
 
@@ -28138,20 +28049,20 @@ var StaticRouter = function (_React$Component) {
     }
 
     return _ret = (_temp = (_this = _possibleConstructorReturn(this, _React$Component.call.apply(_React$Component, [this].concat(args))), _this), _this.createHref = function (path) {
-      return (0, _PathUtils.addLeadingSlash)(_this.props.basename + createURL(path));
+      return addLeadingSlash(_this.props.basename + createURL(path));
     }, _this.handlePush = function (location) {
       var _this$props = _this.props,
           basename = _this$props.basename,
           context = _this$props.context;
-      context.action = 'PUSH';
-      context.location = addBasename(basename, createLocation(location));
+      context.action = "PUSH";
+      context.location = addBasename(basename, (0, _history.createLocation)(location));
       context.url = createURL(context.location);
     }, _this.handleReplace = function (location) {
       var _this$props2 = _this.props,
           basename = _this$props2.basename,
           context = _this$props2.context;
-      context.action = 'REPLACE';
-      context.location = addBasename(basename, createLocation(location));
+      context.action = "REPLACE";
+      context.location = addBasename(basename, (0, _history.createLocation)(location));
       context.url = createURL(context.location);
     }, _this.handleListen = function () {
       return noop;
@@ -28169,7 +28080,7 @@ var StaticRouter = function (_React$Component) {
   };
 
   StaticRouter.prototype.componentWillMount = function componentWillMount() {
-    (0, _warning.default)(!this.props.history, '<StaticRouter> ignores the history prop. To use a custom history, ' + 'use `import { Router }` instead of `import { StaticRouter as Router }`.');
+    (0, _warning.default)(!this.props.history, "<StaticRouter> ignores the history prop. To use a custom history, " + "use `import { Router }` instead of `import { StaticRouter as Router }`.");
   };
 
   StaticRouter.prototype.render = function render() {
@@ -28177,17 +28088,17 @@ var StaticRouter = function (_React$Component) {
         basename = _props.basename,
         context = _props.context,
         location = _props.location,
-        props = _objectWithoutProperties(_props, ['basename', 'context', 'location']);
+        props = _objectWithoutProperties(_props, ["basename", "context", "location"]);
 
     var history = {
       createHref: this.createHref,
-      action: 'POP',
-      location: stripBasename(basename, createLocation(location)),
+      action: "POP",
+      location: stripBasename(basename, (0, _history.createLocation)(location)),
       push: this.handlePush,
       replace: this.handleReplace,
-      go: staticHandler('go'),
-      goBack: staticHandler('goBack'),
-      goForward: staticHandler('goForward'),
+      go: staticHandler("go"),
+      goBack: staticHandler("goBack"),
+      goForward: staticHandler("goForward"),
       listen: this.handleListen,
       block: this.handleBlock
     };
@@ -28205,15 +28116,15 @@ StaticRouter.propTypes = {
   location: _propTypes.default.oneOfType([_propTypes.default.string, _propTypes.default.object])
 };
 StaticRouter.defaultProps = {
-  basename: '',
-  location: '/'
+  basename: "",
+  location: "/"
 };
 StaticRouter.childContextTypes = {
   router: _propTypes.default.object.isRequired
 };
 var _default = StaticRouter;
 exports.default = _default;
-},{"warning":"../node_modules/warning/browser.js","invariant":"../node_modules/invariant/browser.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","history/PathUtils":"../node_modules/history/PathUtils.js","./Router":"../node_modules/react-router/es/Router.js"}],"../node_modules/react-router-dom/es/StaticRouter.js":[function(require,module,exports) {
+},{"warning":"../node_modules/react-router/node_modules/warning/warning.js","invariant":"../node_modules/invariant/browser.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","history":"../node_modules/history/es/index.js","./Router":"../node_modules/react-router/es/Router.js"}],"../node_modules/react-router-dom/es/StaticRouter.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -28291,7 +28202,7 @@ var Switch = function (_React$Component) {
   }
 
   Switch.prototype.componentWillMount = function componentWillMount() {
-    (0, _invariant.default)(this.context.router, 'You should not use <Switch> outside a <Router>');
+    (0, _invariant.default)(this.context.router, "You should not use <Switch> outside a <Router>");
   };
 
   Switch.prototype.componentWillReceiveProps = function componentWillReceiveProps(nextProps) {
@@ -28307,23 +28218,21 @@ var Switch = function (_React$Component) {
         child = void 0;
 
     _react.default.Children.forEach(children, function (element) {
-      if (!_react.default.isValidElement(element)) return;
-      var _element$props = element.props,
-          pathProp = _element$props.path,
-          exact = _element$props.exact,
-          strict = _element$props.strict,
-          sensitive = _element$props.sensitive,
-          from = _element$props.from;
-      var path = pathProp || from;
-
-      if (match == null) {
+      if (match == null && _react.default.isValidElement(element)) {
+        var _element$props = element.props,
+            pathProp = _element$props.path,
+            exact = _element$props.exact,
+            strict = _element$props.strict,
+            sensitive = _element$props.sensitive,
+            from = _element$props.from;
+        var path = pathProp || from;
         child = element;
-        match = path ? (0, _matchPath.default)(location.pathname, {
+        match = (0, _matchPath.default)(location.pathname, {
           path: path,
           exact: exact,
           strict: strict,
           sensitive: sensitive
-        }) : route.match;
+        }, route.match);
       }
     });
 
@@ -28347,7 +28256,7 @@ Switch.propTypes = {
 };
 var _default = Switch;
 exports.default = _default;
-},{"react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","warning":"../node_modules/warning/browser.js","invariant":"../node_modules/invariant/browser.js","./matchPath":"../node_modules/react-router/es/matchPath.js"}],"../node_modules/react-router-dom/es/Switch.js":[function(require,module,exports) {
+},{"react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","warning":"../node_modules/react-router/node_modules/warning/warning.js","invariant":"../node_modules/invariant/browser.js","./matchPath":"../node_modules/react-router/es/matchPath.js"}],"../node_modules/react-router-dom/es/Switch.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -28377,7 +28286,77 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 // Written in this round about way for babel-transform-imports
 var _default = _matchPath.default;
 exports.default = _default;
-},{"react-router/es/matchPath":"../node_modules/react-router/es/matchPath.js"}],"../node_modules/react-router/es/withRouter.js":[function(require,module,exports) {
+},{"react-router/es/matchPath":"../node_modules/react-router/es/matchPath.js"}],"../node_modules/react-router/node_modules/hoist-non-react-statics/dist/hoist-non-react-statics.cjs.js":[function(require,module,exports) {
+'use strict';
+
+/**
+ * Copyright 2015, Yahoo! Inc.
+ * Copyrights licensed under the New BSD License. See the accompanying LICENSE file for terms.
+ */
+var REACT_STATICS = {
+    childContextTypes: true,
+    contextTypes: true,
+    defaultProps: true,
+    displayName: true,
+    getDefaultProps: true,
+    getDerivedStateFromProps: true,
+    mixins: true,
+    propTypes: true,
+    type: true
+};
+
+var KNOWN_STATICS = {
+    name: true,
+    length: true,
+    prototype: true,
+    caller: true,
+    callee: true,
+    arguments: true,
+    arity: true
+};
+
+var defineProperty = Object.defineProperty;
+var getOwnPropertyNames = Object.getOwnPropertyNames;
+var getOwnPropertySymbols = Object.getOwnPropertySymbols;
+var getOwnPropertyDescriptor = Object.getOwnPropertyDescriptor;
+var getPrototypeOf = Object.getPrototypeOf;
+var objectPrototype = getPrototypeOf && getPrototypeOf(Object);
+
+function hoistNonReactStatics(targetComponent, sourceComponent, blacklist) {
+    if (typeof sourceComponent !== 'string') { // don't hoist over string (html) components
+
+        if (objectPrototype) {
+            var inheritedComponent = getPrototypeOf(sourceComponent);
+            if (inheritedComponent && inheritedComponent !== objectPrototype) {
+                hoistNonReactStatics(targetComponent, inheritedComponent, blacklist);
+            }
+        }
+
+        var keys = getOwnPropertyNames(sourceComponent);
+
+        if (getOwnPropertySymbols) {
+            keys = keys.concat(getOwnPropertySymbols(sourceComponent));
+        }
+
+        for (var i = 0; i < keys.length; ++i) {
+            var key = keys[i];
+            if (!REACT_STATICS[key] && !KNOWN_STATICS[key] && (!blacklist || !blacklist[key])) {
+                var descriptor = getOwnPropertyDescriptor(sourceComponent, key);
+                try { // Avoid failures from read-only properties
+                    defineProperty(targetComponent, key, descriptor);
+                } catch (e) {}
+            }
+        }
+
+        return targetComponent;
+    }
+
+    return targetComponent;
+}
+
+module.exports = hoistNonReactStatics;
+
+},{}],"../node_modules/react-router/es/withRouter.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -28427,10 +28406,10 @@ function _objectWithoutProperties(obj, keys) {
 var withRouter = function withRouter(Component) {
   var C = function C(props) {
     var wrappedComponentRef = props.wrappedComponentRef,
-        remainingProps = _objectWithoutProperties(props, ['wrappedComponentRef']);
+        remainingProps = _objectWithoutProperties(props, ["wrappedComponentRef"]);
 
     return _react.default.createElement(_Route.default, {
-      render: function render(routeComponentProps) {
+      children: function children(routeComponentProps) {
         return _react.default.createElement(Component, _extends({}, remainingProps, routeComponentProps, {
           ref: wrappedComponentRef
         }));
@@ -28438,7 +28417,7 @@ var withRouter = function withRouter(Component) {
     });
   };
 
-  C.displayName = 'withRouter(' + (Component.displayName || Component.name) + ')';
+  C.displayName = "withRouter(" + (Component.displayName || Component.name) + ")";
   C.WrappedComponent = Component;
   C.propTypes = {
     wrappedComponentRef: _propTypes.default.func
@@ -28448,7 +28427,7 @@ var withRouter = function withRouter(Component) {
 
 var _default = withRouter;
 exports.default = _default;
-},{"react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","hoist-non-react-statics":"../node_modules/hoist-non-react-statics/index.js","./Route":"../node_modules/react-router/es/Route.js"}],"../node_modules/react-router-dom/es/withRouter.js":[function(require,module,exports) {
+},{"react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","hoist-non-react-statics":"../node_modules/react-router/node_modules/hoist-non-react-statics/dist/hoist-non-react-statics.cjs.js","./Route":"../node_modules/react-router/es/Route.js"}],"../node_modules/react-router-dom/es/withRouter.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -28576,13 +28555,13 @@ var _withRouter2 = _interopRequireDefault(require("./withRouter"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 },{"./BrowserRouter":"../node_modules/react-router-dom/es/BrowserRouter.js","./HashRouter":"../node_modules/react-router-dom/es/HashRouter.js","./Link":"../node_modules/react-router-dom/es/Link.js","./MemoryRouter":"../node_modules/react-router-dom/es/MemoryRouter.js","./NavLink":"../node_modules/react-router-dom/es/NavLink.js","./Prompt":"../node_modules/react-router-dom/es/Prompt.js","./Redirect":"../node_modules/react-router-dom/es/Redirect.js","./Route":"../node_modules/react-router-dom/es/Route.js","./Router":"../node_modules/react-router-dom/es/Router.js","./StaticRouter":"../node_modules/react-router-dom/es/StaticRouter.js","./Switch":"../node_modules/react-router-dom/es/Switch.js","./matchPath":"../node_modules/react-router-dom/es/matchPath.js","./withRouter":"../node_modules/react-router-dom/es/withRouter.js"}],"Images/react-logo.svg":[function(require,module,exports) {
-module.exports = "/react-logo.51016585.svg";
+module.exports = "/../react-logo.51016585.svg";
 },{}],"Images/redux-logo.svg":[function(require,module,exports) {
-module.exports = "/redux-logo.e9e7de85.svg";
+module.exports = "/../redux-logo.e9e7de85.svg";
 },{}],"Images/nodejs-logo.svg":[function(require,module,exports) {
-module.exports = "/nodejs-logo.579f72b0.svg";
+module.exports = "/../nodejs-logo.579f72b0.svg";
 },{}],"Images/d3-logo.svg":[function(require,module,exports) {
-module.exports = "/d3-logo.1924b5ee.svg";
+module.exports = "/../d3-logo.1924b5ee.svg";
 },{}],"../src/components/Header.js":[function(require,module,exports) {
 "use strict";
 
@@ -28662,7 +28641,7 @@ var _default = function _default() {
 
 exports.default = _default;
 },{"react":"../node_modules/react/index.js","../../public/Images/react-logo.svg":"Images/react-logo.svg","../../public/Images/redux-logo.svg":"Images/redux-logo.svg","../../public/Images/nodejs-logo.svg":"Images/nodejs-logo.svg","../../public/Images/d3-logo.svg":"Images/d3-logo.svg"}],"Images/myAvatar.svg":[function(require,module,exports) {
-module.exports = "/myAvatar.7b33cc42.svg";
+module.exports = "/../myAvatar.7b33cc42.svg";
 },{}],"../src/components/AboutMe.js":[function(require,module,exports) {
 "use strict";
 
@@ -28691,19 +28670,19 @@ var AboutMe = function AboutMe(props) {
     alt: "Avatar of me"
   }))), _react.default.createElement("div", {
     className: "about-me__footer"
-  }, _react.default.createElement("div", null, _react.default.createElement("h3", null, "Langagues I speak:"), _react.default.createElement("span", null, _react.default.createElement("ul", null, _react.default.createElement("li", null, "CSS"), _react.default.createElement("li", null, "HTML"), _react.default.createElement("li", null, "JavaScript"), _react.default.createElement("li", null, "JSX"), _react.default.createElement("li", null, "SCSS")))), _react.default.createElement("div", null, _react.default.createElement("h3", null, "Frameworks, libraries and tools I am familiar with:"), _react.default.createElement("span", null, _react.default.createElement("ul", null, _react.default.createElement("li", null, "Babel"), _react.default.createElement("li", null, "Bootstrap"), _react.default.createElement("li", null, "Chai (Mocha)"), _react.default.createElement("li", null, "D3"), _react.default.createElement("li", null, "Firebase"), _react.default.createElement("li", null, "Git & Github")), _react.default.createElement("ul", null, _react.default.createElement("li", null, "Jest"), _react.default.createElement("li", null, "jQuery"), _react.default.createElement("li", null, "MongoDB and Mongoose"), _react.default.createElement("li", null, "Node and Express"), _react.default.createElement("li", null, "React & Redux"), _react.default.createElement("li", null, "Webpack")))))));
+  }, _react.default.createElement("div", null, _react.default.createElement("h3", null, "Langagues I speak:"), _react.default.createElement("span", null, _react.default.createElement("ul", null, _react.default.createElement("li", null, "CSS 3"), _react.default.createElement("li", null, "HTML 5"), _react.default.createElement("li", null, "Java"), _react.default.createElement("li", null, "JavaScript"), _react.default.createElement("li", null, "JSX"), _react.default.createElement("li", null, "Python"), _react.default.createElement("li", null, "SCSS")))), _react.default.createElement("div", null, _react.default.createElement("h3", null, "Frameworks, libraries and tools I am familiar with:"), _react.default.createElement("span", null, _react.default.createElement("ul", null, _react.default.createElement("li", null, "Babel"), _react.default.createElement("li", null, "Bootstrap"), _react.default.createElement("li", null, "Chai (Mocha)"), _react.default.createElement("li", null, "D3"), _react.default.createElement("li", null, "Firebase"), _react.default.createElement("li", null, "Git & Github"), _react.default.createElement("li", null, "Jest")), _react.default.createElement("ul", null, _react.default.createElement("li", null, "jQuery"), _react.default.createElement("li", null, "MongoDB and Mongoose"), _react.default.createElement("li", null, "Node and Express"), _react.default.createElement("li", null, "Parcel"), _react.default.createElement("li", null, "React & Redux"), _react.default.createElement("li", null, "SQL"), _react.default.createElement("li", null, "Webpack")))))));
 };
 
 var _default = AboutMe;
 exports.default = _default;
 },{"react":"../node_modules/react/index.js","../../public/Images/myAvatar.svg":"Images/myAvatar.svg"}],"Images/github-logo.png":[function(require,module,exports) {
-module.exports = "/github-logo.fc9f07b2.png";
+module.exports = "/../github-logo.fc9f07b2.png";
 },{}],"Images/codepen-logo.png":[function(require,module,exports) {
-module.exports = "/codepen-logo.e949f64f.png";
+module.exports = "/../codepen-logo.e949f64f.png";
 },{}],"Images/linkedin-logo.png":[function(require,module,exports) {
-module.exports = "/linkedin-logo.6751d16e.png";
+module.exports = "/../linkedin-logo.6751d16e.png";
 },{}],"Images/email.png":[function(require,module,exports) {
-module.exports = "/email.260fe56d.png";
+module.exports = "/../email.260fe56d.png";
 },{}],"../src/components/Contact.js":[function(require,module,exports) {
 "use strict";
 
@@ -28766,30 +28745,18 @@ var Contact = function Contact() {
 
 var _default = Contact;
 exports.default = _default;
-},{"react":"../node_modules/react/index.js","../../public/Images/github-logo.png":"Images/github-logo.png","../../public/Images/codepen-logo.png":"Images/codepen-logo.png","../../public/Images/linkedin-logo.png":"Images/linkedin-logo.png","../../public/Images/email.png":"Images/email.png"}],"Images/coffee-house.png":[function(require,module,exports) {
-module.exports = "/coffee-house.6a00f27e.png";
-},{}],"Images/thai-restaurant.png":[function(require,module,exports) {
-module.exports = "/thai-restaurant.fdc9e64e.png";
-},{}],"Images/dungeon-crawler.png":[function(require,module,exports) {
-module.exports = "/dungeon-crawler.fdac0712.png";
+},{"react":"../node_modules/react/index.js","../../public/Images/github-logo.png":"Images/github-logo.png","../../public/Images/codepen-logo.png":"Images/codepen-logo.png","../../public/Images/linkedin-logo.png":"Images/linkedin-logo.png","../../public/Images/email.png":"Images/email.png"}],"Images/tilemap.png":[function(require,module,exports) {
+module.exports = "/../tilemap.bca73ab2.png";
+},{}],"Images/coffee-house.png":[function(require,module,exports) {
+module.exports = "/../coffee-house.6a00f27e.png";
 },{}],"Images/expensify.png":[function(require,module,exports) {
-module.exports = "/expensify.9f03f931.png";
-},{}],"Images/game-of-life.png":[function(require,module,exports) {
-module.exports = "/game-of-life.0de3130d.png";
-},{}],"Images/recipe-box.png":[function(require,module,exports) {
-module.exports = "/recipe-box.4168027d.png";
-},{}],"Images/tic-tac-toe.png":[function(require,module,exports) {
-module.exports = "/tic-tac-toe.25cb9980.png";
-},{}],"Images/calculator.png":[function(require,module,exports) {
-module.exports = "/calculator.8d69423d.png";
+module.exports = "/../expensify.9f03f931.png";
+},{}],"Images/thai-restaurant.png":[function(require,module,exports) {
+module.exports = "/../thai-restaurant.fdc9e64e.png";
+},{}],"Images/dungeon-crawler.png":[function(require,module,exports) {
+module.exports = "/../dungeon-crawler.fdac0712.png";
 },{}],"Images/landing-page.png":[function(require,module,exports) {
-module.exports = "/landing-page.04d790d1.png";
-},{}],"Images/simon.png":[function(require,module,exports) {
-module.exports = "/simon.233bf04d.png";
-},{}],"Images/local-weather.png":[function(require,module,exports) {
-module.exports = "/local-weather.809a10fc.png";
-},{}],"Images/wikipedia-viewer.png":[function(require,module,exports) {
-module.exports = "/wikipedia-viewer.d94cafa8.png";
+module.exports = "/../landing-page.04d790d1.png";
 },{}],"../src/projects/projects.js":[function(require,module,exports) {
 "use strict";
 
@@ -28798,10 +28765,20 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 var projects = [{
+  title: 'Tilemap Editor',
+  image: require('../../public/Images/tilemap.png'),
+  alt: 'Screenshot of Tilemap Editor App',
+  link: 'https://tilemap-editor.herokuapp.com/'
+}, {
   title: 'Coffee House',
   image: require('../../public/Images/coffee-house.png'),
   alt: 'Screenshot of Coffee House website',
   link: 'https://BTmathic.github.io/coffee-house'
+}, {
+  title: 'Expense Tracker',
+  image: require('../../public/Images/expensify.png'),
+  alt: 'Screenshot of Dungeon Crawler app',
+  link: 'https://react-expensify-mathic.herokuapp.com'
 }, {
   title: 'Thai Restaurant',
   image: require('../../public/Images/thai-restaurant.png'),
@@ -28813,54 +28790,51 @@ var projects = [{
   alt: 'Screenshot of Dungeon Crawler app',
   link: 'https://BTmathic.github.io/dungeon-crawler'
 }, {
-  title: 'Expense Tracker',
-  image: require('../../public/Images/expensify.png'),
-  alt: 'Screenshot of Dungeon Crawler app',
-  link: 'https://react-expensify-mathic.herokuapp.com'
-}, {
-  title: "Conway's Game of Life",
-  image: require('../../public/Images/game-of-life.png'),
-  alt: 'Screenshot of Game of Life app',
-  link: 'https://BTmathic.github.io/game-of-life'
-}, {
-  title: 'Recipe Box',
-  image: require('../../public/Images/recipe-box.png'),
-  alt: 'Screenshot of Recipe Box app',
-  link: 'https://BTmathic.github.io/recipe-box'
-}, {
-  title: 'Tic Tac Toe',
-  image: require('../../public/Images/tic-tac-toe.png'),
-  alt: 'Screenshot of Tic Tac Toe app',
-  link: 'https://BTmathic.github.io/tic-tac-toe'
-}, {
-  title: 'Calculator',
-  image: require('../../public/Images/calculator.png'),
-  alt: 'Screenshot of Calculator app',
-  link: 'https://BTmathic.github.io/calculator'
-}, {
   title: 'Product Landing Page',
   image: require('../../public/Images/landing-page.png'),
   alt: 'Screenshot of Product Landing Page',
   link: 'https://BTmathic.github.io/landing-page'
-}, {
+  /*{
+  title: "Conway's Game of Life",
+  image: require('../../public/Images/game-of-life.png'),
+  alt: 'Screenshot of Game of Life app',
+  link: 'https://BTmathic.github.io/game-of-life'
+  }, {
+  title: 'Recipe Box',
+  image: require('../../public/Images/recipe-box.png'),
+  alt: 'Screenshot of Recipe Box app',
+  link: 'https://BTmathic.github.io/recipe-box'
+  }, {
+  title: 'Tic Tac Toe',
+  image: require('../../public/Images/tic-tac-toe.png'),
+  alt: 'Screenshot of Tic Tac Toe app',
+  link: 'https://BTmathic.github.io/tic-tac-toe'
+  }, {
+  title: 'Calculator',
+  image: require('../../public/Images/calculator.png'),
+  alt: 'Screenshot of Calculator app',
+  link: 'https://BTmathic.github.io/calculator'
+  }, {
   title: 'Simon',
   image: require('../../public/Images/simon.png'),
   alt: 'Screenshot of Simon app',
   link: 'https://codepen.io/brokentriathlete/full/dvKpZB/'
-}, {
+  }, {
   title: 'Weather App',
   image: require('../../public/Images/local-weather.png'),
   alt: 'Screenshot of Weather app',
   link: 'https://BTmathic.github.io/local-weather'
-}, {
+  }, {
   title: 'Wikipedia Viewer',
   image: require('../../public/Images/wikipedia-viewer.png'),
   alt: 'Screenshot of Wikipedia Viewer app',
   link: 'https://BTmathic.github.io/wikipedia-viewer'
+  }*/
+
 }];
 var _default = projects;
 exports.default = _default;
-},{"../../public/Images/coffee-house.png":"Images/coffee-house.png","../../public/Images/thai-restaurant.png":"Images/thai-restaurant.png","../../public/Images/dungeon-crawler.png":"Images/dungeon-crawler.png","../../public/Images/expensify.png":"Images/expensify.png","../../public/Images/game-of-life.png":"Images/game-of-life.png","../../public/Images/recipe-box.png":"Images/recipe-box.png","../../public/Images/tic-tac-toe.png":"Images/tic-tac-toe.png","../../public/Images/calculator.png":"Images/calculator.png","../../public/Images/landing-page.png":"Images/landing-page.png","../../public/Images/simon.png":"Images/simon.png","../../public/Images/local-weather.png":"Images/local-weather.png","../../public/Images/wikipedia-viewer.png":"Images/wikipedia-viewer.png"}],"../src/components/Projects.js":[function(require,module,exports) {
+},{"../../public/Images/tilemap.png":"Images/tilemap.png","../../public/Images/coffee-house.png":"Images/coffee-house.png","../../public/Images/expensify.png":"Images/expensify.png","../../public/Images/thai-restaurant.png":"Images/thai-restaurant.png","../../public/Images/dungeon-crawler.png":"Images/dungeon-crawler.png","../../public/Images/landing-page.png":"Images/landing-page.png"}],"../src/components/Projects.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -28941,9 +28915,9 @@ function (_React$Component) {
 var _default = Projects;
 exports.default = _default;
 },{"react":"../node_modules/react/index.js","react-router-dom":"../node_modules/react-router-dom/es/index.js","../projects/projects":"../src/projects/projects.js"}],"Images/freeCodeCamp.png":[function(require,module,exports) {
-module.exports = "/freeCodeCamp.aadbed67.png";
+module.exports = "/../freeCodeCamp.aadbed67.png";
 },{}],"Images/hacktober.png":[function(require,module,exports) {
-module.exports = "/hacktober.c4069b8e.png";
+module.exports = "/../hacktober.c4069b8e.png";
 },{}],"../src/components/OpenSource.js":[function(require,module,exports) {
 "use strict";
 
@@ -31511,22 +31485,36 @@ var global = arguments[3];
     function createDate (y, m, d, h, M, s, ms) {
         // can't just apply() to create a date:
         // https://stackoverflow.com/q/181348
-        var date = new Date(y, m, d, h, M, s, ms);
-
+        var date;
         // the date constructor remaps years 0-99 to 1900-1999
-        if (y < 100 && y >= 0 && isFinite(date.getFullYear())) {
-            date.setFullYear(y);
+        if (y < 100 && y >= 0) {
+            // preserve leap years using a full 400 year cycle, then reset
+            date = new Date(y + 400, m, d, h, M, s, ms);
+            if (isFinite(date.getFullYear())) {
+                date.setFullYear(y);
+            }
+        } else {
+            date = new Date(y, m, d, h, M, s, ms);
         }
+
         return date;
     }
 
     function createUTCDate (y) {
-        var date = new Date(Date.UTC.apply(null, arguments));
-
+        var date;
         // the Date.UTC function remaps years 0-99 to 1900-1999
-        if (y < 100 && y >= 0 && isFinite(date.getUTCFullYear())) {
-            date.setUTCFullYear(y);
+        if (y < 100 && y >= 0) {
+            var args = Array.prototype.slice.call(arguments);
+            // preserve leap years using a full 400 year cycle, then reset
+            args[0] = y + 400;
+            date = new Date(Date.UTC.apply(null, args));
+            if (isFinite(date.getUTCFullYear())) {
+                date.setUTCFullYear(y);
+            }
+        } else {
+            date = new Date(Date.UTC.apply(null, arguments));
         }
+
         return date;
     }
 
@@ -31628,7 +31616,7 @@ var global = arguments[3];
 
     var defaultLocaleWeek = {
         dow : 0, // Sunday is the first day of the week.
-        doy : 6  // The week that contains Jan 1st is the first week of the year.
+        doy : 6  // The week that contains Jan 6th is the first week of the year.
     };
 
     function localeFirstDayOfWeek () {
@@ -31737,25 +31725,28 @@ var global = arguments[3];
     }
 
     // LOCALES
+    function shiftWeekdays (ws, n) {
+        return ws.slice(n, 7).concat(ws.slice(0, n));
+    }
 
     var defaultLocaleWeekdays = 'Sunday_Monday_Tuesday_Wednesday_Thursday_Friday_Saturday'.split('_');
     function localeWeekdays (m, format) {
-        if (!m) {
-            return isArray(this._weekdays) ? this._weekdays :
-                this._weekdays['standalone'];
-        }
-        return isArray(this._weekdays) ? this._weekdays[m.day()] :
-            this._weekdays[this._weekdays.isFormat.test(format) ? 'format' : 'standalone'][m.day()];
+        var weekdays = isArray(this._weekdays) ? this._weekdays :
+            this._weekdays[(m && m !== true && this._weekdays.isFormat.test(format)) ? 'format' : 'standalone'];
+        return (m === true) ? shiftWeekdays(weekdays, this._week.dow)
+            : (m) ? weekdays[m.day()] : weekdays;
     }
 
     var defaultLocaleWeekdaysShort = 'Sun_Mon_Tue_Wed_Thu_Fri_Sat'.split('_');
     function localeWeekdaysShort (m) {
-        return (m) ? this._weekdaysShort[m.day()] : this._weekdaysShort;
+        return (m === true) ? shiftWeekdays(this._weekdaysShort, this._week.dow)
+            : (m) ? this._weekdaysShort[m.day()] : this._weekdaysShort;
     }
 
     var defaultLocaleWeekdaysMin = 'Su_Mo_Tu_We_Th_Fr_Sa'.split('_');
     function localeWeekdaysMin (m) {
-        return (m) ? this._weekdaysMin[m.day()] : this._weekdaysMin;
+        return (m === true) ? shiftWeekdays(this._weekdaysMin, this._week.dow)
+            : (m) ? this._weekdaysMin[m.day()] : this._weekdaysMin;
     }
 
     function handleStrictParse$1(weekdayName, format, strict) {
@@ -31841,9 +31832,9 @@ var global = arguments[3];
 
             mom = createUTC([2000, 1]).day(i);
             if (strict && !this._fullWeekdaysParse[i]) {
-                this._fullWeekdaysParse[i] = new RegExp('^' + this.weekdays(mom, '').replace('.', '\.?') + '$', 'i');
-                this._shortWeekdaysParse[i] = new RegExp('^' + this.weekdaysShort(mom, '').replace('.', '\.?') + '$', 'i');
-                this._minWeekdaysParse[i] = new RegExp('^' + this.weekdaysMin(mom, '').replace('.', '\.?') + '$', 'i');
+                this._fullWeekdaysParse[i] = new RegExp('^' + this.weekdays(mom, '').replace('.', '\\.?') + '$', 'i');
+                this._shortWeekdaysParse[i] = new RegExp('^' + this.weekdaysShort(mom, '').replace('.', '\\.?') + '$', 'i');
+                this._minWeekdaysParse[i] = new RegExp('^' + this.weekdaysMin(mom, '').replace('.', '\\.?') + '$', 'i');
             }
             if (!this._weekdaysParse[i]) {
                 regex = '^' + this.weekdays(mom, '') + '|^' + this.weekdaysShort(mom, '') + '|^' + this.weekdaysMin(mom, '');
@@ -32504,13 +32495,13 @@ var global = arguments[3];
                     weekdayOverflow = true;
                 }
             } else if (w.e != null) {
-                // local weekday -- counting starts from begining of week
+                // local weekday -- counting starts from beginning of week
                 weekday = w.e + dow;
                 if (w.e < 0 || w.e > 6) {
                     weekdayOverflow = true;
                 }
             } else {
-                // default to begining of week
+                // default to beginning of week
                 weekday = dow;
             }
         }
@@ -32646,7 +32637,7 @@ var global = arguments[3];
 
     function preprocessRFC2822(s) {
         // Remove comments and folding whitespace and replace multiple-spaces with a single space
-        return s.replace(/\([^)]*\)|[\n\t]/g, ' ').replace(/(\s\s+)/g, ' ').trim();
+        return s.replace(/\([^)]*\)|[\n\t]/g, ' ').replace(/(\s\s+)/g, ' ').replace(/^\s\s*/, '').replace(/\s\s*$/, '');
     }
 
     function checkWeekday(weekdayStr, parsedInput, config) {
@@ -33104,7 +33095,7 @@ var global = arguments[3];
             years = normalizedInput.year || 0,
             quarters = normalizedInput.quarter || 0,
             months = normalizedInput.month || 0,
-            weeks = normalizedInput.week || 0,
+            weeks = normalizedInput.week || normalizedInput.isoWeek || 0,
             days = normalizedInput.day || 0,
             hours = normalizedInput.hour || 0,
             minutes = normalizedInput.minute || 0,
@@ -33408,7 +33399,7 @@ var global = arguments[3];
                 ms : toInt(absRound(match[MILLISECOND] * 1000)) * sign // the millisecond decimal point is included in the match
             };
         } else if (!!(match = isoRegex.exec(input))) {
-            sign = (match[1] === '-') ? -1 : (match[1] === '+') ? 1 : 1;
+            sign = (match[1] === '-') ? -1 : 1;
             duration = {
                 y : parseIso(match[2], sign),
                 M : parseIso(match[3], sign),
@@ -33450,7 +33441,7 @@ var global = arguments[3];
     }
 
     function positiveMomentsDifference(base, other) {
-        var res = {milliseconds: 0, months: 0};
+        var res = {};
 
         res.months = other.month() - base.month() +
             (other.year() - base.year()) * 12;
@@ -33559,7 +33550,7 @@ var global = arguments[3];
         if (!(this.isValid() && localInput.isValid())) {
             return false;
         }
-        units = normalizeUnits(!isUndefined(units) ? units : 'millisecond');
+        units = normalizeUnits(units) || 'millisecond';
         if (units === 'millisecond') {
             return this.valueOf() > localInput.valueOf();
         } else {
@@ -33572,7 +33563,7 @@ var global = arguments[3];
         if (!(this.isValid() && localInput.isValid())) {
             return false;
         }
-        units = normalizeUnits(!isUndefined(units) ? units : 'millisecond');
+        units = normalizeUnits(units) || 'millisecond';
         if (units === 'millisecond') {
             return this.valueOf() < localInput.valueOf();
         } else {
@@ -33581,9 +33572,14 @@ var global = arguments[3];
     }
 
     function isBetween (from, to, units, inclusivity) {
+        var localFrom = isMoment(from) ? from : createLocal(from),
+            localTo = isMoment(to) ? to : createLocal(to);
+        if (!(this.isValid() && localFrom.isValid() && localTo.isValid())) {
+            return false;
+        }
         inclusivity = inclusivity || '()';
-        return (inclusivity[0] === '(' ? this.isAfter(from, units) : !this.isBefore(from, units)) &&
-            (inclusivity[1] === ')' ? this.isBefore(to, units) : !this.isAfter(to, units));
+        return (inclusivity[0] === '(' ? this.isAfter(localFrom, units) : !this.isBefore(localFrom, units)) &&
+            (inclusivity[1] === ')' ? this.isBefore(localTo, units) : !this.isAfter(localTo, units));
     }
 
     function isSame (input, units) {
@@ -33592,7 +33588,7 @@ var global = arguments[3];
         if (!(this.isValid() && localInput.isValid())) {
             return false;
         }
-        units = normalizeUnits(units || 'millisecond');
+        units = normalizeUnits(units) || 'millisecond';
         if (units === 'millisecond') {
             return this.valueOf() === localInput.valueOf();
         } else {
@@ -33602,11 +33598,11 @@ var global = arguments[3];
     }
 
     function isSameOrAfter (input, units) {
-        return this.isSame(input, units) || this.isAfter(input,units);
+        return this.isSame(input, units) || this.isAfter(input, units);
     }
 
     function isSameOrBefore (input, units) {
-        return this.isSame(input, units) || this.isBefore(input,units);
+        return this.isSame(input, units) || this.isBefore(input, units);
     }
 
     function diff (input, units, asFloat) {
@@ -33783,62 +33779,130 @@ var global = arguments[3];
         return this._locale;
     }
 
+    var MS_PER_SECOND = 1000;
+    var MS_PER_MINUTE = 60 * MS_PER_SECOND;
+    var MS_PER_HOUR = 60 * MS_PER_MINUTE;
+    var MS_PER_400_YEARS = (365 * 400 + 97) * 24 * MS_PER_HOUR;
+
+    // actual modulo - handles negative numbers (for dates before 1970):
+    function mod$1(dividend, divisor) {
+        return (dividend % divisor + divisor) % divisor;
+    }
+
+    function localStartOfDate(y, m, d) {
+        // the date constructor remaps years 0-99 to 1900-1999
+        if (y < 100 && y >= 0) {
+            // preserve leap years using a full 400 year cycle, then reset
+            return new Date(y + 400, m, d) - MS_PER_400_YEARS;
+        } else {
+            return new Date(y, m, d).valueOf();
+        }
+    }
+
+    function utcStartOfDate(y, m, d) {
+        // Date.UTC remaps years 0-99 to 1900-1999
+        if (y < 100 && y >= 0) {
+            // preserve leap years using a full 400 year cycle, then reset
+            return Date.UTC(y + 400, m, d) - MS_PER_400_YEARS;
+        } else {
+            return Date.UTC(y, m, d);
+        }
+    }
+
     function startOf (units) {
+        var time;
         units = normalizeUnits(units);
-        // the following switch intentionally omits break keywords
-        // to utilize falling through the cases.
+        if (units === undefined || units === 'millisecond' || !this.isValid()) {
+            return this;
+        }
+
+        var startOfDate = this._isUTC ? utcStartOfDate : localStartOfDate;
+
         switch (units) {
             case 'year':
-                this.month(0);
-                /* falls through */
+                time = startOfDate(this.year(), 0, 1);
+                break;
             case 'quarter':
+                time = startOfDate(this.year(), this.month() - this.month() % 3, 1);
+                break;
             case 'month':
-                this.date(1);
-                /* falls through */
+                time = startOfDate(this.year(), this.month(), 1);
+                break;
             case 'week':
+                time = startOfDate(this.year(), this.month(), this.date() - this.weekday());
+                break;
             case 'isoWeek':
+                time = startOfDate(this.year(), this.month(), this.date() - (this.isoWeekday() - 1));
+                break;
             case 'day':
             case 'date':
-                this.hours(0);
-                /* falls through */
+                time = startOfDate(this.year(), this.month(), this.date());
+                break;
             case 'hour':
-                this.minutes(0);
-                /* falls through */
+                time = this._d.valueOf();
+                time -= mod$1(time + (this._isUTC ? 0 : this.utcOffset() * MS_PER_MINUTE), MS_PER_HOUR);
+                break;
             case 'minute':
-                this.seconds(0);
-                /* falls through */
+                time = this._d.valueOf();
+                time -= mod$1(time, MS_PER_MINUTE);
+                break;
             case 'second':
-                this.milliseconds(0);
+                time = this._d.valueOf();
+                time -= mod$1(time, MS_PER_SECOND);
+                break;
         }
 
-        // weeks are a special case
-        if (units === 'week') {
-            this.weekday(0);
-        }
-        if (units === 'isoWeek') {
-            this.isoWeekday(1);
-        }
-
-        // quarters are also special
-        if (units === 'quarter') {
-            this.month(Math.floor(this.month() / 3) * 3);
-        }
-
+        this._d.setTime(time);
+        hooks.updateOffset(this, true);
         return this;
     }
 
     function endOf (units) {
+        var time;
         units = normalizeUnits(units);
-        if (units === undefined || units === 'millisecond') {
+        if (units === undefined || units === 'millisecond' || !this.isValid()) {
             return this;
         }
 
-        // 'date' is an alias for 'day', so it should be considered as such.
-        if (units === 'date') {
-            units = 'day';
+        var startOfDate = this._isUTC ? utcStartOfDate : localStartOfDate;
+
+        switch (units) {
+            case 'year':
+                time = startOfDate(this.year() + 1, 0, 1) - 1;
+                break;
+            case 'quarter':
+                time = startOfDate(this.year(), this.month() - this.month() % 3 + 3, 1) - 1;
+                break;
+            case 'month':
+                time = startOfDate(this.year(), this.month() + 1, 1) - 1;
+                break;
+            case 'week':
+                time = startOfDate(this.year(), this.month(), this.date() - this.weekday() + 7) - 1;
+                break;
+            case 'isoWeek':
+                time = startOfDate(this.year(), this.month(), this.date() - (this.isoWeekday() - 1) + 7) - 1;
+                break;
+            case 'day':
+            case 'date':
+                time = startOfDate(this.year(), this.month(), this.date() + 1) - 1;
+                break;
+            case 'hour':
+                time = this._d.valueOf();
+                time += MS_PER_HOUR - mod$1(time + (this._isUTC ? 0 : this.utcOffset() * MS_PER_MINUTE), MS_PER_HOUR) - 1;
+                break;
+            case 'minute':
+                time = this._d.valueOf();
+                time += MS_PER_MINUTE - mod$1(time, MS_PER_MINUTE) - 1;
+                break;
+            case 'second':
+                time = this._d.valueOf();
+                time += MS_PER_SECOND - mod$1(time, MS_PER_SECOND) - 1;
+                break;
         }
 
-        return this.startOf(units).add(1, (units === 'isoWeek' ? 'week' : units)).subtract(1, 'ms');
+        this._d.setTime(time);
+        hooks.updateOffset(this, true);
+        return this;
     }
 
     function valueOf () {
@@ -34544,10 +34608,14 @@ var global = arguments[3];
 
         units = normalizeUnits(units);
 
-        if (units === 'month' || units === 'year') {
-            days   = this._days   + milliseconds / 864e5;
+        if (units === 'month' || units === 'quarter' || units === 'year') {
+            days = this._days + milliseconds / 864e5;
             months = this._months + daysToMonths(days);
-            return units === 'month' ? months : months / 12;
+            switch (units) {
+                case 'month':   return months;
+                case 'quarter': return months / 3;
+                case 'year':    return months / 12;
+            }
         } else {
             // handle milliseconds separately because of floating point math errors (issue #1867)
             days = this._days + Math.round(monthsToDays(this._months));
@@ -34590,6 +34658,7 @@ var global = arguments[3];
     var asDays         = makeAs('d');
     var asWeeks        = makeAs('w');
     var asMonths       = makeAs('M');
+    var asQuarters     = makeAs('Q');
     var asYears        = makeAs('y');
 
     function clone$1 () {
@@ -34781,6 +34850,7 @@ var global = arguments[3];
     proto$2.asDays         = asDays;
     proto$2.asWeeks        = asWeeks;
     proto$2.asMonths       = asMonths;
+    proto$2.asQuarters     = asQuarters;
     proto$2.asYears        = asYears;
     proto$2.valueOf        = valueOf$1;
     proto$2._bubble        = bubble;
@@ -34825,7 +34895,7 @@ var global = arguments[3];
     // Side effect imports
 
 
-    hooks.version = '2.22.1';
+    hooks.version = '2.24.0';
 
     setHookCallback(createLocal);
 
@@ -34866,7 +34936,7 @@ var global = arguments[3];
         TIME: 'HH:mm',                                  // <input type="time" />
         TIME_SECONDS: 'HH:mm:ss',                       // <input type="time" step="1" />
         TIME_MS: 'HH:mm:ss.SSS',                        // <input type="time" step="0.001" />
-        WEEK: 'YYYY-[W]WW',                             // <input type="week" />
+        WEEK: 'GGGG-[W]WW',                             // <input type="week" />
         MONTH: 'YYYY-MM'                                // <input type="month" />
     };
 
@@ -35305,6 +35375,15 @@ function scopeTab(node, event) {
     x += shiftKey ? -1 : 1;
   }
 
+  // If the tabbable element does not exist,
+  // focus head/tail based on shiftKey
+  if (typeof tabbable[x] === "undefined") {
+    event.preventDefault();
+    target = shiftKey ? tail : head;
+    target.focus();
+    return;
+  }
+
   event.preventDefault();
 
   tabbable[x].focus();
@@ -35719,7 +35798,7 @@ var ModalPortal = function (_Component) {
           htmlOpenClassName = _this$props.htmlOpenClassName,
           bodyOpenClassName = _this$props.bodyOpenClassName; // Remove classes.
 
-      classList.remove(document.body, bodyOpenClassName);
+      bodyOpenClassName && classList.remove(document.body, bodyOpenClassName);
       htmlOpenClassName && classList.remove(document.getElementsByTagName("html")[0], htmlOpenClassName); // Reset aria-hidden attribute if all modals have been removed
 
       if (ariaHideApp && ariaHiddenInstances > 0) {
@@ -35737,6 +35816,10 @@ var ModalPortal = function (_Component) {
         } else {
           focusManager.popWithoutFocus();
         }
+      }
+
+      if (_this.props.onAfterClose) {
+        _this.props.onAfterClose();
       }
     };
 
@@ -35946,7 +36029,7 @@ var ModalPortal = function (_Component) {
           htmlOpenClassName = _props.htmlOpenClassName,
           bodyOpenClassName = _props.bodyOpenClassName; // Add classes.
 
-      classList.add(document.body, bodyOpenClassName);
+      bodyOpenClassName && classList.add(document.body, bodyOpenClassName);
       htmlOpenClassName && classList.add(document.getElementsByTagName("html")[0], htmlOpenClassName);
 
       if (ariaHideApp) {
@@ -35969,8 +36052,7 @@ var ModalPortal = function (_Component) {
         className: this.buildClassName("overlay", overlayClassName),
         style: _extends({}, overlayStyles, this.props.style.overlay),
         onClick: this.handleOverlayOnClick,
-        onMouseDown: this.handleOverlayOnMouseDown,
-        "aria-modal": "true"
+        onMouseDown: this.handleOverlayOnMouseDown
       }, _react2.default.createElement("div", _extends({
         ref: this.setContentRef,
         style: _extends({}, contentStyles, this.props.style.content),
@@ -35982,7 +36064,9 @@ var ModalPortal = function (_Component) {
         onClick: this.handleContentOnClick,
         role: this.props.role,
         "aria-label": this.props.contentLabel
-      }, this.attributesFromObject("aria", this.props.aria || {}), this.attributesFromObject("data", this.props.data || {})), this.props.children));
+      }, this.attributesFromObject("aria", this.props.aria || {}), this.attributesFromObject("data", this.props.data || {}), {
+        "data-testid": this.props.testId
+      }), this.props.children));
     }
   }]);
 
@@ -36013,6 +36097,7 @@ ModalPortal.propTypes = {
   ariaHideApp: _propTypes2.default.bool,
   appElement: _propTypes2.default.instanceOf(_safeHTMLElement2.default),
   onAfterOpen: _propTypes2.default.func,
+  onAfterClose: _propTypes2.default.func,
   onRequestClose: _propTypes2.default.func,
   closeTimeoutMS: _propTypes2.default.number,
   shouldFocusAfterRender: _propTypes2.default.bool,
@@ -36214,7 +36299,10 @@ var portalClassName = exports.portalClassName = "ReactModalPortal";
 var bodyOpenClassName = exports.bodyOpenClassName = "ReactModal__Body--open";
 
 var isReact16 = _reactDom2.default.createPortal !== undefined;
-var createPortal = isReact16 ? _reactDom2.default.createPortal : _reactDom2.default.unstable_renderSubtreeIntoContainer;
+
+var getCreatePortal = function getCreatePortal() {
+  return isReact16 ? _reactDom2.default.createPortal : _reactDom2.default.unstable_renderSubtreeIntoContainer;
+};
 
 function getParentElement(parentSelector) {
   return parentSelector();
@@ -36241,6 +36329,7 @@ var Modal = function (_Component) {
     }, _this.portalRef = function (ref) {
       _this.portal = ref;
     }, _this.renderPortal = function (props) {
+      var createPortal = getCreatePortal();
       var portal = createPortal(_this, _react2.default.createElement(_ModalPortal2.default, _extends({ defaultStyles: Modal.defaultStyles }, props)), _this.node);
       _this.portalRef(portal);
     }, _temp), _possibleConstructorReturn(_this, _ret);
@@ -36324,6 +36413,7 @@ var Modal = function (_Component) {
         this.node = document.createElement("div");
       }
 
+      var createPortal = getCreatePortal();
       return createPortal(_react2.default.createElement(_ModalPortal2.default, _extends({
         ref: this.portalRef,
         defaultStyles: Modal.defaultStyles
@@ -36384,6 +36474,7 @@ Modal.defaultProps = {
   isOpen: false,
   portalClassName: portalClassName,
   bodyOpenClassName: bodyOpenClassName,
+  role: "dialog",
   ariaHideApp: true,
   closeTimeoutMS: 0,
   shouldFocusAfterRender: true,
@@ -36439,10 +36530,14 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 exports.default = _Modal2.default;
 module.exports = exports["default"];
 },{"./components/Modal":"../node_modules/react-modal/lib/components/Modal.js"}],"../node_modules/airbnb-prop-types/build/mocks/index.js":[function(require,module,exports) {
+"use strict";
+
 function noop() {
   return null;
 }
+
 noop.isRequired = noop;
+
 function noopThunk() {
   return noop;
 }
@@ -36456,7 +36551,9 @@ module.exports = {
   childrenOfType: noopThunk,
   childrenSequenceOf: noopThunk,
   componentWithName: noopThunk,
+  disallowedIf: noopThunk,
   elementType: noopThunk,
+  empty: noopThunk,
   explicitNull: noopThunk,
   forbidExtraProps: Object,
   integer: noopThunk,
@@ -36496,146 +36593,166 @@ module.exports = function isArguments(value) {
 
   return isArgs;
 };
-},{}],"../node_modules/object-keys/index.js":[function(require,module,exports) {
-'use strict'; // modified from https://github.com/es-shims/es5-shim
+},{}],"../node_modules/object-keys/implementation.js":[function(require,module,exports) {
+'use strict';
 
-var has = Object.prototype.hasOwnProperty;
-var toStr = Object.prototype.toString;
+var keysShim;
+
+if (!Object.keys) {
+  // modified from https://github.com/es-shims/es5-shim
+  var has = Object.prototype.hasOwnProperty;
+  var toStr = Object.prototype.toString;
+
+  var isArgs = require('./isArguments'); // eslint-disable-line global-require
+
+
+  var isEnumerable = Object.prototype.propertyIsEnumerable;
+  var hasDontEnumBug = !isEnumerable.call({
+    toString: null
+  }, 'toString');
+  var hasProtoEnumBug = isEnumerable.call(function () {}, 'prototype');
+  var dontEnums = ['toString', 'toLocaleString', 'valueOf', 'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'constructor'];
+
+  var equalsConstructorPrototype = function (o) {
+    var ctor = o.constructor;
+    return ctor && ctor.prototype === o;
+  };
+
+  var excludedKeys = {
+    $applicationCache: true,
+    $console: true,
+    $external: true,
+    $frame: true,
+    $frameElement: true,
+    $frames: true,
+    $innerHeight: true,
+    $innerWidth: true,
+    $outerHeight: true,
+    $outerWidth: true,
+    $pageXOffset: true,
+    $pageYOffset: true,
+    $parent: true,
+    $scrollLeft: true,
+    $scrollTop: true,
+    $scrollX: true,
+    $scrollY: true,
+    $self: true,
+    $webkitIndexedDB: true,
+    $webkitStorageInfo: true,
+    $window: true
+  };
+
+  var hasAutomationEqualityBug = function () {
+    /* global window */
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    for (var k in window) {
+      try {
+        if (!excludedKeys['$' + k] && has.call(window, k) && window[k] !== null && typeof window[k] === 'object') {
+          try {
+            equalsConstructorPrototype(window[k]);
+          } catch (e) {
+            return true;
+          }
+        }
+      } catch (e) {
+        return true;
+      }
+    }
+
+    return false;
+  }();
+
+  var equalsConstructorPrototypeIfNotBuggy = function (o) {
+    /* global window */
+    if (typeof window === 'undefined' || !hasAutomationEqualityBug) {
+      return equalsConstructorPrototype(o);
+    }
+
+    try {
+      return equalsConstructorPrototype(o);
+    } catch (e) {
+      return false;
+    }
+  };
+
+  keysShim = function keys(object) {
+    var isObject = object !== null && typeof object === 'object';
+    var isFunction = toStr.call(object) === '[object Function]';
+    var isArguments = isArgs(object);
+    var isString = isObject && toStr.call(object) === '[object String]';
+    var theKeys = [];
+
+    if (!isObject && !isFunction && !isArguments) {
+      throw new TypeError('Object.keys called on a non-object');
+    }
+
+    var skipProto = hasProtoEnumBug && isFunction;
+
+    if (isString && object.length > 0 && !has.call(object, 0)) {
+      for (var i = 0; i < object.length; ++i) {
+        theKeys.push(String(i));
+      }
+    }
+
+    if (isArguments && object.length > 0) {
+      for (var j = 0; j < object.length; ++j) {
+        theKeys.push(String(j));
+      }
+    } else {
+      for (var name in object) {
+        if (!(skipProto && name === 'prototype') && has.call(object, name)) {
+          theKeys.push(String(name));
+        }
+      }
+    }
+
+    if (hasDontEnumBug) {
+      var skipConstructor = equalsConstructorPrototypeIfNotBuggy(object);
+
+      for (var k = 0; k < dontEnums.length; ++k) {
+        if (!(skipConstructor && dontEnums[k] === 'constructor') && has.call(object, dontEnums[k])) {
+          theKeys.push(dontEnums[k]);
+        }
+      }
+    }
+
+    return theKeys;
+  };
+}
+
+module.exports = keysShim;
+},{"./isArguments":"../node_modules/object-keys/isArguments.js"}],"../node_modules/object-keys/index.js":[function(require,module,exports) {
+'use strict';
+
 var slice = Array.prototype.slice;
 
 var isArgs = require('./isArguments');
 
-var isEnumerable = Object.prototype.propertyIsEnumerable;
-var hasDontEnumBug = !isEnumerable.call({
-  toString: null
-}, 'toString');
-var hasProtoEnumBug = isEnumerable.call(function () {}, 'prototype');
-var dontEnums = ['toString', 'toLocaleString', 'valueOf', 'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'constructor'];
-
-var equalsConstructorPrototype = function (o) {
-  var ctor = o.constructor;
-  return ctor && ctor.prototype === o;
-};
-
-var excludedKeys = {
-  $console: true,
-  $external: true,
-  $frame: true,
-  $frameElement: true,
-  $frames: true,
-  $innerHeight: true,
-  $innerWidth: true,
-  $outerHeight: true,
-  $outerWidth: true,
-  $pageXOffset: true,
-  $pageYOffset: true,
-  $parent: true,
-  $scrollLeft: true,
-  $scrollTop: true,
-  $scrollX: true,
-  $scrollY: true,
-  $self: true,
-  $webkitIndexedDB: true,
-  $webkitStorageInfo: true,
-  $window: true
-};
-
-var hasAutomationEqualityBug = function () {
-  /* global window */
-  if (typeof window === 'undefined') {
-    return false;
-  }
-
-  for (var k in window) {
-    try {
-      if (!excludedKeys['$' + k] && has.call(window, k) && window[k] !== null && typeof window[k] === 'object') {
-        try {
-          equalsConstructorPrototype(window[k]);
-        } catch (e) {
-          return true;
-        }
-      }
-    } catch (e) {
-      return true;
-    }
-  }
-
-  return false;
-}();
-
-var equalsConstructorPrototypeIfNotBuggy = function (o) {
-  /* global window */
-  if (typeof window === 'undefined' || !hasAutomationEqualityBug) {
-    return equalsConstructorPrototype(o);
-  }
-
-  try {
-    return equalsConstructorPrototype(o);
-  } catch (e) {
-    return false;
-  }
-};
-
-var keysShim = function keys(object) {
-  var isObject = object !== null && typeof object === 'object';
-  var isFunction = toStr.call(object) === '[object Function]';
-  var isArguments = isArgs(object);
-  var isString = isObject && toStr.call(object) === '[object String]';
-  var theKeys = [];
-
-  if (!isObject && !isFunction && !isArguments) {
-    throw new TypeError('Object.keys called on a non-object');
-  }
-
-  var skipProto = hasProtoEnumBug && isFunction;
-
-  if (isString && object.length > 0 && !has.call(object, 0)) {
-    for (var i = 0; i < object.length; ++i) {
-      theKeys.push(String(i));
-    }
-  }
-
-  if (isArguments && object.length > 0) {
-    for (var j = 0; j < object.length; ++j) {
-      theKeys.push(String(j));
-    }
-  } else {
-    for (var name in object) {
-      if (!(skipProto && name === 'prototype') && has.call(object, name)) {
-        theKeys.push(String(name));
-      }
-    }
-  }
-
-  if (hasDontEnumBug) {
-    var skipConstructor = equalsConstructorPrototypeIfNotBuggy(object);
-
-    for (var k = 0; k < dontEnums.length; ++k) {
-      if (!(skipConstructor && dontEnums[k] === 'constructor') && has.call(object, dontEnums[k])) {
-        theKeys.push(dontEnums[k]);
-      }
-    }
-  }
-
-  return theKeys;
-};
+var origKeys = Object.keys;
+var keysShim = origKeys ? function keys(o) {
+  return origKeys(o);
+} : require('./implementation');
+var originalKeys = Object.keys;
 
 keysShim.shim = function shimObjectKeys() {
   if (Object.keys) {
     var keysWorksWithArguments = function () {
       // Safari 5.0 bug
-      return (Object.keys(arguments) || '').length === 2;
+      var args = Object.keys(arguments);
+      return args && args.length === arguments.length;
     }(1, 2);
 
     if (!keysWorksWithArguments) {
-      var originalKeys = Object.keys;
-
       Object.keys = function keys(object) {
+        // eslint-disable-line func-name-matching
         if (isArgs(object)) {
           return originalKeys(slice.call(object));
-        } else {
-          return originalKeys(object);
         }
+
+        return originalKeys(object);
       };
     }
   } else {
@@ -36646,39 +36763,15 @@ keysShim.shim = function shimObjectKeys() {
 };
 
 module.exports = keysShim;
-},{"./isArguments":"../node_modules/object-keys/isArguments.js"}],"../node_modules/foreach/index.js":[function(require,module,exports) {
-
-var hasOwn = Object.prototype.hasOwnProperty;
-var toString = Object.prototype.toString;
-
-module.exports = function forEach (obj, fn, ctx) {
-    if (toString.call(fn) !== '[object Function]') {
-        throw new TypeError('iterator must be a function');
-    }
-    var l = obj.length;
-    if (l === +l) {
-        for (var i = 0; i < l; i++) {
-            fn.call(ctx, obj[i], i, obj);
-        }
-    } else {
-        for (var k in obj) {
-            if (hasOwn.call(obj, k)) {
-                fn.call(ctx, obj[k], k, obj);
-            }
-        }
-    }
-};
-
-
-},{}],"../node_modules/define-properties/index.js":[function(require,module,exports) {
+},{"./isArguments":"../node_modules/object-keys/isArguments.js","./implementation":"../node_modules/object-keys/implementation.js"}],"../node_modules/define-properties/index.js":[function(require,module,exports) {
 'use strict';
 
 var keys = require('object-keys');
 
-var foreach = require('foreach');
-
-var hasSymbols = typeof Symbol === 'function' && typeof Symbol() === 'symbol';
+var hasSymbols = typeof Symbol === 'function' && typeof Symbol('foo') === 'symbol';
 var toStr = Object.prototype.toString;
+var concat = Array.prototype.concat;
+var origDefineProperty = Object.defineProperty;
 
 var isFunction = function (fn) {
   return typeof fn === 'function' && toStr.call(fn) === '[object Function]';
@@ -36688,17 +36781,15 @@ var arePropertyDescriptorsSupported = function () {
   var obj = {};
 
   try {
-    Object.defineProperty(obj, 'x', {
+    origDefineProperty(obj, 'x', {
       enumerable: false,
       value: obj
-    });
-    /* eslint-disable no-unused-vars, no-restricted-syntax */
+    }); // eslint-disable-next-line no-unused-vars, no-restricted-syntax
 
     for (var _ in obj) {
+      // jscs:ignore disallowUnusedVariables
       return false;
     }
-    /* eslint-enable no-unused-vars, no-restricted-syntax */
-
 
     return obj.x === obj;
   } catch (e) {
@@ -36707,7 +36798,7 @@ var arePropertyDescriptorsSupported = function () {
   }
 };
 
-var supportsDescriptors = Object.defineProperty && arePropertyDescriptorsSupported();
+var supportsDescriptors = origDefineProperty && arePropertyDescriptorsSupported();
 
 var defineProperty = function (object, name, value, predicate) {
   if (name in object && (!isFunction(predicate) || !predicate())) {
@@ -36715,7 +36806,7 @@ var defineProperty = function (object, name, value, predicate) {
   }
 
   if (supportsDescriptors) {
-    Object.defineProperty(object, name, {
+    origDefineProperty(object, name, {
       configurable: true,
       enumerable: false,
       value: value,
@@ -36731,17 +36822,17 @@ var defineProperties = function (object, map) {
   var props = keys(map);
 
   if (hasSymbols) {
-    props = props.concat(Object.getOwnPropertySymbols(map));
+    props = concat.call(props, Object.getOwnPropertySymbols(map));
   }
 
-  foreach(props, function (name) {
-    defineProperty(object, name, map[name], predicates[name]);
-  });
+  for (var i = 0; i < props.length; i += 1) {
+    defineProperty(object, props[i], map[props[i]], predicates[props[i]]);
+  }
 };
 
 defineProperties.supportsDescriptors = !!supportsDescriptors;
 module.exports = defineProperties;
-},{"object-keys":"../node_modules/object-keys/index.js","foreach":"../node_modules/foreach/index.js"}],"../node_modules/function-bind/implementation.js":[function(require,module,exports) {
+},{"object-keys":"../node_modules/object-keys/index.js"}],"../node_modules/function-bind/implementation.js":[function(require,module,exports) {
 'use strict';
 
 /* eslint no-invalid-this: 1 */
@@ -37031,6 +37122,8 @@ defineProperties(polyfill, {
 });
 module.exports = polyfill;
 },{"define-properties":"../node_modules/define-properties/index.js","./implementation":"../node_modules/object.assign/implementation.js","./polyfill":"../node_modules/object.assign/polyfill.js","./shim":"../node_modules/object.assign/shim.js"}],"../node_modules/has/src/index.js":[function(require,module,exports) {
+'use strict';
+
 var bind = require('function-bind');
 
 module.exports = bind.call(Function.call, Object.prototype.hasOwnProperty);
@@ -37106,24 +37199,23 @@ function forbidExtraProps(propTypes) {
 module.exports = exports['default'];
 
 },{"object.assign":"../node_modules/object.assign/index.js","has":"../node_modules/has/src/index.js","./helpers/isPlainObject":"../node_modules/prop-types-exact/build/helpers/isPlainObject.js"}],"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports["default"] = wrapValidator;
 
-var _object = require("object.assign");
-
-var _object2 = _interopRequireDefault(_object);
+var _object = _interopRequireDefault(require("object.assign"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function wrapValidator(validator, typeName) {
   var typeChecker = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
-
-  return (0, _object2["default"])(validator.bind(), {
+  return (0, _object["default"])(validator.bind(), {
     typeName: typeName,
     typeChecker: typeChecker,
-    isRequired: (0, _object2["default"])(validator.isRequired.bind(), {
+    isRequired: (0, _object["default"])(validator.isRequired.bind(), {
       typeName: typeName,
       typeChecker: typeChecker,
       typeRequired: true
@@ -37132,16 +37224,16 @@ function wrapValidator(validator, typeName) {
 }
 
 },{"object.assign":"../node_modules/object.assign/index.js"}],"../node_modules/airbnb-prop-types/build/and.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports['default'] = andValidator;
+exports["default"] = andValidator;
 
-var _wrapValidator = require('./helpers/wrapValidator');
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
 
-var _wrapValidator2 = _interopRequireDefault(_wrapValidator);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function andValidator(validators) {
   var name = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'and';
@@ -37149,45 +37241,38 @@ function andValidator(validators) {
   if (!Array.isArray(validators)) {
     throw new TypeError('and: 2 or more validators are required');
   }
+
   if (validators.length <= 1) {
     throw new RangeError('and: 2 or more validators are required');
   }
 
-  var validator = function () {
-    function and() {
-      for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-        args[_key] = arguments[_key];
-      }
-
-      var firstError = null;
-      validators.some(function (validatorFn) {
-        firstError = validatorFn.apply(undefined, args);
-        return firstError != null;
-      });
-      return firstError == null ? null : firstError;
+  var validator = function and() {
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
     }
 
-    return and;
-  }();
+    var firstError = null;
+    validators.some(function (validatorFn) {
+      firstError = validatorFn.apply(void 0, args);
+      return firstError != null;
+    });
+    return firstError == null ? null : firstError;
+  };
 
-  validator.isRequired = function () {
-    function andIsRequired() {
-      for (var _len2 = arguments.length, args = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
-        args[_key2] = arguments[_key2];
-      }
-
-      var firstError = null;
-      validators.some(function (validatorFn) {
-        firstError = validatorFn.isRequired.apply(validatorFn, args);
-        return firstError != null;
-      });
-      return firstError == null ? null : firstError;
+  validator.isRequired = function andIsRequired() {
+    for (var _len2 = arguments.length, args = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+      args[_key2] = arguments[_key2];
     }
 
-    return andIsRequired;
-  }();
+    var firstError = null;
+    validators.some(function (validatorFn) {
+      firstError = validatorFn.isRequired.apply(validatorFn, args);
+      return firstError != null;
+    });
+    return firstError == null ? null : firstError;
+  };
 
-  return (0, _wrapValidator2['default'])(validator, name, validators);
+  return (0, _wrapValidator["default"])(validator, name, validators);
 }
 
 },{"./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/es-to-primitive/helpers/isPrimitive.js":[function(require,module,exports) {
@@ -37198,21 +37283,18 @@ module.exports = function isPrimitive(value) {
 'use strict';
 
 var fnToStr = Function.prototype.toString;
-var constructorRegex = /^\s*class /;
+var constructorRegex = /^\s*class\b/;
 
-var isES6ClassFn = function isES6ClassFn(value) {
+var isES6ClassFn = function isES6ClassFunction(value) {
   try {
     var fnStr = fnToStr.call(value);
-    var singleStripped = fnStr.replace(/\/\/.*\n/g, '');
-    var multiStripped = singleStripped.replace(/\/\*[.\s\S]*\*\//g, '');
-    var spaceStripped = multiStripped.replace(/\n/mg, ' ').replace(/ {2}/g, ' ');
-    return constructorRegex.test(spaceStripped);
+    return constructorRegex.test(fnStr);
   } catch (e) {
     return false; // not a function
   }
 };
 
-var tryFunctionObject = function tryFunctionObject(value) {
+var tryFunctionObject = function tryFunctionToStr(value) {
   try {
     if (isES6ClassFn(value)) {
       return false;
@@ -37237,6 +37319,10 @@ module.exports = function isCallable(value) {
 
   if (typeof value !== 'function' && typeof value !== 'object') {
     return false;
+  }
+
+  if (typeof value === 'function' && !value.prototype) {
+    return true;
   }
 
   if (hasToStringTag) {
@@ -37275,17 +37361,45 @@ module.exports = function isDateObject(value) {
 
   return hasToStringTag ? tryDateObject(value) : toStr.call(value) === dateClass;
 };
-},{}],"../node_modules/is-symbol/index.js":[function(require,module,exports) {
+},{}],"../node_modules/has-symbols/index.js":[function(require,module,exports) {
+var global = arguments[3];
+'use strict';
+
+var origSymbol = global.Symbol;
+
+var hasSymbolSham = require('./shams');
+
+module.exports = function hasNativeSymbols() {
+  if (typeof origSymbol !== 'function') {
+    return false;
+  }
+
+  if (typeof Symbol !== 'function') {
+    return false;
+  }
+
+  if (typeof origSymbol('foo') !== 'symbol') {
+    return false;
+  }
+
+  if (typeof Symbol('bar') !== 'symbol') {
+    return false;
+  }
+
+  return hasSymbolSham();
+};
+},{"./shams":"../node_modules/has-symbols/shams.js"}],"../node_modules/is-symbol/index.js":[function(require,module,exports) {
 'use strict';
 
 var toStr = Object.prototype.toString;
-var hasSymbols = typeof Symbol === 'function' && typeof Symbol() === 'symbol';
+
+var hasSymbols = require('has-symbols')();
 
 if (hasSymbols) {
   var symToStr = Symbol.prototype.toString;
   var symStringRegex = /^Symbol\(.*\)$/;
 
-  var isSymbolObject = function isSymbolObject(value) {
+  var isSymbolObject = function isRealSymbolObject(value) {
     if (typeof value.valueOf() !== 'symbol') {
       return false;
     }
@@ -37311,10 +37425,10 @@ if (hasSymbols) {
 } else {
   module.exports = function isSymbol(value) {
     // this environment does not support Symbols.
-    return false;
+    return false && value;
   };
 }
-},{}],"../node_modules/es-to-primitive/es6.js":[function(require,module,exports) {
+},{"has-symbols":"../node_modules/has-symbols/index.js"}],"../node_modules/es-to-primitive/es2015.js":[function(require,module,exports) {
 'use strict';
 
 var hasSymbols = typeof Symbol === 'function' && typeof Symbol.iterator === 'symbol';
@@ -37364,10 +37478,12 @@ var GetMethod = function GetMethod(O, P) {
 
     return func;
   }
+
+  return void 0;
 }; // http://www.ecma-international.org/ecma-262/6.0/#sec-toprimitive
 
 
-module.exports = function ToPrimitive(input, PreferredType) {
+module.exports = function ToPrimitive(input) {
   if (isPrimitive(input)) {
     return input;
   }
@@ -37375,9 +37491,9 @@ module.exports = function ToPrimitive(input, PreferredType) {
   var hint = 'default';
 
   if (arguments.length > 1) {
-    if (PreferredType === String) {
+    if (arguments[1] === String) {
       hint = 'string';
-    } else if (PreferredType === Number) {
+    } else if (arguments[1] === Number) {
       hint = 'number';
     }
   }
@@ -37408,7 +37524,253 @@ module.exports = function ToPrimitive(input, PreferredType) {
 
   return ordinaryToPrimitive(input, hint === 'default' ? 'number' : hint);
 };
-},{"./helpers/isPrimitive":"../node_modules/es-to-primitive/helpers/isPrimitive.js","is-callable":"../node_modules/is-callable/index.js","is-date-object":"../node_modules/is-date-object/index.js","is-symbol":"../node_modules/is-symbol/index.js"}],"../node_modules/es-abstract/helpers/isNaN.js":[function(require,module,exports) {
+},{"./helpers/isPrimitive":"../node_modules/es-to-primitive/helpers/isPrimitive.js","is-callable":"../node_modules/is-callable/index.js","is-date-object":"../node_modules/is-date-object/index.js","is-symbol":"../node_modules/is-symbol/index.js"}],"../node_modules/es-to-primitive/es6.js":[function(require,module,exports) {
+'use strict';
+
+module.exports = require('./es2015');
+},{"./es2015":"../node_modules/es-to-primitive/es2015.js"}],"../node_modules/es-abstract/GetIntrinsic.js":[function(require,module,exports) {
+'use strict';
+/* globals
+	Set,
+	Map,
+	WeakSet,
+	WeakMap,
+
+	Promise,
+
+	Symbol,
+	Proxy,
+
+	Atomics,
+	SharedArrayBuffer,
+
+	ArrayBuffer,
+	DataView,
+	Uint8Array,
+	Float32Array,
+	Float64Array,
+	Int8Array,
+	Int16Array,
+	Int32Array,
+	Uint8ClampedArray,
+	Uint16Array,
+	Uint32Array,
+*/
+
+var undefined; // eslint-disable-line no-shadow-restricted-names
+
+var ThrowTypeError = Object.getOwnPropertyDescriptor ? function () {
+  return Object.getOwnPropertyDescriptor(arguments, 'callee').get;
+}() : function () {
+  throw new TypeError();
+};
+var hasSymbols = typeof Symbol === 'function' && typeof Symbol.iterator === 'symbol';
+
+var getProto = Object.getPrototypeOf || function (x) {
+  return x.__proto__;
+}; // eslint-disable-line no-proto
+
+
+var generator; // = function * () {};
+
+var generatorFunction = generator ? getProto(generator) : undefined;
+var asyncFn; // async function() {};
+
+var asyncFunction = asyncFn ? asyncFn.constructor : undefined;
+var asyncGen; // async function * () {};
+
+var asyncGenFunction = asyncGen ? getProto(asyncGen) : undefined;
+var asyncGenIterator = asyncGen ? asyncGen() : undefined;
+var TypedArray = typeof Uint8Array === 'undefined' ? undefined : getProto(Uint8Array);
+var INTRINSICS = {
+  '$ %Array%': Array,
+  '$ %ArrayBuffer%': typeof ArrayBuffer === 'undefined' ? undefined : ArrayBuffer,
+  '$ %ArrayBufferPrototype%': typeof ArrayBuffer === 'undefined' ? undefined : ArrayBuffer.prototype,
+  '$ %ArrayIteratorPrototype%': hasSymbols ? getProto([][Symbol.iterator]()) : undefined,
+  '$ %ArrayPrototype%': Array.prototype,
+  '$ %ArrayProto_entries%': Array.prototype.entries,
+  '$ %ArrayProto_forEach%': Array.prototype.forEach,
+  '$ %ArrayProto_keys%': Array.prototype.keys,
+  '$ %ArrayProto_values%': Array.prototype.values,
+  '$ %AsyncFromSyncIteratorPrototype%': undefined,
+  '$ %AsyncFunction%': asyncFunction,
+  '$ %AsyncFunctionPrototype%': asyncFunction ? asyncFunction.prototype : undefined,
+  '$ %AsyncGenerator%': asyncGen ? getProto(asyncGenIterator) : undefined,
+  '$ %AsyncGeneratorFunction%': asyncGenFunction,
+  '$ %AsyncGeneratorPrototype%': asyncGenFunction ? asyncGenFunction.prototype : undefined,
+  '$ %AsyncIteratorPrototype%': asyncGenIterator && hasSymbols && Symbol.asyncIterator ? asyncGenIterator[Symbol.asyncIterator]() : undefined,
+  '$ %Atomics%': typeof Atomics === 'undefined' ? undefined : Atomics,
+  '$ %Boolean%': Boolean,
+  '$ %BooleanPrototype%': Boolean.prototype,
+  '$ %DataView%': typeof DataView === 'undefined' ? undefined : DataView,
+  '$ %DataViewPrototype%': typeof DataView === 'undefined' ? undefined : DataView.prototype,
+  '$ %Date%': Date,
+  '$ %DatePrototype%': Date.prototype,
+  '$ %decodeURI%': decodeURI,
+  '$ %decodeURIComponent%': decodeURIComponent,
+  '$ %encodeURI%': encodeURI,
+  '$ %encodeURIComponent%': encodeURIComponent,
+  '$ %Error%': Error,
+  '$ %ErrorPrototype%': Error.prototype,
+  '$ %eval%': eval,
+  // eslint-disable-line no-eval
+  '$ %EvalError%': EvalError,
+  '$ %EvalErrorPrototype%': EvalError.prototype,
+  '$ %Float32Array%': typeof Float32Array === 'undefined' ? undefined : Float32Array,
+  '$ %Float32ArrayPrototype%': typeof Float32Array === 'undefined' ? undefined : Float32Array.prototype,
+  '$ %Float64Array%': typeof Float64Array === 'undefined' ? undefined : Float64Array,
+  '$ %Float64ArrayPrototype%': typeof Float64Array === 'undefined' ? undefined : Float64Array.prototype,
+  '$ %Function%': Function,
+  '$ %FunctionPrototype%': Function.prototype,
+  '$ %Generator%': generator ? getProto(generator()) : undefined,
+  '$ %GeneratorFunction%': generatorFunction,
+  '$ %GeneratorPrototype%': generatorFunction ? generatorFunction.prototype : undefined,
+  '$ %Int8Array%': typeof Int8Array === 'undefined' ? undefined : Int8Array,
+  '$ %Int8ArrayPrototype%': typeof Int8Array === 'undefined' ? undefined : Int8Array.prototype,
+  '$ %Int16Array%': typeof Int16Array === 'undefined' ? undefined : Int16Array,
+  '$ %Int16ArrayPrototype%': typeof Int16Array === 'undefined' ? undefined : Int8Array.prototype,
+  '$ %Int32Array%': typeof Int32Array === 'undefined' ? undefined : Int32Array,
+  '$ %Int32ArrayPrototype%': typeof Int32Array === 'undefined' ? undefined : Int32Array.prototype,
+  '$ %isFinite%': isFinite,
+  '$ %isNaN%': isNaN,
+  '$ %IteratorPrototype%': hasSymbols ? getProto(getProto([][Symbol.iterator]())) : undefined,
+  '$ %JSON%': JSON,
+  '$ %JSONParse%': JSON.parse,
+  '$ %Map%': typeof Map === 'undefined' ? undefined : Map,
+  '$ %MapIteratorPrototype%': typeof Map === 'undefined' || !hasSymbols ? undefined : getProto(new Map()[Symbol.iterator]()),
+  '$ %MapPrototype%': typeof Map === 'undefined' ? undefined : Map.prototype,
+  '$ %Math%': Math,
+  '$ %Number%': Number,
+  '$ %NumberPrototype%': Number.prototype,
+  '$ %Object%': Object,
+  '$ %ObjectPrototype%': Object.prototype,
+  '$ %ObjProto_toString%': Object.prototype.toString,
+  '$ %ObjProto_valueOf%': Object.prototype.valueOf,
+  '$ %parseFloat%': parseFloat,
+  '$ %parseInt%': parseInt,
+  '$ %Promise%': typeof Promise === 'undefined' ? undefined : Promise,
+  '$ %PromisePrototype%': typeof Promise === 'undefined' ? undefined : Promise.prototype,
+  '$ %PromiseProto_then%': typeof Promise === 'undefined' ? undefined : Promise.prototype.then,
+  '$ %Promise_all%': typeof Promise === 'undefined' ? undefined : Promise.all,
+  '$ %Promise_reject%': typeof Promise === 'undefined' ? undefined : Promise.reject,
+  '$ %Promise_resolve%': typeof Promise === 'undefined' ? undefined : Promise.resolve,
+  '$ %Proxy%': typeof Proxy === 'undefined' ? undefined : Proxy,
+  '$ %RangeError%': RangeError,
+  '$ %RangeErrorPrototype%': RangeError.prototype,
+  '$ %ReferenceError%': ReferenceError,
+  '$ %ReferenceErrorPrototype%': ReferenceError.prototype,
+  '$ %Reflect%': typeof Reflect === 'undefined' ? undefined : Reflect,
+  '$ %RegExp%': RegExp,
+  '$ %RegExpPrototype%': RegExp.prototype,
+  '$ %Set%': typeof Set === 'undefined' ? undefined : Set,
+  '$ %SetIteratorPrototype%': typeof Set === 'undefined' || !hasSymbols ? undefined : getProto(new Set()[Symbol.iterator]()),
+  '$ %SetPrototype%': typeof Set === 'undefined' ? undefined : Set.prototype,
+  '$ %SharedArrayBuffer%': typeof SharedArrayBuffer === 'undefined' ? undefined : SharedArrayBuffer,
+  '$ %SharedArrayBufferPrototype%': typeof SharedArrayBuffer === 'undefined' ? undefined : SharedArrayBuffer.prototype,
+  '$ %String%': String,
+  '$ %StringIteratorPrototype%': hasSymbols ? getProto(''[Symbol.iterator]()) : undefined,
+  '$ %StringPrototype%': String.prototype,
+  '$ %Symbol%': hasSymbols ? Symbol : undefined,
+  '$ %SymbolPrototype%': hasSymbols ? Symbol.prototype : undefined,
+  '$ %SyntaxError%': SyntaxError,
+  '$ %SyntaxErrorPrototype%': SyntaxError.prototype,
+  '$ %ThrowTypeError%': ThrowTypeError,
+  '$ %TypedArray%': TypedArray,
+  '$ %TypedArrayPrototype%': TypedArray ? TypedArray.prototype : undefined,
+  '$ %TypeError%': TypeError,
+  '$ %TypeErrorPrototype%': TypeError.prototype,
+  '$ %Uint8Array%': typeof Uint8Array === 'undefined' ? undefined : Uint8Array,
+  '$ %Uint8ArrayPrototype%': typeof Uint8Array === 'undefined' ? undefined : Uint8Array.prototype,
+  '$ %Uint8ClampedArray%': typeof Uint8ClampedArray === 'undefined' ? undefined : Uint8ClampedArray,
+  '$ %Uint8ClampedArrayPrototype%': typeof Uint8ClampedArray === 'undefined' ? undefined : Uint8ClampedArray.prototype,
+  '$ %Uint16Array%': typeof Uint16Array === 'undefined' ? undefined : Uint16Array,
+  '$ %Uint16ArrayPrototype%': typeof Uint16Array === 'undefined' ? undefined : Uint16Array.prototype,
+  '$ %Uint32Array%': typeof Uint32Array === 'undefined' ? undefined : Uint32Array,
+  '$ %Uint32ArrayPrototype%': typeof Uint32Array === 'undefined' ? undefined : Uint32Array.prototype,
+  '$ %URIError%': URIError,
+  '$ %URIErrorPrototype%': URIError.prototype,
+  '$ %WeakMap%': typeof WeakMap === 'undefined' ? undefined : WeakMap,
+  '$ %WeakMapPrototype%': typeof WeakMap === 'undefined' ? undefined : WeakMap.prototype,
+  '$ %WeakSet%': typeof WeakSet === 'undefined' ? undefined : WeakSet,
+  '$ %WeakSetPrototype%': typeof WeakSet === 'undefined' ? undefined : WeakSet.prototype
+};
+
+module.exports = function GetIntrinsic(name, allowMissing) {
+  if (arguments.length > 1 && typeof allowMissing !== 'boolean') {
+    throw new TypeError('"allowMissing" argument must be a boolean');
+  }
+
+  var key = '$ ' + name;
+
+  if (!(key in INTRINSICS)) {
+    throw new SyntaxError('intrinsic ' + name + ' does not exist!');
+  } // istanbul ignore if // hopefully this is impossible to test :-)
+
+
+  if (typeof INTRINSICS[key] === 'undefined' && !allowMissing) {
+    throw new TypeError('intrinsic ' + name + ' exists, but is not available. Please file an issue!');
+  }
+
+  return INTRINSICS[key];
+};
+},{}],"../node_modules/es-abstract/helpers/assertRecord.js":[function(require,module,exports) {
+'use strict';
+
+var GetIntrinsic = require('../GetIntrinsic');
+
+var $TypeError = GetIntrinsic('%TypeError%');
+var $SyntaxError = GetIntrinsic('%SyntaxError%');
+
+var has = require('has');
+
+var predicates = {
+  // https://ecma-international.org/ecma-262/6.0/#sec-property-descriptor-specification-type
+  'Property Descriptor': function isPropertyDescriptor(ES, Desc) {
+    if (ES.Type(Desc) !== 'Object') {
+      return false;
+    }
+
+    var allowed = {
+      '[[Configurable]]': true,
+      '[[Enumerable]]': true,
+      '[[Get]]': true,
+      '[[Set]]': true,
+      '[[Value]]': true,
+      '[[Writable]]': true
+    };
+
+    for (var key in Desc) {
+      // eslint-disable-line
+      if (has(Desc, key) && !allowed[key]) {
+        return false;
+      }
+    }
+
+    var isData = has(Desc, '[[Value]]');
+    var IsAccessor = has(Desc, '[[Get]]') || has(Desc, '[[Set]]');
+
+    if (isData && IsAccessor) {
+      throw new $TypeError('Property Descriptors may not be both accessor and data descriptors');
+    }
+
+    return true;
+  }
+};
+
+module.exports = function assertRecord(ES, recordType, argumentName, value) {
+  var predicate = predicates[recordType];
+
+  if (typeof predicate !== 'function') {
+    throw new $SyntaxError('unknown record type: ' + recordType);
+  }
+
+  if (!predicate(ES, value)) {
+    throw new $TypeError(argumentName + ' must be a ' + recordType);
+  }
+
+  console.log(predicate(ES, value), value);
+};
+},{"../GetIntrinsic":"../node_modules/es-abstract/GetIntrinsic.js","has":"../node_modules/has/src/index.js"}],"../node_modules/es-abstract/helpers/isNaN.js":[function(require,module,exports) {
 module.exports = Number.isNaN || function isNaN(a) {
   return a !== a;
 };
@@ -37421,22 +37783,25 @@ module.exports = Number.isFinite || function (x) {
   return typeof x === 'number' && !$isNaN(x) && x !== Infinity && x !== -Infinity;
 };
 },{}],"../node_modules/es-abstract/helpers/assign.js":[function(require,module,exports) {
-var has = Object.prototype.hasOwnProperty;
+var bind = require('function-bind');
+
+var has = bind.call(Function.call, Object.prototype.hasOwnProperty);
+var $assign = Object.assign;
 
 module.exports = function assign(target, source) {
-  if (Object.assign) {
-    return Object.assign(target, source);
+  if ($assign) {
+    return $assign(target, source);
   }
 
   for (var key in source) {
-    if (has.call(source, key)) {
+    if (has(source, key)) {
       target[key] = source[key];
     }
   }
 
   return target;
 };
-},{}],"../node_modules/es-abstract/helpers/sign.js":[function(require,module,exports) {
+},{"function-bind":"../node_modules/function-bind/index.js"}],"../node_modules/es-abstract/helpers/sign.js":[function(require,module,exports) {
 module.exports = function sign(number) {
   return number >= 0 ? 1 : -1;
 };
@@ -37456,12 +37821,18 @@ var toStr = Object.prototype.toString;
 
 var isPrimitive = require('./helpers/isPrimitive');
 
-var isCallable = require('is-callable'); // https://es5.github.io/#x8.12
+var isCallable = require('is-callable'); // http://ecma-international.org/ecma-262/5.1/#sec-8.12.8
 
 
 var ES5internalSlots = {
-  '[[DefaultValue]]': function (O, hint) {
-    var actualHint = hint || (toStr.call(O) === '[object Date]' ? String : Number);
+  '[[DefaultValue]]': function (O) {
+    var actualHint;
+
+    if (arguments.length > 1) {
+      actualHint = arguments[1];
+    } else {
+      actualHint = toStr.call(O) === '[object Date]' ? String : Number;
+    }
 
     if (actualHint === String || actualHint === Number) {
       var methods = actualHint === String ? ['toString', 'valueOf'] : ['valueOf', 'toString'];
@@ -37482,17 +37853,29 @@ var ES5internalSlots = {
 
     throw new TypeError('invalid [[DefaultValue]] hint supplied');
   }
-}; // https://es5.github.io/#x9
+}; // http://ecma-international.org/ecma-262/5.1/#sec-9.1
 
-module.exports = function ToPrimitive(input, PreferredType) {
+module.exports = function ToPrimitive(input) {
   if (isPrimitive(input)) {
     return input;
   }
 
-  return ES5internalSlots['[[DefaultValue]]'](input, PreferredType);
+  if (arguments.length > 1) {
+    return ES5internalSlots['[[DefaultValue]]'](input, arguments[1]);
+  }
+
+  return ES5internalSlots['[[DefaultValue]]'](input);
 };
 },{"./helpers/isPrimitive":"../node_modules/es-to-primitive/helpers/isPrimitive.js","is-callable":"../node_modules/is-callable/index.js"}],"../node_modules/es-abstract/es5.js":[function(require,module,exports) {
 'use strict';
+
+var GetIntrinsic = require('./GetIntrinsic');
+
+var $Object = GetIntrinsic('%Object%');
+var $TypeError = GetIntrinsic('%TypeError%');
+var $String = GetIntrinsic('%String%');
+
+var assertRecord = require('./helpers/assertRecord');
 
 var $isNaN = require('./helpers/isNaN');
 
@@ -37515,7 +37898,7 @@ var ES5 = {
     return !!value;
   },
   ToNumber: function ToNumber(value) {
-    return Number(value);
+    return +value; // eslint-disable-line no-implicit-coercion
   },
   ToInteger: function ToInteger(value) {
     var number = this.ToNumber(value);
@@ -37547,16 +37930,16 @@ var ES5 = {
     return mod(posInt, 0x10000);
   },
   ToString: function ToString(value) {
-    return String(value);
+    return $String(value);
   },
   ToObject: function ToObject(value) {
     this.CheckObjectCoercible(value);
-    return Object(value);
+    return $Object(value);
   },
   CheckObjectCoercible: function CheckObjectCoercible(value, optMessage) {
     /* jshint eqnull:true */
     if (value == null) {
-      throw new TypeError(optMessage || 'Cannot call method on ' + value);
+      throw new $TypeError(optMessage || 'Cannot call method on ' + value);
     }
 
     return value;
@@ -37574,7 +37957,7 @@ var ES5 = {
 
     return $isNaN(x) && $isNaN(y);
   },
-  // http://www.ecma-international.org/ecma-262/5.1/#sec-8
+  // https://www.ecma-international.org/ecma-262/5.1/#sec-8
   Type: function Type(x) {
     if (x === null) {
       return 'Null';
@@ -37600,7 +37983,7 @@ var ES5 = {
       return 'String';
     }
   },
-  // http://ecma-international.org/ecma-262/6.0/#sec-property-descriptor-specification-type
+  // https://ecma-international.org/ecma-262/6.0/#sec-property-descriptor-specification-type
   IsPropertyDescriptor: function IsPropertyDescriptor(Desc) {
     if (this.Type(Desc) !== 'Object') {
       return false;
@@ -37613,34 +37996,31 @@ var ES5 = {
       '[[Set]]': true,
       '[[Value]]': true,
       '[[Writable]]': true
-    }; // jscs:disable
+    };
 
     for (var key in Desc) {
       // eslint-disable-line
       if (has(Desc, key) && !allowed[key]) {
         return false;
       }
-    } // jscs:enable
-
+    }
 
     var isData = has(Desc, '[[Value]]');
     var IsAccessor = has(Desc, '[[Get]]') || has(Desc, '[[Set]]');
 
     if (isData && IsAccessor) {
-      throw new TypeError('Property Descriptors may not be both accessor and data descriptors');
+      throw new $TypeError('Property Descriptors may not be both accessor and data descriptors');
     }
 
     return true;
   },
-  // http://ecma-international.org/ecma-262/5.1/#sec-8.10.1
+  // https://ecma-international.org/ecma-262/5.1/#sec-8.10.1
   IsAccessorDescriptor: function IsAccessorDescriptor(Desc) {
     if (typeof Desc === 'undefined') {
       return false;
     }
 
-    if (!this.IsPropertyDescriptor(Desc)) {
-      throw new TypeError('Desc must be a Property Descriptor');
-    }
+    assertRecord(this, 'Property Descriptor', 'Desc', Desc);
 
     if (!has(Desc, '[[Get]]') && !has(Desc, '[[Set]]')) {
       return false;
@@ -37648,15 +38028,13 @@ var ES5 = {
 
     return true;
   },
-  // http://ecma-international.org/ecma-262/5.1/#sec-8.10.2
+  // https://ecma-international.org/ecma-262/5.1/#sec-8.10.2
   IsDataDescriptor: function IsDataDescriptor(Desc) {
     if (typeof Desc === 'undefined') {
       return false;
     }
 
-    if (!this.IsPropertyDescriptor(Desc)) {
-      throw new TypeError('Desc must be a Property Descriptor');
-    }
+    assertRecord(this, 'Property Descriptor', 'Desc', Desc);
 
     if (!has(Desc, '[[Value]]') && !has(Desc, '[[Writable]]')) {
       return false;
@@ -37664,15 +38042,13 @@ var ES5 = {
 
     return true;
   },
-  // http://ecma-international.org/ecma-262/5.1/#sec-8.10.3
+  // https://ecma-international.org/ecma-262/5.1/#sec-8.10.3
   IsGenericDescriptor: function IsGenericDescriptor(Desc) {
     if (typeof Desc === 'undefined') {
       return false;
     }
 
-    if (!this.IsPropertyDescriptor(Desc)) {
-      throw new TypeError('Desc must be a Property Descriptor');
-    }
+    assertRecord(this, 'Property Descriptor', 'Desc', Desc);
 
     if (!this.IsAccessorDescriptor(Desc) && !this.IsDataDescriptor(Desc)) {
       return true;
@@ -37680,15 +38056,13 @@ var ES5 = {
 
     return false;
   },
-  // http://ecma-international.org/ecma-262/5.1/#sec-8.10.4
+  // https://ecma-international.org/ecma-262/5.1/#sec-8.10.4
   FromPropertyDescriptor: function FromPropertyDescriptor(Desc) {
     if (typeof Desc === 'undefined') {
       return Desc;
     }
 
-    if (!this.IsPropertyDescriptor(Desc)) {
-      throw new TypeError('Desc must be a Property Descriptor');
-    }
+    assertRecord(this, 'Property Descriptor', 'Desc', Desc);
 
     if (this.IsDataDescriptor(Desc)) {
       return {
@@ -37705,13 +38079,13 @@ var ES5 = {
         configurable: !!Desc['[[Configurable]]']
       };
     } else {
-      throw new TypeError('FromPropertyDescriptor must be called with a fully populated Property Descriptor');
+      throw new $TypeError('FromPropertyDescriptor must be called with a fully populated Property Descriptor');
     }
   },
-  // http://ecma-international.org/ecma-262/5.1/#sec-8.10.5
+  // https://ecma-international.org/ecma-262/5.1/#sec-8.10.5
   ToPropertyDescriptor: function ToPropertyDescriptor(Obj) {
     if (this.Type(Obj) !== 'Object') {
-      throw new TypeError('ToPropertyDescriptor requires an object');
+      throw new $TypeError('ToPropertyDescriptor requires an object');
     }
 
     var desc = {};
@@ -37746,21 +38120,21 @@ var ES5 = {
       var setter = Obj.set;
 
       if (typeof setter !== 'undefined' && !this.IsCallable(setter)) {
-        throw new TypeError('setter must be a function');
+        throw new $TypeError('setter must be a function');
       }
 
       desc['[[Set]]'] = setter;
     }
 
     if ((has(desc, '[[Get]]') || has(desc, '[[Set]]')) && (has(desc, '[[Value]]') || has(desc, '[[Writable]]'))) {
-      throw new TypeError('Invalid property descriptor. Cannot both specify accessors and a value or writable attribute');
+      throw new $TypeError('Invalid property descriptor. Cannot both specify accessors and a value or writable attribute');
     }
 
     return desc;
   }
 };
 module.exports = ES5;
-},{"./helpers/isNaN":"../node_modules/es-abstract/helpers/isNaN.js","./helpers/isFinite":"../node_modules/es-abstract/helpers/isFinite.js","./helpers/sign":"../node_modules/es-abstract/helpers/sign.js","./helpers/mod":"../node_modules/es-abstract/helpers/mod.js","is-callable":"../node_modules/is-callable/index.js","es-to-primitive/es5":"../node_modules/es-to-primitive/es5.js","has":"../node_modules/has/src/index.js"}],"../node_modules/is-regex/index.js":[function(require,module,exports) {
+},{"./GetIntrinsic":"../node_modules/es-abstract/GetIntrinsic.js","./helpers/assertRecord":"../node_modules/es-abstract/helpers/assertRecord.js","./helpers/isNaN":"../node_modules/es-abstract/helpers/isNaN.js","./helpers/isFinite":"../node_modules/es-abstract/helpers/isFinite.js","./helpers/sign":"../node_modules/es-abstract/helpers/sign.js","./helpers/mod":"../node_modules/es-abstract/helpers/mod.js","is-callable":"../node_modules/is-callable/index.js","es-to-primitive/es5":"../node_modules/es-to-primitive/es5.js","has":"../node_modules/has/src/index.js"}],"../node_modules/is-regex/index.js":[function(require,module,exports) {
 'use strict';
 
 var has = require('has');
@@ -37810,15 +38184,27 @@ var has = require('has');
 
 var toPrimitive = require('es-to-primitive/es6');
 
-var toStr = Object.prototype.toString;
-var hasSymbols = typeof Symbol === 'function' && typeof Symbol.iterator === 'symbol';
-var SymbolIterator = hasSymbols ? Symbol.iterator : null;
+var keys = require('object-keys');
+
+var GetIntrinsic = require('./GetIntrinsic');
+
+var $TypeError = GetIntrinsic('%TypeError%');
+var $SyntaxError = GetIntrinsic('%SyntaxError%');
+var $Array = GetIntrinsic('%Array%');
+var $String = GetIntrinsic('%String%');
+var $Object = GetIntrinsic('%Object%');
+var $Number = GetIntrinsic('%Number%');
+var $Symbol = GetIntrinsic('%Symbol%', true);
+var $RegExp = GetIntrinsic('%RegExp%');
+var hasSymbols = !!$Symbol;
+
+var assertRecord = require('./helpers/assertRecord');
 
 var $isNaN = require('./helpers/isNaN');
 
 var $isFinite = require('./helpers/isFinite');
 
-var MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER || Math.pow(2, 53) - 1;
+var MAX_SAFE_INTEGER = $Number.MAX_SAFE_INTEGER || Math.pow(2, 53) - 1;
 
 var assign = require('./helpers/assign');
 
@@ -37832,21 +38218,33 @@ var parseInteger = parseInt;
 
 var bind = require('function-bind');
 
-var arraySlice = bind.call(Function.call, Array.prototype.slice);
-var strSlice = bind.call(Function.call, String.prototype.slice);
-var isBinary = bind.call(Function.call, RegExp.prototype.test, /^0b[01]+$/i);
-var isOctal = bind.call(Function.call, RegExp.prototype.test, /^0o[0-7]+$/i);
-var regexExec = bind.call(Function.call, RegExp.prototype.exec);
+var arraySlice = bind.call(Function.call, $Array.prototype.slice);
+var strSlice = bind.call(Function.call, $String.prototype.slice);
+var isBinary = bind.call(Function.call, $RegExp.prototype.test, /^0b[01]+$/i);
+var isOctal = bind.call(Function.call, $RegExp.prototype.test, /^0o[0-7]+$/i);
+var regexExec = bind.call(Function.call, $RegExp.prototype.exec);
 var nonWS = ['\u0085', '\u200b', '\ufffe'].join('');
-var nonWSregex = new RegExp('[' + nonWS + ']', 'g');
-var hasNonWS = bind.call(Function.call, RegExp.prototype.test, nonWSregex);
+var nonWSregex = new $RegExp('[' + nonWS + ']', 'g');
+var hasNonWS = bind.call(Function.call, $RegExp.prototype.test, nonWSregex);
 var invalidHexLiteral = /^[-+]0x[0-9a-f]+$/i;
-var isInvalidHexLiteral = bind.call(Function.call, RegExp.prototype.test, invalidHexLiteral); // whitespace from: http://es5.github.io/#x15.5.4.20
+var isInvalidHexLiteral = bind.call(Function.call, $RegExp.prototype.test, invalidHexLiteral);
+var $charCodeAt = bind.call(Function.call, $String.prototype.charCodeAt);
+var toStr = bind.call(Function.call, Object.prototype.toString);
+var $NumberValueOf = bind.call(Function.call, GetIntrinsic('%NumberPrototype%').valueOf);
+var $BooleanValueOf = bind.call(Function.call, GetIntrinsic('%BooleanPrototype%').valueOf);
+var $StringValueOf = bind.call(Function.call, GetIntrinsic('%StringPrototype%').valueOf);
+var $DateValueOf = bind.call(Function.call, GetIntrinsic('%DatePrototype%').valueOf);
+var $floor = Math.floor;
+var $abs = Math.abs;
+var $ObjectCreate = Object.create;
+var $gOPD = $Object.getOwnPropertyDescriptor;
+var $isExtensible = $Object.isExtensible;
+var $defineProperty = $Object.defineProperty; // whitespace from: http://es5.github.io/#x15.5.4.20
 // implementation from https://github.com/es-shims/es5-shim/blob/v3.4.0/es5-shim.js#L1304-L1324
 
 var ws = ['\x09\x0A\x0B\x0C\x0D\x20\xA0\u1680\u180E\u2000\u2001\u2002\u2003', '\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u202F\u205F\u3000\u2028', '\u2029\uFEFF'].join('');
 var trimRegex = new RegExp('(^[' + ws + ']+)|([' + ws + ']+$)', 'g');
-var replace = bind.call(Function.call, String.prototype.replace);
+var replace = bind.call(Function.call, $String.prototype.replace);
 
 var trim = function (value) {
   return replace(value, trimRegex, '');
@@ -37863,7 +38261,7 @@ var ES6 = assign(assign({}, ES5), {
     var args = arguments.length > 2 ? arguments[2] : [];
 
     if (!this.IsCallable(F)) {
-      throw new TypeError(F + ' is not a function');
+      throw new $TypeError(F + ' is not a function');
     }
 
     return F.apply(V, args);
@@ -37872,12 +38270,12 @@ var ES6 = assign(assign({}, ES5), {
   ToPrimitive: toPrimitive,
   // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-toboolean
   // ToBoolean: ES5.ToBoolean,
-  // http://www.ecma-international.org/ecma-262/6.0/#sec-tonumber
+  // https://ecma-international.org/ecma-262/6.0/#sec-tonumber
   ToNumber: function ToNumber(argument) {
-    var value = isPrimitive(argument) ? argument : toPrimitive(argument, Number);
+    var value = isPrimitive(argument) ? argument : toPrimitive(argument, $Number);
 
     if (typeof value === 'symbol') {
-      throw new TypeError('Cannot convert a Symbol value to a number');
+      throw new $TypeError('Cannot convert a Symbol value to a number');
     }
 
     if (typeof value === 'string') {
@@ -37896,7 +38294,7 @@ var ES6 = assign(assign({}, ES5), {
       }
     }
 
-    return Number(value);
+    return $Number(value);
   },
   // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tointeger
   // ToInteger: ES5.ToNumber,
@@ -37924,7 +38322,7 @@ var ES6 = assign(assign({}, ES5), {
       return 0;
     }
 
-    var posInt = sign(number) * Math.floor(Math.abs(number));
+    var posInt = sign(number) * $floor($abs(number));
     return mod(posInt, 0x100);
   },
   // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-touint8clamp
@@ -37939,7 +38337,7 @@ var ES6 = assign(assign({}, ES5), {
       return 0xFF;
     }
 
-    var f = Math.floor(argument);
+    var f = $floor(argument);
 
     if (f + 0.5 < number) {
       return f + 1;
@@ -37958,19 +38356,19 @@ var ES6 = assign(assign({}, ES5), {
   // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tostring
   ToString: function ToString(argument) {
     if (typeof argument === 'symbol') {
-      throw new TypeError('Cannot convert a Symbol value to a string');
+      throw new $TypeError('Cannot convert a Symbol value to a string');
     }
 
-    return String(argument);
+    return $String(argument);
   },
   // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-toobject
   ToObject: function ToObject(value) {
     this.RequireObjectCoercible(value);
-    return Object(value);
+    return $Object(value);
   },
   // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-topropertykey
   ToPropertyKey: function ToPropertyKey(argument) {
-    var key = this.ToPrimitive(argument, String);
+    var key = this.ToPrimitive(argument, $String);
     return typeof key === 'symbol' ? key : this.ToString(key);
   },
   // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-tolength
@@ -37988,10 +38386,10 @@ var ES6 = assign(assign({}, ES5), {
 
     return len;
   },
-  // http://www.ecma-international.org/ecma-262/6.0/#sec-canonicalnumericindexstring
+  // https://ecma-international.org/ecma-262/6.0/#sec-canonicalnumericindexstring
   CanonicalNumericIndexString: function CanonicalNumericIndexString(argument) {
-    if (toStr.call(argument) !== '[object String]') {
-      throw new TypeError('must be a string');
+    if (toStr(argument) !== '[object String]') {
+      throw new $TypeError('must be a string');
     }
 
     if (argument === '-0') {
@@ -38009,8 +38407,8 @@ var ES6 = assign(assign({}, ES5), {
   // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-requireobjectcoercible
   RequireObjectCoercible: ES5.CheckObjectCoercible,
   // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-isarray
-  IsArray: Array.isArray || function IsArray(argument) {
-    return toStr.call(argument) === '[object Array]';
+  IsArray: $Array.isArray || function IsArray(argument) {
+    return toStr(argument) === '[object Array]';
   },
   // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-iscallable
   // IsCallable: ES5.IsCallable,
@@ -38019,38 +38417,37 @@ var ES6 = assign(assign({}, ES5), {
     return typeof argument === 'function' && !!argument.prototype; // unfortunately there's no way to truly check this without try/catch `new argument`
   },
   // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-isextensible-o
-  IsExtensible: function IsExtensible(obj) {
-    if (!Object.preventExtensions) {
-      return true;
-    }
-
+  IsExtensible: Object.preventExtensions ? function IsExtensible(obj) {
     if (isPrimitive(obj)) {
       return false;
     }
 
-    return Object.isExtensible(obj);
+    return $isExtensible(obj);
+  } : function isExtensible(obj) {
+    return true;
   },
+  // eslint-disable-line no-unused-vars
   // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-isinteger
   IsInteger: function IsInteger(argument) {
     if (typeof argument !== 'number' || $isNaN(argument) || !$isFinite(argument)) {
       return false;
     }
 
-    var abs = Math.abs(argument);
-    return Math.floor(abs) === abs;
+    var abs = $abs(argument);
+    return $floor(abs) === abs;
   },
   // https://people.mozilla.org/~jorendorff/es6-draft.html#sec-ispropertykey
   IsPropertyKey: function IsPropertyKey(argument) {
     return typeof argument === 'string' || typeof argument === 'symbol';
   },
-  // http://www.ecma-international.org/ecma-262/6.0/#sec-isregexp
+  // https://ecma-international.org/ecma-262/6.0/#sec-isregexp
   IsRegExp: function IsRegExp(argument) {
     if (!argument || typeof argument !== 'object') {
       return false;
     }
 
     if (hasSymbols) {
-      var isRegExp = argument[Symbol.match];
+      var isRegExp = argument[$Symbol.match];
 
       if (typeof isRegExp !== 'undefined') {
         return ES5.ToBoolean(isRegExp);
@@ -38076,7 +38473,7 @@ var ES6 = assign(assign({}, ES5), {
   GetV: function GetV(V, P) {
     // 7.3.2.1
     if (!this.IsPropertyKey(P)) {
-      throw new TypeError('Assertion failed: IsPropertyKey(P) is not true');
+      throw new $TypeError('Assertion failed: IsPropertyKey(P) is not true');
     } // 7.3.2.2-3
 
 
@@ -38086,7 +38483,7 @@ var ES6 = assign(assign({}, ES5), {
   },
 
   /**
-   * 7.3.9 - http://www.ecma-international.org/ecma-262/6.0/#sec-getmethod
+   * 7.3.9 - https://ecma-international.org/ecma-262/6.0/#sec-getmethod
    * 1. Assert: IsPropertyKey(P) is true.
    * 2. Let func be GetV(O, P).
    * 3. ReturnIfAbrupt(func).
@@ -38097,7 +38494,7 @@ var ES6 = assign(assign({}, ES5), {
   GetMethod: function GetMethod(O, P) {
     // 7.3.9.1
     if (!this.IsPropertyKey(P)) {
-      throw new TypeError('Assertion failed: IsPropertyKey(P) is not true');
+      throw new $TypeError('Assertion failed: IsPropertyKey(P) is not true');
     } // 7.3.9.2
 
 
@@ -38109,7 +38506,7 @@ var ES6 = assign(assign({}, ES5), {
 
 
     if (!this.IsCallable(func)) {
-      throw new TypeError(P + 'is not a function');
+      throw new $TypeError(P + 'is not a function');
     } // 7.3.9.6
 
 
@@ -38117,7 +38514,7 @@ var ES6 = assign(assign({}, ES5), {
   },
 
   /**
-   * 7.3.1 Get (O, P) - http://www.ecma-international.org/ecma-262/6.0/#sec-get-o-p
+   * 7.3.1 Get (O, P) - https://ecma-international.org/ecma-262/6.0/#sec-get-o-p
    * 1. Assert: Type(O) is Object.
    * 2. Assert: IsPropertyKey(P) is true.
    * 3. Return O.[[Get]](P, O).
@@ -38125,12 +38522,12 @@ var ES6 = assign(assign({}, ES5), {
   Get: function Get(O, P) {
     // 7.3.1.1
     if (this.Type(O) !== 'Object') {
-      throw new TypeError('Assertion failed: Type(O) is not Object');
+      throw new $TypeError('Assertion failed: Type(O) is not Object');
     } // 7.3.1.2
 
 
     if (!this.IsPropertyKey(P)) {
-      throw new TypeError('Assertion failed: IsPropertyKey(P) is not true');
+      throw new $TypeError('Assertion failed: IsPropertyKey(P) is not true');
     } // 7.3.1.3
 
 
@@ -38143,10 +38540,10 @@ var ES6 = assign(assign({}, ES5), {
 
     return ES5.Type(x);
   },
-  // http://www.ecma-international.org/ecma-262/6.0/#sec-speciesconstructor
+  // https://ecma-international.org/ecma-262/6.0/#sec-speciesconstructor
   SpeciesConstructor: function SpeciesConstructor(O, defaultConstructor) {
     if (this.Type(O) !== 'Object') {
-      throw new TypeError('Assertion failed: Type(O) is not Object');
+      throw new $TypeError('Assertion failed: Type(O) is not Object');
     }
 
     var C = O.constructor;
@@ -38156,10 +38553,10 @@ var ES6 = assign(assign({}, ES5), {
     }
 
     if (this.Type(C) !== 'Object') {
-      throw new TypeError('O.constructor is not an Object');
+      throw new $TypeError('O.constructor is not an Object');
     }
 
-    var S = hasSymbols && Symbol.species ? C[Symbol.species] : void 0;
+    var S = hasSymbols && $Symbol.species ? C[$Symbol.species] : void 0;
 
     if (S == null) {
       return defaultConstructor;
@@ -38169,13 +38566,11 @@ var ES6 = assign(assign({}, ES5), {
       return S;
     }
 
-    throw new TypeError('no constructor found');
+    throw new $TypeError('no constructor found');
   },
-  // http://ecma-international.org/ecma-262/6.0/#sec-completepropertydescriptor
+  // https://ecma-international.org/ecma-262/6.0/#sec-completepropertydescriptor
   CompletePropertyDescriptor: function CompletePropertyDescriptor(Desc) {
-    if (!this.IsPropertyDescriptor(Desc)) {
-      throw new TypeError('Desc must be a Property Descriptor');
-    }
+    assertRecord(this, 'Property Descriptor', 'Desc', Desc);
 
     if (this.IsGenericDescriptor(Desc) || this.IsDataDescriptor(Desc)) {
       if (!has(Desc, '[[Value]]')) {
@@ -38205,18 +38600,18 @@ var ES6 = assign(assign({}, ES5), {
 
     return Desc;
   },
-  // http://ecma-international.org/ecma-262/6.0/#sec-set-o-p-v-throw
+  // https://ecma-international.org/ecma-262/6.0/#sec-set-o-p-v-throw
   Set: function Set(O, P, V, Throw) {
     if (this.Type(O) !== 'Object') {
-      throw new TypeError('O must be an Object');
+      throw new $TypeError('O must be an Object');
     }
 
     if (!this.IsPropertyKey(P)) {
-      throw new TypeError('P must be a Property Key');
+      throw new $TypeError('P must be a Property Key');
     }
 
     if (this.Type(Throw) !== 'Boolean') {
-      throw new TypeError('Throw must be a Boolean');
+      throw new $TypeError('Throw must be a Boolean');
     }
 
     if (Throw) {
@@ -38230,37 +38625,37 @@ var ES6 = assign(assign({}, ES5), {
       }
     }
   },
-  // http://ecma-international.org/ecma-262/6.0/#sec-hasownproperty
+  // https://ecma-international.org/ecma-262/6.0/#sec-hasownproperty
   HasOwnProperty: function HasOwnProperty(O, P) {
     if (this.Type(O) !== 'Object') {
-      throw new TypeError('O must be an Object');
+      throw new $TypeError('O must be an Object');
     }
 
     if (!this.IsPropertyKey(P)) {
-      throw new TypeError('P must be a Property Key');
+      throw new $TypeError('P must be a Property Key');
     }
 
     return has(O, P);
   },
-  // http://ecma-international.org/ecma-262/6.0/#sec-hasproperty
+  // https://ecma-international.org/ecma-262/6.0/#sec-hasproperty
   HasProperty: function HasProperty(O, P) {
     if (this.Type(O) !== 'Object') {
-      throw new TypeError('O must be an Object');
+      throw new $TypeError('O must be an Object');
     }
 
     if (!this.IsPropertyKey(P)) {
-      throw new TypeError('P must be a Property Key');
+      throw new $TypeError('P must be a Property Key');
     }
 
     return P in O;
   },
-  // http://ecma-international.org/ecma-262/6.0/#sec-isconcatspreadable
+  // https://ecma-international.org/ecma-262/6.0/#sec-isconcatspreadable
   IsConcatSpreadable: function IsConcatSpreadable(O) {
     if (this.Type(O) !== 'Object') {
       return false;
     }
 
-    if (hasSymbols && typeof Symbol.isConcatSpreadable === 'symbol') {
+    if (hasSymbols && typeof $Symbol.isConcatSpreadable === 'symbol') {
       var spreadable = this.Get(O, Symbol.isConcatSpreadable);
 
       if (typeof spreadable !== 'undefined') {
@@ -38270,17 +38665,17 @@ var ES6 = assign(assign({}, ES5), {
 
     return this.IsArray(O);
   },
-  // http://ecma-international.org/ecma-262/6.0/#sec-invoke
+  // https://ecma-international.org/ecma-262/6.0/#sec-invoke
   Invoke: function Invoke(O, P) {
     if (!this.IsPropertyKey(P)) {
-      throw new TypeError('P must be a Property Key');
+      throw new $TypeError('P must be a Property Key');
     }
 
     var argumentsList = arraySlice(arguments, 2);
     var func = this.GetV(O, P);
     return this.Call(func, O, argumentsList);
   },
-  // http://ecma-international.org/ecma-262/6.0/#sec-getiterator
+  // https://ecma-international.org/ecma-262/6.0/#sec-getiterator
   GetIterator: function GetIterator(obj, method) {
     if (!hasSymbols) {
       throw new SyntaxError('ES.GetIterator depends on native iterator support.');
@@ -38289,57 +38684,57 @@ var ES6 = assign(assign({}, ES5), {
     var actualMethod = method;
 
     if (arguments.length < 2) {
-      actualMethod = this.GetMethod(obj, SymbolIterator);
+      actualMethod = this.GetMethod(obj, $Symbol.iterator);
     }
 
     var iterator = this.Call(actualMethod, obj);
 
     if (this.Type(iterator) !== 'Object') {
-      throw new TypeError('iterator must return an object');
+      throw new $TypeError('iterator must return an object');
     }
 
     return iterator;
   },
-  // http://ecma-international.org/ecma-262/6.0/#sec-iteratornext
+  // https://ecma-international.org/ecma-262/6.0/#sec-iteratornext
   IteratorNext: function IteratorNext(iterator, value) {
     var result = this.Invoke(iterator, 'next', arguments.length < 2 ? [] : [value]);
 
     if (this.Type(result) !== 'Object') {
-      throw new TypeError('iterator next must return an object');
+      throw new $TypeError('iterator next must return an object');
     }
 
     return result;
   },
-  // http://ecma-international.org/ecma-262/6.0/#sec-iteratorcomplete
+  // https://ecma-international.org/ecma-262/6.0/#sec-iteratorcomplete
   IteratorComplete: function IteratorComplete(iterResult) {
     if (this.Type(iterResult) !== 'Object') {
-      throw new TypeError('Assertion failed: Type(iterResult) is not Object');
+      throw new $TypeError('Assertion failed: Type(iterResult) is not Object');
     }
 
     return this.ToBoolean(this.Get(iterResult, 'done'));
   },
-  // http://ecma-international.org/ecma-262/6.0/#sec-iteratorvalue
+  // https://ecma-international.org/ecma-262/6.0/#sec-iteratorvalue
   IteratorValue: function IteratorValue(iterResult) {
     if (this.Type(iterResult) !== 'Object') {
-      throw new TypeError('Assertion failed: Type(iterResult) is not Object');
+      throw new $TypeError('Assertion failed: Type(iterResult) is not Object');
     }
 
     return this.Get(iterResult, 'value');
   },
-  // http://ecma-international.org/ecma-262/6.0/#sec-iteratorstep
+  // https://ecma-international.org/ecma-262/6.0/#sec-iteratorstep
   IteratorStep: function IteratorStep(iterator) {
     var result = this.IteratorNext(iterator);
     var done = this.IteratorComplete(result);
     return done === true ? false : result;
   },
-  // http://ecma-international.org/ecma-262/6.0/#sec-iteratorclose
+  // https://ecma-international.org/ecma-262/6.0/#sec-iteratorclose
   IteratorClose: function IteratorClose(iterator, completion) {
     if (this.Type(iterator) !== 'Object') {
-      throw new TypeError('Assertion failed: Type(iterator) is not Object');
+      throw new $TypeError('Assertion failed: Type(iterator) is not Object');
     }
 
     if (!this.IsCallable(completion)) {
-      throw new TypeError('Assertion failed: completion is not a thunk for a Completion Record');
+      throw new $TypeError('Assertion failed: completion is not a thunk for a Completion Record');
     }
 
     var completionThunk = completion;
@@ -38368,15 +38763,15 @@ var ES6 = assign(assign({}, ES5), {
     completionThunk = null; // ensure it's not called twice.
 
     if (this.Type(innerResult) !== 'Object') {
-      throw new TypeError('iterator .return must return an object');
+      throw new $TypeError('iterator .return must return an object');
     }
 
     return completionRecord;
   },
-  // http://ecma-international.org/ecma-262/6.0/#sec-createiterresultobject
+  // https://ecma-international.org/ecma-262/6.0/#sec-createiterresultobject
   CreateIterResultObject: function CreateIterResultObject(value, done) {
     if (this.Type(done) !== 'Boolean') {
-      throw new TypeError('Assertion failed: Type(done) is not Boolean');
+      throw new $TypeError('Assertion failed: Type(done) is not Boolean');
     }
 
     return {
@@ -38384,14 +38779,14 @@ var ES6 = assign(assign({}, ES5), {
       done: done
     };
   },
-  // http://ecma-international.org/ecma-262/6.0/#sec-regexpexec
+  // https://ecma-international.org/ecma-262/6.0/#sec-regexpexec
   RegExpExec: function RegExpExec(R, S) {
     if (this.Type(R) !== 'Object') {
-      throw new TypeError('R must be an Object');
+      throw new $TypeError('R must be an Object');
     }
 
     if (this.Type(S) !== 'String') {
-      throw new TypeError('S must be a String');
+      throw new $TypeError('S must be a String');
     }
 
     var exec = this.Get(R, 'exec');
@@ -38403,15 +38798,15 @@ var ES6 = assign(assign({}, ES5), {
         return result;
       }
 
-      throw new TypeError('"exec" method must return `null` or an Object');
+      throw new $TypeError('"exec" method must return `null` or an Object');
     }
 
     return regexExec(R, S);
   },
-  // http://ecma-international.org/ecma-262/6.0/#sec-arrayspeciescreate
+  // https://ecma-international.org/ecma-262/6.0/#sec-arrayspeciescreate
   ArraySpeciesCreate: function ArraySpeciesCreate(originalArray, length) {
     if (!this.IsInteger(length) || length < 0) {
-      throw new TypeError('Assertion failed: length must be an integer >= 0');
+      throw new $TypeError('Assertion failed: length must be an integer >= 0');
     }
 
     var len = length === 0 ? 0 : length;
@@ -38425,8 +38820,8 @@ var ES6 = assign(assign({}, ES5), {
       // 	Object.getPrototypeOf(Object.getPrototypeOf(Object.getPrototypeOf(Array))) === null ?
       // }
 
-      if (this.Type(C) === 'Object' && hasSymbols && Symbol.species) {
-        C = this.Get(C, Symbol.species);
+      if (this.Type(C) === 'Object' && hasSymbols && $Symbol.species) {
+        C = this.Get(C, $Symbol.species);
 
         if (C === null) {
           C = void 0;
@@ -38435,26 +38830,26 @@ var ES6 = assign(assign({}, ES5), {
     }
 
     if (typeof C === 'undefined') {
-      return Array(len);
+      return $Array(len);
     }
 
     if (!this.IsConstructor(C)) {
-      throw new TypeError('C must be a constructor');
+      throw new $TypeError('C must be a constructor');
     }
 
     return new C(len); // this.Construct(C, len);
   },
   CreateDataProperty: function CreateDataProperty(O, P, V) {
     if (this.Type(O) !== 'Object') {
-      throw new TypeError('Assertion failed: Type(O) is not Object');
+      throw new $TypeError('Assertion failed: Type(O) is not Object');
     }
 
     if (!this.IsPropertyKey(P)) {
-      throw new TypeError('Assertion failed: IsPropertyKey(P) is not true');
+      throw new $TypeError('Assertion failed: IsPropertyKey(P) is not true');
     }
 
-    var oldDesc = Object.getOwnPropertyDescriptor(O, P);
-    var extensible = oldDesc || typeof Object.isExtensible !== 'function' || Object.isExtensible(O);
+    var oldDesc = $gOPD(O, P);
+    var extensible = oldDesc || typeof $isExtensible !== 'function' || $isExtensible(O);
     var immutable = oldDesc && (!oldDesc.writable || !oldDesc.configurable);
 
     if (immutable || !extensible) {
@@ -38467,43 +38862,57 @@ var ES6 = assign(assign({}, ES5), {
       value: V,
       writable: true
     };
-    Object.defineProperty(O, P, newDesc);
+    $defineProperty(O, P, newDesc);
     return true;
   },
-  // http://ecma-international.org/ecma-262/6.0/#sec-createdatapropertyorthrow
+  // https://ecma-international.org/ecma-262/6.0/#sec-createdatapropertyorthrow
   CreateDataPropertyOrThrow: function CreateDataPropertyOrThrow(O, P, V) {
     if (this.Type(O) !== 'Object') {
-      throw new TypeError('Assertion failed: Type(O) is not Object');
+      throw new $TypeError('Assertion failed: Type(O) is not Object');
     }
 
     if (!this.IsPropertyKey(P)) {
-      throw new TypeError('Assertion failed: IsPropertyKey(P) is not true');
+      throw new $TypeError('Assertion failed: IsPropertyKey(P) is not true');
     }
 
     var success = this.CreateDataProperty(O, P, V);
 
     if (!success) {
-      throw new TypeError('unable to create data property');
+      throw new $TypeError('unable to create data property');
     }
 
     return success;
   },
-  // http://ecma-international.org/ecma-262/6.0/#sec-advancestringindex
+  // https://www.ecma-international.org/ecma-262/6.0/#sec-objectcreate
+  ObjectCreate: function ObjectCreate(proto, internalSlotsList) {
+    if (proto !== null && this.Type(proto) !== 'Object') {
+      throw new $TypeError('Assertion failed: proto must be null or an object');
+    }
+
+    var slots = arguments.length < 2 ? [] : internalSlotsList;
+
+    if (slots.length > 0) {
+      throw new $SyntaxError('es-abstract does not yet support internal slots');
+    }
+
+    if (proto === null && !$ObjectCreate) {
+      throw new $SyntaxError('native Object.create support is required to create null objects');
+    }
+
+    return $ObjectCreate(proto);
+  },
+  // https://ecma-international.org/ecma-262/6.0/#sec-advancestringindex
   AdvanceStringIndex: function AdvanceStringIndex(S, index, unicode) {
     if (this.Type(S) !== 'String') {
-      throw new TypeError('Assertion failed: Type(S) is not String');
+      throw new $TypeError('S must be a String');
     }
 
-    if (!this.IsInteger(index)) {
-      throw new TypeError('Assertion failed: length must be an integer >= 0 and <= (2**53 - 1)');
-    }
-
-    if (index < 0 || index > MAX_SAFE_INTEGER) {
-      throw new RangeError('Assertion failed: length must be an integer >= 0 and <= (2**53 - 1)');
+    if (!this.IsInteger(index) || index < 0 || index > MAX_SAFE_INTEGER) {
+      throw new $TypeError('Assertion failed: length must be an integer >= 0 and <= 2**53');
     }
 
     if (this.Type(unicode) !== 'Boolean') {
-      throw new TypeError('Assertion failed: Type(unicode) is not Boolean');
+      throw new $TypeError('Assertion failed: unicode must be a Boolean');
     }
 
     if (!unicode) {
@@ -38516,25 +38925,109 @@ var ES6 = assign(assign({}, ES5), {
       return index + 1;
     }
 
-    var first = S.charCodeAt(index);
+    var first = $charCodeAt(S, index);
 
     if (first < 0xD800 || first > 0xDBFF) {
       return index + 1;
     }
 
-    var second = S.charCodeAt(index + 1);
+    var second = $charCodeAt(S, index + 1);
 
     if (second < 0xDC00 || second > 0xDFFF) {
       return index + 1;
     }
 
     return index + 2;
+  },
+  // https://www.ecma-international.org/ecma-262/6.0/#sec-createmethodproperty
+  CreateMethodProperty: function CreateMethodProperty(O, P, V) {
+    if (this.Type(O) !== 'Object') {
+      throw new $TypeError('Assertion failed: Type(O) is not Object');
+    }
+
+    if (!this.IsPropertyKey(P)) {
+      throw new $TypeError('Assertion failed: IsPropertyKey(P) is not true');
+    }
+
+    var newDesc = {
+      configurable: true,
+      enumerable: false,
+      value: V,
+      writable: true
+    };
+    return !!$defineProperty(O, P, newDesc);
+  },
+  // https://www.ecma-international.org/ecma-262/6.0/#sec-definepropertyorthrow
+  DefinePropertyOrThrow: function DefinePropertyOrThrow(O, P, desc) {
+    if (this.Type(O) !== 'Object') {
+      throw new $TypeError('Assertion failed: Type(O) is not Object');
+    }
+
+    if (!this.IsPropertyKey(P)) {
+      throw new $TypeError('Assertion failed: IsPropertyKey(P) is not true');
+    }
+
+    return !!$defineProperty(O, P, desc);
+  },
+  // https://www.ecma-international.org/ecma-262/6.0/#sec-deletepropertyorthrow
+  DeletePropertyOrThrow: function DeletePropertyOrThrow(O, P) {
+    if (this.Type(O) !== 'Object') {
+      throw new $TypeError('Assertion failed: Type(O) is not Object');
+    }
+
+    if (!this.IsPropertyKey(P)) {
+      throw new $TypeError('Assertion failed: IsPropertyKey(P) is not true');
+    }
+
+    var success = delete O[P];
+
+    if (!success) {
+      throw new TypeError('Attempt to delete property failed.');
+    }
+
+    return success;
+  },
+  // https://www.ecma-international.org/ecma-262/6.0/#sec-enumerableownnames
+  EnumerableOwnNames: function EnumerableOwnNames(O) {
+    if (this.Type(O) !== 'Object') {
+      throw new $TypeError('Assertion failed: Type(O) is not Object');
+    }
+
+    return keys(O);
+  },
+  // https://ecma-international.org/ecma-262/6.0/#sec-properties-of-the-number-prototype-object
+  thisNumberValue: function thisNumberValue(value) {
+    if (this.Type(value) === 'Number') {
+      return value;
+    }
+
+    return $NumberValueOf(value);
+  },
+  // https://ecma-international.org/ecma-262/6.0/#sec-properties-of-the-boolean-prototype-object
+  thisBooleanValue: function thisBooleanValue(value) {
+    if (this.Type(value) === 'Boolean') {
+      return value;
+    }
+
+    return $BooleanValueOf(value);
+  },
+  // https://ecma-international.org/ecma-262/6.0/#sec-properties-of-the-string-prototype-object
+  thisStringValue: function thisStringValue(value) {
+    if (this.Type(value) === 'String') {
+      return value;
+    }
+
+    return $StringValueOf(value);
+  },
+  // https://ecma-international.org/ecma-262/6.0/#sec-properties-of-the-date-prototype-object
+  thisTimeValue: function thisTimeValue(value) {
+    return $DateValueOf(value);
   }
 });
 delete ES6.CheckObjectCoercible; // renamed in ES6 to RequireObjectCoercible
 
 module.exports = ES6;
-},{"has":"../node_modules/has/src/index.js","es-to-primitive/es6":"../node_modules/es-to-primitive/es6.js","./helpers/isNaN":"../node_modules/es-abstract/helpers/isNaN.js","./helpers/isFinite":"../node_modules/es-abstract/helpers/isFinite.js","./helpers/assign":"../node_modules/es-abstract/helpers/assign.js","./helpers/sign":"../node_modules/es-abstract/helpers/sign.js","./helpers/mod":"../node_modules/es-abstract/helpers/mod.js","./helpers/isPrimitive":"../node_modules/es-abstract/helpers/isPrimitive.js","function-bind":"../node_modules/function-bind/index.js","./es5":"../node_modules/es-abstract/es5.js","is-regex":"../node_modules/is-regex/index.js"}],"../node_modules/es-abstract/es2016.js":[function(require,module,exports) {
+},{"has":"../node_modules/has/src/index.js","es-to-primitive/es6":"../node_modules/es-to-primitive/es6.js","object-keys":"../node_modules/object-keys/index.js","./GetIntrinsic":"../node_modules/es-abstract/GetIntrinsic.js","./helpers/assertRecord":"../node_modules/es-abstract/helpers/assertRecord.js","./helpers/isNaN":"../node_modules/es-abstract/helpers/isNaN.js","./helpers/isFinite":"../node_modules/es-abstract/helpers/isFinite.js","./helpers/assign":"../node_modules/es-abstract/helpers/assign.js","./helpers/sign":"../node_modules/es-abstract/helpers/sign.js","./helpers/mod":"../node_modules/es-abstract/helpers/mod.js","./helpers/isPrimitive":"../node_modules/es-abstract/helpers/isPrimitive.js","function-bind":"../node_modules/function-bind/index.js","./es5":"../node_modules/es-abstract/es5.js","is-regex":"../node_modules/is-regex/index.js"}],"../node_modules/es-abstract/es2016.js":[function(require,module,exports) {
 'use strict';
 
 var ES2015 = require('./es2015');
@@ -38626,201 +39119,194 @@ define(polyfill, {
 });
 module.exports = polyfill;
 },{"define-properties":"../node_modules/define-properties/index.js","./implementation":"../node_modules/object.entries/implementation.js","./polyfill":"../node_modules/object.entries/polyfill.js","./shim":"../node_modules/object.entries/shim.js"}],"../node_modules/airbnb-prop-types/build/helpers/isPlainObject.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports["default"] = void 0;
 
-var _isPlainObject = require('prop-types-exact/build/helpers/isPlainObject');
+var _isPlainObject = _interopRequireDefault(require("prop-types-exact/build/helpers/isPlainObject"));
 
-var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-exports['default'] = _isPlainObject2['default'];
+var _default = _isPlainObject["default"];
+exports["default"] = _default;
 
 },{"prop-types-exact/build/helpers/isPlainObject":"../node_modules/prop-types-exact/build/helpers/isPlainObject.js"}],"../node_modules/airbnb-prop-types/build/shape.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports['default'] = shapeValidator;
+exports["default"] = shapeValidator;
 
-var _isPlainObject = require('./helpers/isPlainObject');
+var _isPlainObject = _interopRequireDefault(require("./helpers/isPlainObject"));
 
-var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
 
-var _wrapValidator = require('./helpers/wrapValidator');
-
-var _wrapValidator2 = _interopRequireDefault(_wrapValidator);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function shapeValidator(shapeTypes) {
-  if (!(0, _isPlainObject2['default'])(shapeTypes)) {
+  if (!(0, _isPlainObject["default"])(shapeTypes)) {
     throw new TypeError('shape must be a normal object');
   }
 
   function shape(props, propName, componentName, location) {
     var propValue = props[propName];
+
     if (propValue == null) {
       return null;
-    }
-    // code adapted from PropTypes.shape: https://github.com/facebook/react/blob/14156e56b9cf18ac86963185c5af4abddf3ff811/src/isomorphic/classic/types/ReactPropTypes.js#L381
+    } // code adapted from PropTypes.shape: https://github.com/facebook/react/blob/14156e56b9cf18ac86963185c5af4abddf3ff811/src/isomorphic/classic/types/ReactPropTypes.js#L381
     // eslint-disable-next-line guard-for-in, no-restricted-syntax
 
-    for (var _len = arguments.length, rest = Array(_len > 4 ? _len - 4 : 0), _key = 4; _key < _len; _key++) {
+
+    for (var _len = arguments.length, rest = new Array(_len > 4 ? _len - 4 : 0), _key = 4; _key < _len; _key++) {
       rest[_key - 4] = arguments[_key];
     }
 
     for (var key in shapeTypes) {
       var checker = shapeTypes[key];
+
       if (checker) {
-        var error = checker.apply(undefined, [propValue, key, componentName, location].concat(rest));
+        var error = checker.apply(void 0, [propValue, key, componentName, location].concat(rest));
+
         if (error) {
           return error;
         }
       }
     }
+
     return null;
   }
 
-  shape.isRequired = function () {
-    function shapeRequired(props, propName, componentName) {
-      var propValue = props[propName];
-      if (propValue == null) {
-        return new TypeError(String(componentName) + ': ' + String(propName) + ' is required.');
-      }
+  shape.isRequired = function shapeRequired(props, propName, componentName) {
+    var propValue = props[propName];
 
-      for (var _len2 = arguments.length, rest = Array(_len2 > 3 ? _len2 - 3 : 0), _key2 = 3; _key2 < _len2; _key2++) {
-        rest[_key2 - 3] = arguments[_key2];
-      }
-
-      return shape.apply(undefined, [props, propName, componentName].concat(rest));
+    if (propValue == null) {
+      return new TypeError("".concat(componentName, ": ").concat(propName, " is required."));
     }
 
-    return shapeRequired;
-  }();
+    for (var _len2 = arguments.length, rest = new Array(_len2 > 3 ? _len2 - 3 : 0), _key2 = 3; _key2 < _len2; _key2++) {
+      rest[_key2 - 3] = arguments[_key2];
+    }
 
-  return (0, _wrapValidator2['default'])(shape, 'shape', shapeTypes);
+    return shape.apply(void 0, [props, propName, componentName].concat(rest));
+  };
+
+  return (0, _wrapValidator["default"])(shape, 'shape', shapeTypes);
 }
 
 },{"./helpers/isPlainObject":"../node_modules/airbnb-prop-types/build/helpers/isPlainObject.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/helpers/isPrimitive.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports["default"] = isPrimitive;
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
-exports['default'] = isPrimitive;
 function isPrimitive(x) {
-  return !x || (typeof x === 'undefined' ? 'undefined' : _typeof(x)) !== 'object' && typeof x !== 'function';
+  return !x || _typeof(x) !== 'object' && typeof x !== 'function';
 }
 
 },{}],"../node_modules/airbnb-prop-types/build/valuesOf.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports['default'] = valuesOfValidator;
+exports["default"] = valuesOfValidator;
 
-var _isPrimitive = require('./helpers/isPrimitive');
+var _isPrimitive = _interopRequireDefault(require("./helpers/isPrimitive"));
 
-var _isPrimitive2 = _interopRequireDefault(_isPrimitive);
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
 
-var _wrapValidator = require('./helpers/wrapValidator');
-
-var _wrapValidator2 = _interopRequireDefault(_wrapValidator);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 // code adapted from https://github.com/facebook/react/blob/14156e56b9cf18ac86963185c5af4abddf3ff811/src/isomorphic/classic/types/ReactPropTypes.js#L307-L340
-
 function valuesOfValidator(propType) {
   if (typeof propType !== 'function') {
     throw new TypeError('objectOf: propType must be a function');
   }
 
-  var validator = function () {
-    function valuesOf(props, propName, componentName, location, propFullName) {
-      for (var _len = arguments.length, rest = Array(_len > 5 ? _len - 5 : 0), _key = 5; _key < _len; _key++) {
-        rest[_key - 5] = arguments[_key];
-      }
-
-      var propValue = props[propName];
-      if (propValue == null || (0, _isPrimitive2['default'])(propValue)) {
-        return null;
-      }
-
-      var firstError = void 0;
-      Object.keys(propValue).some(function (key) {
-        firstError = propType.apply(undefined, [propValue, key, componentName, location, String(propFullName) + '.' + String(key)].concat(rest));
-        return firstError;
-      });
-      return firstError || null;
+  var validator = function valuesOf(props, propName, componentName, location, propFullName) {
+    for (var _len = arguments.length, rest = new Array(_len > 5 ? _len - 5 : 0), _key = 5; _key < _len; _key++) {
+      rest[_key - 5] = arguments[_key];
     }
 
-    return valuesOf;
-  }();
-  validator.isRequired = function () {
-    function valuesOfRequired(props, propName, componentName) {
-      var propValue = props[propName];
-      if (propValue == null) {
-        return new TypeError(String(componentName) + ': ' + String(propName) + ' is required.');
-      }
+    var propValue = props[propName];
 
-      for (var _len2 = arguments.length, rest = Array(_len2 > 3 ? _len2 - 3 : 0), _key2 = 3; _key2 < _len2; _key2++) {
-        rest[_key2 - 3] = arguments[_key2];
-      }
-
-      return validator.apply(undefined, [props, propName, componentName].concat(rest));
+    if (propValue == null || (0, _isPrimitive["default"])(propValue)) {
+      return null;
     }
 
-    return valuesOfRequired;
-  }();
+    var firstError;
+    Object.keys(propValue).some(function (key) {
+      firstError = propType.apply(void 0, [propValue, key, componentName, location, "".concat(propFullName, ".").concat(key)].concat(rest));
+      return firstError;
+    });
+    return firstError || null;
+  };
 
-  return (0, _wrapValidator2['default'])(validator, 'valuesOf', propType);
+  validator.isRequired = function valuesOfRequired(props, propName, componentName) {
+    var propValue = props[propName];
+
+    if (propValue == null) {
+      return new TypeError("".concat(componentName, ": ").concat(propName, " is required."));
+    }
+
+    for (var _len2 = arguments.length, rest = new Array(_len2 > 3 ? _len2 - 3 : 0), _key2 = 3; _key2 < _len2; _key2++) {
+      rest[_key2 - 3] = arguments[_key2];
+    }
+
+    return validator.apply(void 0, [props, propName, componentName].concat(rest));
+  };
+
+  return (0, _wrapValidator["default"])(validator, 'valuesOf', propType);
 }
 
 },{"./helpers/isPrimitive":"../node_modules/airbnb-prop-types/build/helpers/isPrimitive.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/between.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports["default"] = betweenValidator;
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+var _object = _interopRequireDefault(require("object.entries"));
 
-var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+var _shape = _interopRequireDefault(require("./shape"));
 
-exports['default'] = betweenValidator;
+var _valuesOf = _interopRequireDefault(require("./valuesOf"));
 
-var _object = require('object.assign');
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
 
-var _object2 = _interopRequireDefault(_object);
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _object3 = require('object.entries');
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
-var _object4 = _interopRequireDefault(_object3);
-
-var _shape = require('./shape');
-
-var _shape2 = _interopRequireDefault(_shape);
-
-var _valuesOf = require('./valuesOf');
-
-var _valuesOf2 = _interopRequireDefault(_valuesOf);
-
-var _wrapValidator = require('./helpers/wrapValidator');
-
-var _wrapValidator2 = _interopRequireDefault(_wrapValidator);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
+function _slicedToArray(arr, i) { return _arrayWithHoles(arr) || _iterableToArrayLimit(arr, i) || _nonIterableRest(); }
+
+function _nonIterableRest() { throw new TypeError("Invalid attempt to destructure non-iterable instance"); }
+
+function _iterableToArrayLimit(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"] != null) _i["return"](); } finally { if (_d) throw _e; } } return _arr; }
+
+function _arrayWithHoles(arr) { if (Array.isArray(arr)) return arr; }
+
 function number(props, propName, componentName) {
   var value = props[propName];
+
   if (typeof value === 'number' && !isNaN(value)) {
     return null;
   }
 
-  return new TypeError(String(componentName) + ': ' + String(propName) + ' must be a non-NaN number.');
+  return new TypeError("".concat(componentName, ": ").concat(propName, " must be a non-NaN number."));
 }
 
 function numberOrPropsFunc(props, propName) {
@@ -38834,7 +39320,7 @@ function numberOrPropsFunc(props, propName) {
     return null;
   }
 
-  return new TypeError(String(propName) + ': a function, or a non-NaN number is required');
+  return new TypeError("".concat(propName, ": a function, or a non-NaN number is required"));
 }
 
 function lowerCompare(value, _ref) {
@@ -38844,9 +39330,11 @@ function lowerCompare(value, _ref) {
   if (typeof gt === 'number') {
     return value > gt;
   }
+
   if (typeof gte === 'number') {
     return value >= gte;
   }
+
   return true;
 }
 
@@ -38857,9 +39345,11 @@ function upperCompare(value, _ref2) {
   if (typeof lt === 'number') {
     return value < lt;
   }
+
   if (typeof lte === 'number') {
     return value <= lte;
   }
+
   return true;
 }
 
@@ -38868,11 +39358,13 @@ function greaterThanError(_ref3) {
       gte = _ref3.gte;
 
   if (typeof gt === 'number') {
-    return 'greater than ' + gt;
+    return "greater than ".concat(gt);
   }
+
   if (typeof gte === 'number') {
-    return 'greater than or equal to ' + gte;
+    return "greater than or equal to ".concat(gte);
   }
+
   return '';
 }
 
@@ -38881,21 +39373,23 @@ function lessThanError(_ref4) {
       lte = _ref4.lte;
 
   if (typeof lt === 'number') {
-    return 'less than ' + lt;
+    return "less than ".concat(lt);
   }
+
   if (typeof lte === 'number') {
-    return 'less than or equal to ' + lte;
+    return "less than or equal to ".concat(lte);
   }
+
   return '';
 }
 
 function errorMessage(componentName, propName, opts) {
   var errors = [greaterThanError(opts), lessThanError(opts)].filter(Boolean).join(' and ');
-  return String(componentName) + ': ' + String(propName) + ' must be ' + String(errors);
+  return "".concat(componentName, ": ").concat(propName, " must be ").concat(errors);
 }
 
 function propsThunkify(opts) {
-  return (0, _object4['default'])(opts).reduce(function (acc, _ref5) {
+  return (0, _object["default"])(opts).reduce(function (acc, _ref5) {
     var _ref6 = _slicedToArray(_ref5, 2),
         key = _ref6[0],
         value = _ref6[1];
@@ -38903,122 +39397,144 @@ function propsThunkify(opts) {
     var numberThunk = typeof value === 'number' ? function () {
       return value;
     } : value;
-    return (0, _object2['default'])({}, acc, _defineProperty({}, key, numberThunk));
+    return _objectSpread({}, acc, _defineProperty({}, key, numberThunk));
   }, {});
 }
 
 function invokeWithProps(optsThunks, props) {
-  return (0, _object4['default'])(optsThunks).reduce(function (acc, _ref7) {
+  return (0, _object["default"])(optsThunks).reduce(function (acc, _ref7) {
     var _ref8 = _slicedToArray(_ref7, 2),
         key = _ref8[0],
         thunk = _ref8[1];
 
     var value = thunk(props);
-    return (0, _object2['default'])({}, acc, _defineProperty({}, key, value));
+    return _objectSpread({}, acc, _defineProperty({}, key, value));
   }, {});
 }
 
-var argValidators = [(0, _shape2['default'])({ lt: numberOrPropsFunc, gt: numberOrPropsFunc }).isRequired, (0, _shape2['default'])({ lte: numberOrPropsFunc, gt: numberOrPropsFunc }).isRequired, (0, _shape2['default'])({ lt: numberOrPropsFunc, gte: numberOrPropsFunc }).isRequired, (0, _shape2['default'])({ lte: numberOrPropsFunc, gte: numberOrPropsFunc }).isRequired, (0, _shape2['default'])({ lt: numberOrPropsFunc }).isRequired, (0, _shape2['default'])({ lte: numberOrPropsFunc }).isRequired, (0, _shape2['default'])({ gt: numberOrPropsFunc }).isRequired, (0, _shape2['default'])({ gte: numberOrPropsFunc }).isRequired];
+var argValidators = [(0, _shape["default"])({
+  lt: numberOrPropsFunc,
+  gt: numberOrPropsFunc
+}).isRequired, (0, _shape["default"])({
+  lte: numberOrPropsFunc,
+  gt: numberOrPropsFunc
+}).isRequired, (0, _shape["default"])({
+  lt: numberOrPropsFunc,
+  gte: numberOrPropsFunc
+}).isRequired, (0, _shape["default"])({
+  lte: numberOrPropsFunc,
+  gte: numberOrPropsFunc
+}).isRequired, (0, _shape["default"])({
+  lt: numberOrPropsFunc
+}).isRequired, (0, _shape["default"])({
+  lte: numberOrPropsFunc
+}).isRequired, (0, _shape["default"])({
+  gt: numberOrPropsFunc
+}).isRequired, (0, _shape["default"])({
+  gte: numberOrPropsFunc
+}).isRequired];
+
 function argValidator(props, propName) {
   return argValidators.every(function (validator) {
     return !!validator(props, propName);
   });
 }
 
-var thunkValueValidator = (0, _valuesOf2['default'])(number).isRequired;
+var thunkValueValidator = (0, _valuesOf["default"])(number).isRequired;
 
 function betweenValidator(options) {
-  var argError = argValidator({ options: options }, 'options');
+  var argError = argValidator({
+    options: options
+  }, 'options');
+
   if (argError) {
     throw new TypeError('between: only one of the pairs of `lt`/`lte`, and `gt`/`gte`, may be supplied, and at least one pair must be provided.');
   }
 
   var optsThunks = propsThunkify(options);
 
-  var validator = function () {
-    function between(props, propName, componentName) {
-      var propValue = props[propName];
-      if (propValue == null) {
-        return null;
-      }
+  var validator = function between(props, propName, componentName) {
+    var propValue = props[propName];
 
-      if (typeof propValue !== 'number') {
-        return new RangeError(String(componentName) + ': ' + String(propName) + ' must be a number, got "' + (typeof propValue === 'undefined' ? 'undefined' : _typeof(propValue)) + '"');
-      }
-
-      var opts = invokeWithProps(optsThunks, props);
-
-      for (var _len = arguments.length, rest = Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
-        rest[_key - 3] = arguments[_key];
-      }
-
-      var thunkValuesError = thunkValueValidator.apply(undefined, [_defineProperty({}, propName, opts), propName, componentName].concat(rest));
-      if (thunkValuesError) {
-        return thunkValuesError;
-      }
-
-      if (!lowerCompare(propValue, opts) || !upperCompare(propValue, opts)) {
-        return new RangeError(errorMessage(componentName, propName, opts));
-      }
-
+    if (propValue == null) {
       return null;
     }
 
-    return between;
-  }();
-  validator.isRequired = function () {
-    function betweenRequired(props, propName, componentName) {
-      var propValue = props[propName];
-      if (typeof propValue !== 'number') {
-        return new RangeError(String(componentName) + ': ' + String(propName) + ' must be a number, got "' + (typeof propValue === 'undefined' ? 'undefined' : _typeof(propValue)) + '"');
-      }
-
-      var opts = invokeWithProps(optsThunks, props);
-
-      for (var _len2 = arguments.length, rest = Array(_len2 > 3 ? _len2 - 3 : 0), _key2 = 3; _key2 < _len2; _key2++) {
-        rest[_key2 - 3] = arguments[_key2];
-      }
-
-      var thunkValuesError = thunkValueValidator.apply(undefined, [_defineProperty({}, propName, opts), propName, componentName].concat(rest));
-      if (thunkValuesError) {
-        return thunkValuesError;
-      }
-
-      if (!lowerCompare(propValue, opts) || !upperCompare(propValue, opts)) {
-        return new RangeError(errorMessage(componentName, propName, opts));
-      }
-
-      return null;
+    if (typeof propValue !== 'number') {
+      return new RangeError("".concat(componentName, ": ").concat(propName, " must be a number, got \"").concat(_typeof(propValue), "\""));
     }
 
-    return betweenRequired;
-  }();
+    var opts = invokeWithProps(optsThunks, props);
 
-  return (0, _wrapValidator2['default'])(validator, 'between', options);
+    for (var _len = arguments.length, rest = new Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
+      rest[_key - 3] = arguments[_key];
+    }
+
+    var thunkValuesError = thunkValueValidator.apply(void 0, [_defineProperty({}, propName, opts), propName, componentName].concat(rest));
+
+    if (thunkValuesError) {
+      return thunkValuesError;
+    }
+
+    if (!lowerCompare(propValue, opts) || !upperCompare(propValue, opts)) {
+      return new RangeError(errorMessage(componentName, propName, opts));
+    }
+
+    return null;
+  };
+
+  validator.isRequired = function betweenRequired(props, propName, componentName) {
+    var propValue = props[propName];
+
+    if (typeof propValue !== 'number') {
+      return new RangeError("".concat(componentName, ": ").concat(propName, " must be a number, got \"").concat(_typeof(propValue), "\""));
+    }
+
+    var opts = invokeWithProps(optsThunks, props);
+
+    for (var _len2 = arguments.length, rest = new Array(_len2 > 3 ? _len2 - 3 : 0), _key2 = 3; _key2 < _len2; _key2++) {
+      rest[_key2 - 3] = arguments[_key2];
+    }
+
+    var thunkValuesError = thunkValueValidator.apply(void 0, [_defineProperty({}, propName, opts), propName, componentName].concat(rest));
+
+    if (thunkValuesError) {
+      return thunkValuesError;
+    }
+
+    if (!lowerCompare(propValue, opts) || !upperCompare(propValue, opts)) {
+      return new RangeError(errorMessage(componentName, propName, opts));
+    }
+
+    return null;
+  };
+
+  return (0, _wrapValidator["default"])(validator, 'between', options);
 }
 
-},{"object.assign":"../node_modules/object.assign/index.js","object.entries":"../node_modules/object.entries/index.js","./shape":"../node_modules/airbnb-prop-types/build/shape.js","./valuesOf":"../node_modules/airbnb-prop-types/build/valuesOf.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/booleanSome.js":[function(require,module,exports) {
+},{"object.entries":"../node_modules/object.entries/index.js","./shape":"../node_modules/airbnb-prop-types/build/shape.js","./valuesOf":"../node_modules/airbnb-prop-types/build/valuesOf.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/booleanSome.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports['default'] = booleanSomeValidator;
+exports["default"] = booleanSomeValidator;
 
-var _propTypes = require('prop-types');
+var _propTypes = require("prop-types");
 
-var _wrapValidator = require('./helpers/wrapValidator');
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
 
-var _wrapValidator2 = _interopRequireDefault(_wrapValidator);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function booleanSomeValidator() {
-  for (var _len = arguments.length, notAllPropsFalse = Array(_len), _key = 0; _key < _len; _key++) {
+  for (var _len = arguments.length, notAllPropsFalse = new Array(_len), _key = 0; _key < _len; _key++) {
     notAllPropsFalse[_key] = arguments[_key];
   }
 
   if (notAllPropsFalse.length < 1) {
     throw new TypeError('at least one prop (one of which must be `true`) is required');
   }
+
   if (!notAllPropsFalse.every(function (x) {
     return typeof x === 'string';
   })) {
@@ -39027,177 +39543,154 @@ function booleanSomeValidator() {
 
   var propsList = notAllPropsFalse.join(', or ');
 
-  var validator = function () {
-    function booleanSome(props, propName, componentName) {
-      var countFalse = function () {
-        function countFalse(count, prop) {
-          return count + (props[prop] === false ? 1 : 0);
-        }
+  var validator = function booleanSome(props, propName, componentName) {
+    var countFalse = function countFalse(count, prop) {
+      return count + (props[prop] === false ? 1 : 0);
+    };
 
-        return countFalse;
-      }();
+    var falsePropCount = notAllPropsFalse.reduce(countFalse, 0);
 
-      var falsePropCount = notAllPropsFalse.reduce(countFalse, 0);
-      if (falsePropCount === notAllPropsFalse.length) {
-        return new Error('A ' + String(componentName) + ' must have at least one of these boolean props be `true`: ' + String(propsList));
-      }
-
-      for (var _len2 = arguments.length, rest = Array(_len2 > 3 ? _len2 - 3 : 0), _key2 = 3; _key2 < _len2; _key2++) {
-        rest[_key2 - 3] = arguments[_key2];
-      }
-
-      return _propTypes.bool.apply(undefined, [props, propName, componentName].concat(rest));
+    if (falsePropCount === notAllPropsFalse.length) {
+      return new Error("A ".concat(componentName, " must have at least one of these boolean props be `true`: ").concat(propsList));
     }
 
-    return booleanSome;
-  }();
-
-  validator.isRequired = function () {
-    function booleanSomeRequired(props, propName, componentName) {
-      var countFalse = function () {
-        function countFalse(count, prop) {
-          return count + (props[prop] === false ? 1 : 0);
-        }
-
-        return countFalse;
-      }();
-
-      var falsePropCount = notAllPropsFalse.reduce(countFalse, 0);
-      if (falsePropCount === notAllPropsFalse.length) {
-        return new Error('A ' + String(componentName) + ' must have at least one of these boolean props be `true`: ' + String(propsList));
-      }
-
-      for (var _len3 = arguments.length, rest = Array(_len3 > 3 ? _len3 - 3 : 0), _key3 = 3; _key3 < _len3; _key3++) {
-        rest[_key3 - 3] = arguments[_key3];
-      }
-
-      return _propTypes.bool.isRequired.apply(_propTypes.bool, [props, propName, componentName].concat(rest));
+    for (var _len2 = arguments.length, rest = new Array(_len2 > 3 ? _len2 - 3 : 0), _key2 = 3; _key2 < _len2; _key2++) {
+      rest[_key2 - 3] = arguments[_key2];
     }
 
-    return booleanSomeRequired;
-  }();
+    return _propTypes.bool.apply(void 0, [props, propName, componentName].concat(rest));
+  };
 
-  return (0, _wrapValidator2['default'])(validator, 'booleanSome: ' + String(propsList), notAllPropsFalse);
+  validator.isRequired = function booleanSomeRequired(props, propName, componentName) {
+    var countFalse = function countFalse(count, prop) {
+      return count + (props[prop] === false ? 1 : 0);
+    };
+
+    var falsePropCount = notAllPropsFalse.reduce(countFalse, 0);
+
+    if (falsePropCount === notAllPropsFalse.length) {
+      return new Error("A ".concat(componentName, " must have at least one of these boolean props be `true`: ").concat(propsList));
+    }
+
+    for (var _len3 = arguments.length, rest = new Array(_len3 > 3 ? _len3 - 3 : 0), _key3 = 3; _key3 < _len3; _key3++) {
+      rest[_key3 - 3] = arguments[_key3];
+    }
+
+    return _propTypes.bool.isRequired.apply(_propTypes.bool, [props, propName, componentName].concat(rest));
+  };
+
+  return (0, _wrapValidator["default"])(validator, "booleanSome: ".concat(propsList), notAllPropsFalse);
 }
 
 },{"prop-types":"../node_modules/prop-types/index.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/childrenHavePropXorChildren.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports["default"] = childrenHavePropXorChildren;
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+var _react = _interopRequireDefault(require("react"));
 
-exports['default'] = childrenHavePropXorChildren;
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
 
-var _react = require('react');
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _react2 = _interopRequireDefault(_react);
-
-var _wrapValidator = require('./helpers/wrapValidator');
-
-var _wrapValidator2 = _interopRequireDefault(_wrapValidator);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function childrenHavePropXorChildren(prop) {
-  if (typeof prop !== 'string' && (typeof prop === 'undefined' ? 'undefined' : _typeof(prop)) !== 'symbol') {
+  if (typeof prop !== 'string' && _typeof(prop) !== 'symbol') {
     throw new TypeError('invalid prop: must be string or symbol');
   }
 
-  var validator = function () {
-    function childrenHavePropXorChildrenWithProp(_ref, _, componentName) {
-      var children = _ref.children;
+  var validator = function childrenHavePropXorChildrenWithProp(_ref, _, componentName) {
+    var children = _ref.children;
+    var truthyChildrenCount = 0;
+    var propCount = 0;
+    var grandchildrenCount = 0;
 
-      var truthyChildrenCount = 0;
-      var propCount = 0;
-      var grandchildrenCount = 0;
-
-      _react2['default'].Children.forEach(children, function (child) {
-        if (!child) {
-          return;
-        }
-
-        truthyChildrenCount += 1;
-
-        if (child.props[prop]) {
-          propCount += 1;
-        }
-
-        if (_react2['default'].Children.count(child.props.children)) {
-          grandchildrenCount += 1;
-        }
-      });
-
-      if (propCount === truthyChildrenCount && grandchildrenCount === 0 || propCount === 0 && grandchildrenCount === truthyChildrenCount || propCount === 0 && grandchildrenCount === 0) {
-        return null;
+    _react["default"].Children.forEach(children, function (child) {
+      if (!child) {
+        return;
       }
 
-      return new TypeError('`' + String(componentName) + '` requires children to all have prop \u201C' + String(prop) + '\u201D, all have children, or all have neither.');
+      truthyChildrenCount += 1;
+
+      if (child.props[prop]) {
+        propCount += 1;
+      }
+
+      if (_react["default"].Children.count(child.props.children)) {
+        grandchildrenCount += 1;
+      }
+    });
+
+    if (propCount === truthyChildrenCount && grandchildrenCount === 0 || propCount === 0 && grandchildrenCount === truthyChildrenCount || propCount === 0 && grandchildrenCount === 0) {
+      return null;
     }
 
-    return childrenHavePropXorChildrenWithProp;
-  }();
-  validator.isRequired = validator;
+    return new TypeError("`".concat(componentName, "` requires children to all have prop \u201C").concat(prop, "\u201D, all have children, or all have neither."));
+  };
 
-  return (0, _wrapValidator2['default'])(validator, 'childrenHavePropXorChildrenWithProp:' + String(prop), prop);
+  validator.isRequired = validator;
+  return (0, _wrapValidator["default"])(validator, "childrenHavePropXorChildrenWithProp:".concat(prop), prop);
 }
 
 },{"react":"../node_modules/react/index.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/helpers/renderableChildren.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports['default'] = renderableChildren;
+exports["default"] = renderableChildren;
 
-var _react = require('react');
+var _react = _interopRequireDefault(require("react"));
 
-var _react2 = _interopRequireDefault(_react);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function renderableChildren(childrenProp) {
-  return _react2['default'].Children.toArray(childrenProp).filter(function (child) {
+  return _react["default"].Children.toArray(childrenProp).filter(function (child) {
     return child === 0 || child;
   });
 }
 
 },{"react":"../node_modules/react/index.js"}],"../node_modules/airbnb-prop-types/build/childrenOf.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports['default'] = childrenOf;
+exports["default"] = childrenOf;
 
-var _object = require('object.assign');
+var _renderableChildren = _interopRequireDefault(require("./helpers/renderableChildren"));
 
-var _object2 = _interopRequireDefault(_object);
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
 
-var _renderableChildren = require('./helpers/renderableChildren');
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _renderableChildren2 = _interopRequireDefault(_renderableChildren);
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
 
-var _wrapValidator = require('./helpers/wrapValidator');
-
-var _wrapValidator2 = _interopRequireDefault(_wrapValidator);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 function validateChildren(propType, children, props) {
-  for (var _len = arguments.length, rest = Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
+  for (var _len = arguments.length, rest = new Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
     rest[_key - 3] = arguments[_key];
   }
 
-  var error = void 0;
+  var error;
   children.some(function (child) {
-    error = propType.apply(undefined, [(0, _object2['default'])({}, props, { children: child }), 'children'].concat(rest));
+    error = propType.apply(void 0, [_objectSpread({}, props, {
+      children: child
+    }), 'children'].concat(rest));
     return error;
   });
-
   return error || null;
 }
 
 function childrenOf(propType) {
   function childrenOfPropType(props, propName, componentName) {
     if (propName !== 'children') {
-      return new TypeError(String(componentName) + ' is using the childrenOf validator on non-children prop "' + String(propName) + '"');
+      return new TypeError("".concat(componentName, " is using the childrenOf validator on non-children prop \"").concat(propName, "\""));
     }
 
     var propValue = props[propName];
@@ -39205,39 +39698,42 @@ function childrenOf(propType) {
     if (propValue == null) {
       return null;
     }
-    var children = (0, _renderableChildren2['default'])(propValue);
+
+    var children = (0, _renderableChildren["default"])(propValue);
+
     if (children.length === 0) {
       return null;
     }
 
-    for (var _len2 = arguments.length, rest = Array(_len2 > 3 ? _len2 - 3 : 0), _key2 = 3; _key2 < _len2; _key2++) {
+    for (var _len2 = arguments.length, rest = new Array(_len2 > 3 ? _len2 - 3 : 0), _key2 = 3; _key2 < _len2; _key2++) {
       rest[_key2 - 3] = arguments[_key2];
     }
 
-    return validateChildren.apply(undefined, [propType, children, props, componentName].concat(rest));
+    return validateChildren.apply(void 0, [propType, children, props, componentName].concat(rest));
   }
 
   childrenOfPropType.isRequired = function (props, propName, componentName) {
-    for (var _len3 = arguments.length, rest = Array(_len3 > 3 ? _len3 - 3 : 0), _key3 = 3; _key3 < _len3; _key3++) {
+    if (propName !== 'children') {
+      return new TypeError("".concat(componentName, " is using the childrenOf validator on non-children prop \"").concat(propName, "\""));
+    }
+
+    var children = (0, _renderableChildren["default"])(props[propName]);
+
+    if (children.length === 0) {
+      return new TypeError("`".concat(componentName, "` requires at least one node of type ").concat(propType.typeName || propType.name));
+    }
+
+    for (var _len3 = arguments.length, rest = new Array(_len3 > 3 ? _len3 - 3 : 0), _key3 = 3; _key3 < _len3; _key3++) {
       rest[_key3 - 3] = arguments[_key3];
     }
 
-    if (propName !== 'children') {
-      return new TypeError(String(componentName) + ' is using the childrenOf validator on non-children prop "' + String(propName) + '"');
-    }
-
-    var children = (0, _renderableChildren2['default'])(props[propName]);
-    if (children.length === 0) {
-      return new TypeError('`' + String(componentName) + '` requires at least one node of type ' + String(propType.typeName || propType.name));
-    }
-
-    return validateChildren.apply(undefined, [propType, children, props, componentName].concat(rest));
+    return validateChildren.apply(void 0, [propType, children, props, componentName].concat(rest));
   };
 
-  return (0, _wrapValidator2['default'])(childrenOfPropType, 'childrenOf', propType);
+  return (0, _wrapValidator["default"])(childrenOfPropType, 'childrenOf', propType);
 }
 
-},{"object.assign":"../node_modules/object.assign/index.js","./helpers/renderableChildren":"../node_modules/airbnb-prop-types/build/helpers/renderableChildren.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/es-abstract/es6.js":[function(require,module,exports) {
+},{"./helpers/renderableChildren":"../node_modules/airbnb-prop-types/build/helpers/renderableChildren.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/es-abstract/es6.js":[function(require,module,exports) {
 'use strict';
 
 module.exports = require('./es2015');
@@ -39455,72 +39951,71 @@ define(bound, {
 });
 module.exports = bound;
 },{"define-properties":"../node_modules/define-properties/index.js","function-bind":"../node_modules/function-bind/index.js","./implementation":"../node_modules/function.prototype.name/implementation.js","./polyfill":"../node_modules/function.prototype.name/polyfill.js","./shim":"../node_modules/function.prototype.name/shim.js"}],"../node_modules/airbnb-prop-types/build/helpers/getComponentName.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports['default'] = getComponentName;
+exports["default"] = getComponentName;
 
-var _functionPrototype = require('function.prototype.name');
+var _functionPrototype = _interopRequireDefault(require("function.prototype.name"));
 
-var _functionPrototype2 = _interopRequireDefault(_functionPrototype);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function getComponentName(Component) {
   if (typeof Component === 'string') {
     return Component;
   }
+
   if (typeof Component === 'function') {
-    return Component.displayName || (0, _functionPrototype2['default'])(Component);
+    return Component.displayName || (0, _functionPrototype["default"])(Component);
   }
+
   return null;
 }
 
 },{"function.prototype.name":"../node_modules/function.prototype.name/index.js"}],"../node_modules/airbnb-prop-types/build/childrenOfType.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports["default"] = void 0;
 
-var _arrayPrototype = require('array.prototype.find');
+var _arrayPrototype = _interopRequireDefault(require("array.prototype.find"));
 
-var _arrayPrototype2 = _interopRequireDefault(_arrayPrototype);
+var _getComponentName = _interopRequireDefault(require("./helpers/getComponentName"));
 
-var _getComponentName = require('./helpers/getComponentName');
+var _renderableChildren = _interopRequireDefault(require("./helpers/renderableChildren"));
 
-var _getComponentName2 = _interopRequireDefault(_getComponentName);
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
 
-var _renderableChildren = require('./helpers/renderableChildren');
-
-var _renderableChildren2 = _interopRequireDefault(_renderableChildren);
-
-var _wrapValidator = require('./helpers/wrapValidator');
-
-var _wrapValidator2 = _interopRequireDefault(_wrapValidator);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function onlyTypes(types, children, componentName) {
   if (!children.every(function (child) {
-    return child && (0, _arrayPrototype2['default'])(types, function (Type) {
+    return child && (0, _arrayPrototype["default"])(types, function (Type) {
       return Type === '*' || child.type === Type;
     });
   })) {
-    var typeNames = types.map(_getComponentName2['default']).join(', or ');
-    return new TypeError('`' + String(componentName) + '` only accepts children of type ' + String(typeNames));
+    var typeNames = types.map(_getComponentName["default"]).join(', or ');
+    return new TypeError("`".concat(componentName, "` only accepts children of type ").concat(typeNames));
   }
+
   return null;
 }
 
 function isRequired(types, children, componentName) {
   if (children.length === 0) {
-    var typeNames = types.map(_getComponentName2['default']).join(', or ');
-    return new TypeError('`' + String(componentName) + '` requires at least one node of type ' + String(typeNames));
+    var typeNames = types.map(_getComponentName["default"]).join(', or ');
+    return new TypeError("`".concat(componentName, "` requires at least one node of type ").concat(typeNames));
   }
+
   return null;
 }
 
 function childrenOfType() {
-  for (var _len = arguments.length, types = Array(_len), _key = 0; _key < _len; _key++) {
+  for (var _len = arguments.length, types = new Array(_len), _key = 0; _key < _len; _key++) {
     types[_key] = arguments[_key];
   }
 
@@ -39529,77 +40024,83 @@ function childrenOfType() {
   }
 
   function validator(props, propName, componentName) {
-    return onlyTypes(types, (0, _renderableChildren2['default'])(props[propName]), componentName);
+    return onlyTypes(types, (0, _renderableChildren["default"])(props[propName]), componentName);
   }
 
   validator.isRequired = function (props, propName, componentName) {
-    var children = (0, _renderableChildren2['default'])(props[propName]);
+    var children = (0, _renderableChildren["default"])(props[propName]);
     return isRequired(types, children, componentName) || onlyTypes(types, children, componentName);
   };
 
-  return (0, _wrapValidator2['default'])(validator, 'childrenOfType', types);
+  return (0, _wrapValidator["default"])(validator, 'childrenOfType', types);
 }
 
-exports['default'] = childrenOfType;
+var _default = childrenOfType;
+exports["default"] = _default;
 
 },{"array.prototype.find":"../node_modules/array.prototype.find/index.js","./helpers/getComponentName":"../node_modules/airbnb-prop-types/build/helpers/getComponentName.js","./helpers/renderableChildren":"../node_modules/airbnb-prop-types/build/helpers/renderableChildren.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/helpers/isInteger.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports["default"] = void 0;
 var floor = Math.floor;
-
 var finite = isFinite;
 
-exports['default'] = Number.isInteger || /* istanbul ignore next */function (x) {
+var _default = Number.isInteger ||
+/* istanbul ignore next */
+function (x) {
   return typeof x === 'number' && finite(x) && floor(x) === x;
 };
 
+exports["default"] = _default;
+
 },{}],"../node_modules/airbnb-prop-types/build/integer.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports["default"] = void 0;
 
-var _isInteger = require('./helpers/isInteger');
+var _isInteger = _interopRequireDefault(require("./helpers/isInteger"));
 
-var _isInteger2 = _interopRequireDefault(_isInteger);
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
 
-var _wrapValidator = require('./helpers/wrapValidator');
-
-var _wrapValidator2 = _interopRequireDefault(_wrapValidator);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function requiredInteger(props, propName, componentName) {
-  var value = props[propName];
-  if (value == null || !(0, _isInteger2['default'])(value)) {
-    return new RangeError(String(propName) + ' in ' + String(componentName) + ' must be an integer');
+  var propValue = props[propName];
+
+  if (propValue == null || !(0, _isInteger["default"])(propValue)) {
+    return new RangeError("".concat(propName, " in ").concat(componentName, " must be an integer"));
   }
+
   return null;
 }
 
-var validator = function () {
-  function integer(props, propName) {
-    var value = props[propName];
+var validator = function integer(props, propName) {
+  var propValue = props[propName];
 
-    if (value == null) {
-      return null;
-    }
-
-    for (var _len = arguments.length, rest = Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
-      rest[_key - 2] = arguments[_key];
-    }
-
-    return requiredInteger.apply(undefined, [props, propName].concat(rest));
+  if (propValue == null) {
+    return null;
   }
 
-  return integer;
-}();
+  for (var _len = arguments.length, rest = new Array(_len > 2 ? _len - 2 : 0), _key = 2; _key < _len; _key++) {
+    rest[_key - 2] = arguments[_key];
+  }
+
+  return requiredInteger.apply(void 0, [props, propName].concat(rest));
+};
 
 validator.isRequired = requiredInteger;
 
-exports['default'] = function () {
-  return (0, _wrapValidator2['default'])(validator, 'integer');
+var _default = function _default() {
+  return (0, _wrapValidator["default"])(validator, 'integer');
 };
+
+exports["default"] = _default;
 
 },{"./helpers/isInteger":"../node_modules/airbnb-prop-types/build/helpers/isInteger.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/object-is/index.js":[function(require,module,exports) {
 "use strict";
@@ -39621,22 +40122,21 @@ module.exports = function is(a, b) {
   return false;
 };
 },{}],"../node_modules/airbnb-prop-types/build/nonNegativeNumber.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports["default"] = void 0;
 
-var _objectIs = require('object-is');
+var _objectIs = _interopRequireDefault(require("object-is"));
 
-var _objectIs2 = _interopRequireDefault(_objectIs);
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
 
-var _wrapValidator = require('./helpers/wrapValidator');
-
-var _wrapValidator2 = _interopRequireDefault(_wrapValidator);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function isNonNegative(x) {
-  return typeof x === 'number' && isFinite(x) && x >= 0 && !(0, _objectIs2['default'])(x, -0);
+  return typeof x === 'number' && isFinite(x) && x >= 0 && !(0, _objectIs["default"])(x, -0);
 }
 
 function nonNegativeNumber(props, propName, componentName) {
@@ -39646,7 +40146,7 @@ function nonNegativeNumber(props, propName, componentName) {
     return null;
   }
 
-  return new RangeError(String(propName) + ' in ' + String(componentName) + ' must be a non-negative number');
+  return new RangeError("".concat(propName, " in ").concat(componentName, " must be a non-negative number"));
 }
 
 function requiredNonNegativeNumber(props, propName, componentName) {
@@ -39656,91 +40156,91 @@ function requiredNonNegativeNumber(props, propName, componentName) {
     return null;
   }
 
-  return new RangeError(String(propName) + ' in ' + String(componentName) + ' must be a non-negative number');
+  return new RangeError("".concat(propName, " in ").concat(componentName, " must be a non-negative number"));
 }
 
 nonNegativeNumber.isRequired = requiredNonNegativeNumber;
 
-exports['default'] = function () {
-  return (0, _wrapValidator2['default'])(nonNegativeNumber, 'nonNegativeNumber');
+var _default = function _default() {
+  return (0, _wrapValidator["default"])(nonNegativeNumber, 'nonNegativeNumber');
 };
 
+exports["default"] = _default;
+
 },{"object-is":"../node_modules/object-is/index.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/nonNegativeInteger.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports["default"] = void 0;
 
-var _and = require('./and');
+var _and = _interopRequireDefault(require("./and"));
 
-var _and2 = _interopRequireDefault(_and);
+var _integer = _interopRequireDefault(require("./integer"));
 
-var _integer = require('./integer');
+var _nonNegativeNumber = _interopRequireDefault(require("./nonNegativeNumber"));
 
-var _integer2 = _interopRequireDefault(_integer);
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _nonNegativeNumber = require('./nonNegativeNumber');
+var _default = (0, _and["default"])([(0, _integer["default"])(), (0, _nonNegativeNumber["default"])()], 'nonNegativeInteger');
 
-var _nonNegativeNumber2 = _interopRequireDefault(_nonNegativeNumber);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-exports['default'] = (0, _and2['default'])([(0, _integer2['default'])(), (0, _nonNegativeNumber2['default'])()], 'nonNegativeInteger');
+exports["default"] = _default;
 
 },{"./and":"../node_modules/airbnb-prop-types/build/and.js","./integer":"../node_modules/airbnb-prop-types/build/integer.js","./nonNegativeNumber":"../node_modules/airbnb-prop-types/build/nonNegativeNumber.js"}],"../node_modules/airbnb-prop-types/build/helpers/typeOf.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports["default"] = typeOf;
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+var _react = _interopRequireDefault(require("react"));
 
-exports['default'] = typeOf;
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _react = require('react');
-
-var _react2 = _interopRequireDefault(_react);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function typeOf(child) {
   if (child === null) {
     return 'null';
   }
+
   if (Array.isArray(child)) {
     return 'array';
   }
-  if ((typeof child === 'undefined' ? 'undefined' : _typeof(child)) !== 'object') {
-    return typeof child === 'undefined' ? 'undefined' : _typeof(child);
+
+  if (_typeof(child) !== 'object') {
+    return _typeof(child);
   }
-  if (_react2['default'].isValidElement(child)) {
+
+  if (_react["default"].isValidElement(child)) {
     return child.type;
   }
+
   return child;
 }
 
 },{"react":"../node_modules/react/index.js"}],"../node_modules/airbnb-prop-types/build/object.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports["default"] = void 0;
 
-var _isPlainObject = require('./helpers/isPlainObject');
+var _isPlainObject = _interopRequireDefault(require("./helpers/isPlainObject"));
 
-var _isPlainObject2 = _interopRequireDefault(_isPlainObject);
+var _typeOf = _interopRequireDefault(require("./helpers/typeOf"));
 
-var _typeOf = require('./helpers/typeOf');
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
 
-var _typeOf2 = _interopRequireDefault(_typeOf);
-
-var _wrapValidator = require('./helpers/wrapValidator');
-
-var _wrapValidator2 = _interopRequireDefault(_wrapValidator);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 /*
   code adapted from https://github.com/facebook/react/blob/14156e56b9cf18ac86963185c5af4abddf3ff811/src/isomorphic/classic/types/ReactPropTypes.js#L202-L206
   so that it can be called outside of React's normal PropType flow
 */
-
 var ReactPropTypeLocationNames = {
   prop: 'prop',
   context: 'context',
@@ -39749,108 +40249,97 @@ var ReactPropTypeLocationNames = {
 
 function object(props, propName, componentName, location, propFullName) {
   var propValue = props[propName];
+
   if (propValue == null) {
     return null;
   }
 
-  if ((0, _isPlainObject2['default'])(propValue)) {
+  if ((0, _isPlainObject["default"])(propValue)) {
     return null;
   }
+
   var locationName = ReactPropTypeLocationNames[location] || location;
-  return new TypeError('Invalid ' + String(locationName) + ' `' + String(propFullName) + '` of type `' + String((0, _typeOf2['default'])(propValue)) + '` supplied to `' + String(componentName) + '`, expected `object`.');
+  return new TypeError("Invalid ".concat(locationName, " `").concat(propFullName, "` of type `").concat((0, _typeOf["default"])(propValue), "` supplied to `").concat(componentName, "`, expected `object`."));
 }
-object.isRequired = function () {
-  function objectRequired(props, propName, componentName, location, propFullName) {
-    var propValue = props[propName];
-    if (propValue == null) {
-      var locationName = ReactPropTypeLocationNames[location] || location;
-      return new TypeError('The ' + String(locationName) + ' `' + String(propFullName) + '` is marked as required in `' + String(componentName) + '`, but its value is `' + String(propValue) + '`.');
-    }
 
-    for (var _len = arguments.length, rest = Array(_len > 5 ? _len - 5 : 0), _key = 5; _key < _len; _key++) {
-      rest[_key - 5] = arguments[_key];
-    }
+object.isRequired = function objectRequired(props, propName, componentName, location, propFullName) {
+  var propValue = props[propName];
 
-    return object.apply(undefined, [props, propName, componentName, location, propFullName].concat(rest));
+  if (propValue == null) {
+    var locationName = ReactPropTypeLocationNames[location] || location;
+    return new TypeError("The ".concat(locationName, " `").concat(propFullName, "` is marked as required in `").concat(componentName, "`, but its value is `").concat(propValue, "`."));
   }
 
-  return objectRequired;
-}();
+  for (var _len = arguments.length, rest = new Array(_len > 5 ? _len - 5 : 0), _key = 5; _key < _len; _key++) {
+    rest[_key - 5] = arguments[_key];
+  }
 
-exports['default'] = function () {
-  return (0, _wrapValidator2['default'])(object, 'object');
+  return object.apply(void 0, [props, propName, componentName, location, propFullName].concat(rest));
 };
 
+var _default = function _default() {
+  return (0, _wrapValidator["default"])(object, 'object');
+};
+
+exports["default"] = _default;
+
 },{"./helpers/isPlainObject":"../node_modules/airbnb-prop-types/build/helpers/isPlainObject.js","./helpers/typeOf":"../node_modules/airbnb-prop-types/build/helpers/typeOf.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/withShape.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports['default'] = withShape;
+exports["default"] = withShape;
 
-var _and = require('./and');
+var _and = _interopRequireDefault(require("./and"));
 
-var _and2 = _interopRequireDefault(_and);
+var _shape = _interopRequireDefault(require("./shape"));
 
-var _shape = require('./shape');
-
-var _shape2 = _interopRequireDefault(_shape);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function withShape(type, shapeTypes) {
   if (typeof type !== 'function') {
     throw new TypeError('type must be a valid PropType');
   }
-  var shapeValidator = (0, _shape2['default'])(shapeTypes);
-  return (0, _and2['default'])([type, shapeValidator], 'withShape');
+
+  var shapeValidator = (0, _shape["default"])(shapeTypes);
+  return (0, _and["default"])([type, shapeValidator], 'withShape');
 }
 
 },{"./and":"../node_modules/airbnb-prop-types/build/and.js","./shape":"../node_modules/airbnb-prop-types/build/shape.js"}],"../node_modules/airbnb-prop-types/build/sequenceOf.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports['default'] = sequenceOfValidator;
+exports["default"] = sequenceOfValidator;
 
-var _object = require('object.assign');
+var _propTypes = require("prop-types");
 
-var _object2 = _interopRequireDefault(_object);
+var _and = _interopRequireDefault(require("./and"));
 
-var _propTypes = require('prop-types');
+var _between = _interopRequireDefault(require("./between"));
 
-var _and = require('./and');
+var _nonNegativeInteger = _interopRequireDefault(require("./nonNegativeInteger"));
 
-var _and2 = _interopRequireDefault(_and);
+var _object = _interopRequireDefault(require("./object"));
 
-var _between = require('./between');
+var _withShape = _interopRequireDefault(require("./withShape"));
 
-var _between2 = _interopRequireDefault(_between);
+var _typeOf = _interopRequireDefault(require("./helpers/typeOf"));
 
-var _nonNegativeInteger = require('./nonNegativeInteger');
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
 
-var _nonNegativeInteger2 = _interopRequireDefault(_nonNegativeInteger);
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _object3 = require('./object');
-
-var _object4 = _interopRequireDefault(_object3);
-
-var _withShape = require('./withShape');
-
-var _withShape2 = _interopRequireDefault(_withShape);
-
-var _typeOf = require('./helpers/typeOf');
-
-var _typeOf2 = _interopRequireDefault(_typeOf);
-
-var _wrapValidator = require('./helpers/wrapValidator');
-
-var _wrapValidator2 = _interopRequireDefault(_wrapValidator);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-var minValidator = _nonNegativeInteger2['default'];
-var maxValidator = (0, _and2['default'])([_nonNegativeInteger2['default'], (0, _between2['default'])({ gte: 1 })]);
+var minValidator = _nonNegativeInteger["default"];
+var maxValidator = (0, _and["default"])([_nonNegativeInteger["default"], (0, _between["default"])({
+  gte: 1
+})]);
 
 function validateRange(min, max) {
   if (typeof max !== 'number' || typeof min !== 'number') {
@@ -39860,42 +40349,34 @@ function validateRange(min, max) {
   if (min <= max) {
     return null;
   }
+
   return new RangeError('min must be less than or equal to max');
 }
 
 var specifierShape = {
-  validator: function () {
-    function validator(props, propName) {
-      if (typeof props[propName] !== 'function') {
-        return new TypeError('"validator" must be a propType validator function');
-      }
-      return null;
+  validator: function validator(props, propName) {
+    var propValue = props[propName];
+
+    if (typeof propValue !== 'function') {
+      return new TypeError('"validator" must be a propType validator function');
     }
 
-    return validator;
-  }(),
-  min: function () {
-    function min(props, propName) {
-      return minValidator(props, propName) || validateRange(props.min, props.max);
-    }
-
-    return min;
-  }(),
-  max: function () {
-    function max(props, propName) {
-      return maxValidator(props, propName) || validateRange(props.min, props.max);
-    }
-
-    return max;
-  }()
+    return null;
+  },
+  min: function min(props, propName) {
+    return minValidator(props, propName) || validateRange(props.min, props.max);
+  },
+  max: function max(props, propName) {
+    return maxValidator(props, propName) || validateRange(props.min, props.max);
+  }
 };
 
 function getMinMax(_ref) {
   var min = _ref.min,
       max = _ref.max;
+  var minimum;
+  var maximum;
 
-  var minimum = void 0;
-  var maximum = void 0;
   if (typeof min !== 'number' && typeof max !== 'number') {
     // neither provided, default to "1"
     minimum = 1;
@@ -39904,20 +40385,26 @@ function getMinMax(_ref) {
     minimum = typeof min === 'number' ? min : 1;
     maximum = typeof max === 'number' ? max : Infinity;
   }
-  return { minimum: minimum, maximum: maximum };
+
+  return {
+    minimum: minimum,
+    maximum: maximum
+  };
 }
 
 function chunkByType(items) {
   var chunk = [];
-  var lastType = void 0;
+  var lastType;
   return items.reduce(function (chunks, item) {
-    var itemType = (0, _typeOf2['default'])(item);
+    var itemType = (0, _typeOf["default"])(item);
+
     if (!lastType || itemType === lastType) {
       chunk.push(item);
     } else {
       chunks.push(chunk);
       chunk = [item];
     }
+
     lastType = itemType;
     return chunks;
   }, []).concat(chunk.length > 0 ? [chunk] : []);
@@ -39927,7 +40414,7 @@ function validateChunks(specifiers, props, propName, componentName) {
   var items = props[propName];
   var chunks = chunkByType(items);
 
-  for (var _len = arguments.length, rest = Array(_len > 4 ? _len - 4 : 0), _key = 4; _key < _len; _key++) {
+  for (var _len = arguments.length, rest = new Array(_len > 4 ? _len - 4 : 0), _key = 4; _key < _len; _key++) {
     rest[_key - 4] = arguments[_key];
   }
 
@@ -39937,7 +40424,10 @@ function validateChunks(specifiers, props, propName, componentName) {
         min = _specifiers$i.min,
         max = _specifiers$i.max;
 
-    var _getMinMax = getMinMax({ min: min, max: max }),
+    var _getMinMax = getMinMax({
+      min: min,
+      max: max
+    }),
         minimum = _getMinMax.minimum,
         maximum = _getMinMax.maximum;
 
@@ -39947,43 +40437,43 @@ function validateChunks(specifiers, props, propName, componentName) {
     }
 
     var arrayOfValidator = (0, _propTypes.arrayOf)(validator).isRequired;
-
     var chunk = chunks.shift(); // extract the next chunk to test
 
-    var chunkError = arrayOfValidator.apply(undefined, [(0, _object2['default'])({}, props, _defineProperty({}, propName, chunk)), propName, componentName].concat(rest));
+    var chunkError = arrayOfValidator.apply(void 0, [_objectSpread({}, props, _defineProperty({}, propName, chunk)), propName, componentName].concat(rest));
 
     if (chunkError) {
       // this chunk is invalid
       if (minimum === 0) {
         // but, specifier has a min of 0 and can be skipped
         chunks.unshift(chunk); // put the chunk back, for the next iteration
+
         continue; // eslint-disable-line no-continue
       }
-      return chunkError;
-    }
 
-    // chunk is valid!
+      return chunkError;
+    } // chunk is valid!
+
 
     if (chunk.length < minimum) {
-      return new RangeError(String(componentName) + ': specifier index ' + i + ' requires a minimum of ' + String(min) + ' items, but only has ' + String(chunk.length) + '.');
+      return new RangeError("".concat(componentName, ": specifier index ").concat(i, " requires a minimum of ").concat(min, " items, but only has ").concat(chunk.length, "."));
     }
 
     if (chunk.length > maximum) {
-      return new RangeError(String(componentName) + ': specifier index ' + i + ' requires a maximum of ' + String(max) + ' items, but has ' + String(chunk.length) + '.');
+      return new RangeError("".concat(componentName, ": specifier index ").concat(i, " requires a maximum of ").concat(max, " items, but has ").concat(chunk.length, "."));
     }
   }
 
   if (chunks.length > 0) {
-    return new TypeError(String(componentName) + ': after all ' + String(specifiers.length) + ' specifiers matched, ' + String(chunks.length) + ' types of items were remaining.');
+    return new TypeError("".concat(componentName, ": after all ").concat(specifiers.length, " specifiers matched, ").concat(chunks.length, " types of items were remaining."));
   }
 
   return null;
 }
 
-var specifierValidator = (0, _withShape2['default'])((0, _object4['default'])(), specifierShape).isRequired;
+var specifierValidator = (0, _withShape["default"])((0, _object["default"])(), specifierShape).isRequired;
 
 function sequenceOfValidator() {
-  for (var _len2 = arguments.length, specifiers = Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
+  for (var _len2 = arguments.length, specifiers = new Array(_len2), _key2 = 0; _key2 < _len2; _key2++) {
     specifiers[_key2] = arguments[_key2];
   }
 
@@ -39992,284 +40482,376 @@ function sequenceOfValidator() {
   }
 
   var errors = specifiers.map(function (specifier, i) {
-    return specifierValidator({ specifier: specifier }, 'specifier', 'sequenceOf specifier', 'suequenceOf specifier, index ' + String(i), 'specifier, index ' + String(i));
+    return specifierValidator({
+      specifier: specifier
+    }, 'specifier', 'sequenceOf specifier', "suequenceOf specifier, index ".concat(i), "specifier, index ".concat(i));
   });
+
   if (errors.some(Boolean)) {
-    throw new TypeError('\n      sequenceOf: all specifiers must match the appropriate shape.\n\n      Errors:\n        ' + String(errors.map(function (e, i) {
-      return ' - Argument index ' + String(i) + ': ' + String(e.message);
-    }).join(',\n        ')) + '\n    ');
+    throw new TypeError("\n      sequenceOf: all specifiers must match the appropriate shape.\n\n      Errors:\n        ".concat(errors.map(function (e, i) {
+      return " - Argument index ".concat(i, ": ").concat(e.message);
+    }).join(',\n        '), "\n    "));
   }
 
-  var validator = function () {
-    function sequenceOf(props, propName) {
-      var propValue = props[propName];
+  var validator = function sequenceOf(props, propName) {
+    var propValue = props[propName];
 
-      if (propValue == null) {
-        return null;
-      }
-
-      for (var _len3 = arguments.length, rest = Array(_len3 > 2 ? _len3 - 2 : 0), _key3 = 2; _key3 < _len3; _key3++) {
-        rest[_key3 - 2] = arguments[_key3];
-      }
-
-      var error = _propTypes.array.apply(undefined, [props, propName].concat(rest));
-      if (error) {
-        return error;
-      }
-
-      return validateChunks.apply(undefined, [specifiers, props, propName].concat(rest));
+    if (propValue == null) {
+      return null;
     }
 
-    return sequenceOf;
-  }();
-
-  validator.isRequired = function () {
-    function sequenceOfRequired(props, propName, componentName) {
-      for (var _len4 = arguments.length, rest = Array(_len4 > 3 ? _len4 - 3 : 0), _key4 = 3; _key4 < _len4; _key4++) {
-        rest[_key4 - 3] = arguments[_key4];
-      }
-
-      var error = _propTypes.array.isRequired.apply(_propTypes.array, [props, propName, componentName].concat(rest));
-      if (error) {
-        return error;
-      }
-
-      return validateChunks.apply(undefined, [specifiers, props, propName, componentName].concat(rest));
+    for (var _len3 = arguments.length, rest = new Array(_len3 > 2 ? _len3 - 2 : 0), _key3 = 2; _key3 < _len3; _key3++) {
+      rest[_key3 - 2] = arguments[_key3];
     }
 
-    return sequenceOfRequired;
-  }();
+    var error = _propTypes.array.apply(void 0, [props, propName].concat(rest));
 
-  return (0, _wrapValidator2['default'])(validator, 'sequenceOf', specifiers);
+    if (error) {
+      return error;
+    }
+
+    return validateChunks.apply(void 0, [specifiers, props, propName].concat(rest));
+  };
+
+  validator.isRequired = function sequenceOfRequired(props, propName, componentName) {
+    for (var _len4 = arguments.length, rest = new Array(_len4 > 3 ? _len4 - 3 : 0), _key4 = 3; _key4 < _len4; _key4++) {
+      rest[_key4 - 3] = arguments[_key4];
+    }
+
+    var error = _propTypes.array.isRequired.apply(_propTypes.array, [props, propName, componentName].concat(rest));
+
+    if (error) {
+      return error;
+    }
+
+    return validateChunks.apply(void 0, [specifiers, props, propName, componentName].concat(rest));
+  };
+
+  return (0, _wrapValidator["default"])(validator, 'sequenceOf', specifiers);
 }
 
-},{"object.assign":"../node_modules/object.assign/index.js","prop-types":"../node_modules/prop-types/index.js","./and":"../node_modules/airbnb-prop-types/build/and.js","./between":"../node_modules/airbnb-prop-types/build/between.js","./nonNegativeInteger":"../node_modules/airbnb-prop-types/build/nonNegativeInteger.js","./object":"../node_modules/airbnb-prop-types/build/object.js","./withShape":"../node_modules/airbnb-prop-types/build/withShape.js","./helpers/typeOf":"../node_modules/airbnb-prop-types/build/helpers/typeOf.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/childrenSequenceOf.js":[function(require,module,exports) {
+},{"prop-types":"../node_modules/prop-types/index.js","./and":"../node_modules/airbnb-prop-types/build/and.js","./between":"../node_modules/airbnb-prop-types/build/between.js","./nonNegativeInteger":"../node_modules/airbnb-prop-types/build/nonNegativeInteger.js","./object":"../node_modules/airbnb-prop-types/build/object.js","./withShape":"../node_modules/airbnb-prop-types/build/withShape.js","./helpers/typeOf":"../node_modules/airbnb-prop-types/build/helpers/typeOf.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/childrenSequenceOf.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports['default'] = childrenSequenceOfValidator;
+exports["default"] = childrenSequenceOfValidator;
 
-var _object = require('object.assign');
+var _sequenceOf = _interopRequireDefault(require("./sequenceOf"));
 
-var _object2 = _interopRequireDefault(_object);
+var _renderableChildren = _interopRequireDefault(require("./helpers/renderableChildren"));
 
-var _sequenceOf = require('./sequenceOf');
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
 
-var _sequenceOf2 = _interopRequireDefault(_sequenceOf);
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _renderableChildren = require('./helpers/renderableChildren');
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
 
-var _renderableChildren2 = _interopRequireDefault(_renderableChildren);
-
-var _wrapValidator = require('./helpers/wrapValidator');
-
-var _wrapValidator2 = _interopRequireDefault(_wrapValidator);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
 function childrenSequenceOfValidator() {
-  for (var _len = arguments.length, specifiers = Array(_len), _key = 0; _key < _len; _key++) {
+  for (var _len = arguments.length, specifiers = new Array(_len), _key = 0; _key < _len; _key++) {
     specifiers[_key] = arguments[_key];
   }
 
-  var seq = _sequenceOf2['default'].apply(undefined, specifiers);
+  var seq = _sequenceOf["default"].apply(void 0, specifiers);
 
-  var validator = function () {
-    function childrenSequenceOf(props, propName, componentName) {
-      if (propName !== 'children') {
-        return new TypeError(String(componentName) + ' is using the childrenSequenceOf validator on non-children prop "' + String(propName) + '"');
-      }
-
-      var propValue = props[propName];
-      var children = (0, _renderableChildren2['default'])(propValue);
-      if (children.length === 0) {
-        return null;
-      }
-
-      for (var _len2 = arguments.length, rest = Array(_len2 > 3 ? _len2 - 3 : 0), _key2 = 3; _key2 < _len2; _key2++) {
-        rest[_key2 - 3] = arguments[_key2];
-      }
-
-      return seq.apply(undefined, [(0, _object2['default'])({}, props, { children: children }), propName, componentName].concat(rest));
+  var validator = function childrenSequenceOf(props, propName, componentName) {
+    if (propName !== 'children') {
+      return new TypeError("".concat(componentName, " is using the childrenSequenceOf validator on non-children prop \"").concat(propName, "\""));
     }
 
-    return childrenSequenceOf;
-  }();
+    var propValue = props[propName];
+    var children = (0, _renderableChildren["default"])(propValue);
 
-  validator.isRequired = function () {
-    function childrenSequenceOfRequired(props, propName, componentName) {
-      if (propName !== 'children') {
-        return new TypeError(String(componentName) + ' is using the childrenSequenceOf validator on non-children prop "' + String(propName) + '"');
-      }
-
-      var propValue = props[propName];
-      var children = (0, _renderableChildren2['default'])(propValue);
-      if (children.length === 0) {
-        return new TypeError(String(componentName) + ': renderable children are required.');
-      }
-
-      for (var _len3 = arguments.length, rest = Array(_len3 > 3 ? _len3 - 3 : 0), _key3 = 3; _key3 < _len3; _key3++) {
-        rest[_key3 - 3] = arguments[_key3];
-      }
-
-      return seq.isRequired.apply(seq, [(0, _object2['default'])({}, props, { children: children }), propName, componentName].concat(rest));
+    if (children.length === 0) {
+      return null;
     }
 
-    return childrenSequenceOfRequired;
-  }();
+    for (var _len2 = arguments.length, rest = new Array(_len2 > 3 ? _len2 - 3 : 0), _key2 = 3; _key2 < _len2; _key2++) {
+      rest[_key2 - 3] = arguments[_key2];
+    }
 
-  return (0, _wrapValidator2['default'])(validator, 'childrenSequenceOf', specifiers);
+    return seq.apply(void 0, [_objectSpread({}, props, {
+      children: children
+    }), propName, componentName].concat(rest));
+  };
+
+  validator.isRequired = function childrenSequenceOfRequired(props, propName, componentName) {
+    if (propName !== 'children') {
+      return new TypeError("".concat(componentName, " is using the childrenSequenceOf validator on non-children prop \"").concat(propName, "\""));
+    }
+
+    var propValue = props[propName];
+    var children = (0, _renderableChildren["default"])(propValue);
+
+    if (children.length === 0) {
+      return new TypeError("".concat(componentName, ": renderable children are required."));
+    }
+
+    for (var _len3 = arguments.length, rest = new Array(_len3 > 3 ? _len3 - 3 : 0), _key3 = 3; _key3 < _len3; _key3++) {
+      rest[_key3 - 3] = arguments[_key3];
+    }
+
+    return seq.isRequired.apply(seq, [_objectSpread({}, props, {
+      children: children
+    }), propName, componentName].concat(rest));
+  };
+
+  return (0, _wrapValidator["default"])(validator, 'childrenSequenceOf', specifiers);
 }
 
-},{"object.assign":"../node_modules/object.assign/index.js","./sequenceOf":"../node_modules/airbnb-prop-types/build/sequenceOf.js","./helpers/renderableChildren":"../node_modules/airbnb-prop-types/build/helpers/renderableChildren.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/componentWithName.js":[function(require,module,exports) {
+},{"./sequenceOf":"../node_modules/airbnb-prop-types/build/sequenceOf.js","./helpers/renderableChildren":"../node_modules/airbnb-prop-types/build/helpers/renderableChildren.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/componentWithName.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports['default'] = componentWithName;
+exports["default"] = componentWithName;
 
-var _react = require('react');
+var _react = _interopRequireDefault(require("react"));
 
-var _react2 = _interopRequireDefault(_react);
+var _isRegex = _interopRequireDefault(require("is-regex"));
 
-var _isRegex = require('is-regex');
+var _arrayPrototype = _interopRequireDefault(require("array.prototype.find"));
 
-var _isRegex2 = _interopRequireDefault(_isRegex);
+var _getComponentName = _interopRequireDefault(require("./helpers/getComponentName"));
 
-var _arrayPrototype = require('array.prototype.find');
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
 
-var _arrayPrototype2 = _interopRequireDefault(_arrayPrototype);
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _getComponentName = require('./helpers/getComponentName');
+function stripHOCs(fullName, namesOfHOCsToStrip) {
+  var innerName = fullName;
 
-var _getComponentName2 = _interopRequireDefault(_getComponentName);
+  while (/\([^()]*\)/g.test(innerName)) {
+    var HOC = innerName;
+    var previousHOC = void 0;
 
-var _wrapValidator = require('./helpers/wrapValidator');
+    do {
+      previousHOC = HOC;
+      HOC = previousHOC.replace(/\([^()]*\)/g, '');
+    } while (previousHOC !== HOC);
 
-var _wrapValidator2 = _interopRequireDefault(_wrapValidator);
+    if (namesOfHOCsToStrip.indexOf(HOC) === -1) {
+      return innerName;
+    }
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-function hasName(name, prop, propName, componentName) {
-  for (var _len = arguments.length, rest = Array(_len > 4 ? _len - 4 : 0), _key = 4; _key < _len; _key++) {
-    rest[_key - 4] = arguments[_key];
+    innerName = innerName.replace(RegExp("^".concat(HOC, "\\(|\\)$"), 'g'), '');
   }
 
-  if (Array.isArray(prop)) {
-    return (0, _arrayPrototype2['default'])(prop.map(function (item) {
-      return hasName.apply(undefined, [name, item, propName, componentName].concat(rest));
+  return innerName;
+}
+
+function hasName(name, namesOfHOCsToStrip, propValue, propName, componentName) {
+  for (var _len = arguments.length, rest = new Array(_len > 5 ? _len - 5 : 0), _key = 5; _key < _len; _key++) {
+    rest[_key - 5] = arguments[_key];
+  }
+
+  if (Array.isArray(propValue)) {
+    return (0, _arrayPrototype["default"])(propValue.map(function (item) {
+      return hasName.apply(void 0, [name, namesOfHOCsToStrip, item, propName, componentName].concat(rest));
     }), Boolean) || null;
   }
 
-  if (!_react2['default'].isValidElement(prop)) {
-    return new TypeError(String(componentName) + '.' + String(propName) + ' is not a valid React element');
+  if (!_react["default"].isValidElement(propValue)) {
+    return new TypeError("".concat(componentName, ".").concat(propName, " is not a valid React element"));
   }
 
-  var type = prop.type;
+  var type = propValue.type;
+  var componentNameFromType = (0, _getComponentName["default"])(type);
+  var innerComponentName = namesOfHOCsToStrip.length > 0 ? stripHOCs(componentNameFromType, namesOfHOCsToStrip) : componentNameFromType;
 
-  var componentNameFromType = (0, _getComponentName2['default'])(type);
-
-  if ((0, _isRegex2['default'])(name) && !name.test(componentNameFromType)) {
-    return new TypeError('`' + String(componentName) + '.' + String(propName) + '` only accepts components matching the regular expression ' + String(name));
+  if ((0, _isRegex["default"])(name) && !name.test(innerComponentName)) {
+    return new TypeError("`".concat(componentName, ".").concat(propName, "` only accepts components matching the regular expression ").concat(name));
   }
 
-  if (!(0, _isRegex2['default'])(name) && componentNameFromType !== name) {
-    return new TypeError('`' + String(componentName) + '.' + String(propName) + '` only accepts components named ' + String(name));
+  if (!(0, _isRegex["default"])(name) && innerComponentName !== name) {
+    return new TypeError("`".concat(componentName, ".").concat(propName, "` only accepts components named ").concat(name, ", got ").concat(innerComponentName));
   }
 
   return null;
 }
 
 function componentWithName(name) {
-  if (typeof name !== 'string' && !(0, _isRegex2['default'])(name)) {
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+
+  if (typeof name !== 'string' && !(0, _isRegex["default"])(name)) {
     throw new TypeError('name must be a string or a regex');
   }
 
+  var passedOptions = Object.keys(options);
+
+  if (passedOptions.length > 1 || passedOptions.length === 1 && passedOptions[0] !== 'stripHOCs') {
+    throw new TypeError("The only options supported are: \u201CstripHOCs\u201D, got: \u201C".concat(passedOptions.join('”, “'), "\u201D"));
+  }
+
+  var _options$stripHOCs = options.stripHOCs,
+      namesOfHOCsToStrip = _options$stripHOCs === void 0 ? [] : _options$stripHOCs;
+  var allHOCNamesAreValid = namesOfHOCsToStrip.every(function (x) {
+    if (typeof x !== 'string' || /[()]/g.test(x)) {
+      return false;
+    }
+
+    return /^(?:[a-z][a-zA-Z0-9]+|[A-Z][a-z][a-zA-Z0-9]+)$/.test(x);
+  });
+
+  if (!allHOCNamesAreValid) {
+    throw new TypeError('every provided HOC name must be a string with no parens, and in camelCase');
+  }
+
   function componentWithNameValidator(props, propName, componentName) {
-    var prop = props[propName];
+    var propValue = props[propName];
+
     if (props[propName] == null) {
       return null;
     }
 
-    for (var _len2 = arguments.length, rest = Array(_len2 > 3 ? _len2 - 3 : 0), _key2 = 3; _key2 < _len2; _key2++) {
+    for (var _len2 = arguments.length, rest = new Array(_len2 > 3 ? _len2 - 3 : 0), _key2 = 3; _key2 < _len2; _key2++) {
       rest[_key2 - 3] = arguments[_key2];
     }
 
-    return hasName.apply(undefined, [name, prop, propName, componentName].concat(rest));
+    return hasName.apply(void 0, [name, namesOfHOCsToStrip, propValue, propName, componentName].concat(rest));
   }
 
-  componentWithNameValidator.isRequired = function () {
-    function componentWithNameRequired(props, propName, componentName) {
-      var prop = props[propName];
-      if (prop == null) {
-        return new TypeError('`' + String(componentName) + '.' + String(propName) + '` requires at least one component named ' + String(name));
-      }
+  componentWithNameValidator.isRequired = function componentWithNameRequired(props, propName, componentName) {
+    var propValue = props[propName];
 
-      for (var _len3 = arguments.length, rest = Array(_len3 > 3 ? _len3 - 3 : 0), _key3 = 3; _key3 < _len3; _key3++) {
-        rest[_key3 - 3] = arguments[_key3];
-      }
-
-      return hasName.apply(undefined, [name, prop, propName, componentName].concat(rest));
+    if (propValue == null) {
+      return new TypeError("`".concat(componentName, ".").concat(propName, "` requires at least one component named ").concat(name));
     }
 
-    return componentWithNameRequired;
-  }();
+    for (var _len3 = arguments.length, rest = new Array(_len3 > 3 ? _len3 - 3 : 0), _key3 = 3; _key3 < _len3; _key3++) {
+      rest[_key3 - 3] = arguments[_key3];
+    }
 
-  return (0, _wrapValidator2['default'])(componentWithNameValidator, 'componentWithName:' + String(name), name);
+    return hasName.apply(void 0, [name, namesOfHOCsToStrip, propValue, propName, componentName].concat(rest));
+  };
+
+  return (0, _wrapValidator["default"])(componentWithNameValidator, "componentWithName:".concat(name), name);
 }
 
-},{"react":"../node_modules/react/index.js","is-regex":"../node_modules/is-regex/index.js","array.prototype.find":"../node_modules/array.prototype.find/index.js","./helpers/getComponentName":"../node_modules/airbnb-prop-types/build/helpers/getComponentName.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/elementType.js":[function(require,module,exports) {
+},{"react":"../node_modules/react/index.js","is-regex":"../node_modules/is-regex/index.js","array.prototype.find":"../node_modules/array.prototype.find/index.js","./helpers/getComponentName":"../node_modules/airbnb-prop-types/build/helpers/getComponentName.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/disallowedIf.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports["default"] = disallowedIf;
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
 
-exports['default'] = elementTypeValidator;
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _propTypes = require('prop-types');
+function disallowedIf(propType, otherPropName, otherPropType) {
+  if (typeof propType !== 'function' || typeof propType.isRequired !== 'function') {
+    throw new TypeError('a propType validator is required; propType validators must also provide `.isRequired`');
+  }
 
-var _and = require('./and');
+  if (typeof otherPropName !== 'string') {
+    throw new TypeError('other prop name must be a string');
+  }
 
-var _and2 = _interopRequireDefault(_and);
+  if (typeof otherPropType !== 'function') {
+    throw new TypeError('other prop type validator is required');
+  }
 
-var _getComponentName = require('./helpers/getComponentName');
+  function disallowedIfRequired(props, propName, componentName) {
+    for (var _len = arguments.length, rest = new Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
+      rest[_key - 3] = arguments[_key];
+    }
 
-var _getComponentName2 = _interopRequireDefault(_getComponentName);
+    var error = propType.isRequired.apply(propType, [props, propName, componentName].concat(rest));
 
-var _wrapValidator = require('./helpers/wrapValidator');
+    if (error) {
+      return error;
+    }
 
-var _wrapValidator2 = _interopRequireDefault(_wrapValidator);
+    if (props[otherPropName] == null) {
+      return null;
+    }
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+    var otherError = otherPropType.apply(void 0, [props, otherPropName, componentName].concat(rest));
+
+    if (otherError) {
+      return null;
+    }
+
+    return new Error("prop \u201C".concat(propName, "\u201D is disallowed when \u201C").concat(otherPropName, "\u201D matches the provided validator"));
+  }
+
+  var validator = function disallowedIfPropType(props, propName) {
+    if (props[propName] == null) {
+      return null;
+    }
+
+    for (var _len2 = arguments.length, rest = new Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
+      rest[_key2 - 2] = arguments[_key2];
+    }
+
+    return disallowedIfRequired.apply(void 0, [props, propName].concat(rest));
+  };
+
+  validator.isRequired = disallowedIfRequired;
+  return (0, _wrapValidator["default"])(validator, 'disallowedIf', {
+    propType: propType,
+    otherPropName: otherPropName,
+    otherPropType: otherPropType
+  });
+}
+
+},{"./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/elementType.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = elementTypeValidator;
+
+var _propTypes = require("prop-types");
+
+var _reactIs = require("react-is");
+
+var _and = _interopRequireDefault(require("./and"));
+
+var _getComponentName = _interopRequireDefault(require("./helpers/getComponentName"));
+
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function getTypeName(Type) {
   if (typeof Type === 'string') {
     return Type;
   }
-  var type = (0, _getComponentName2['default'])(Type);
 
-  /* istanbul ignore next */ // in environments where functions do not have names
+  var type = (0, _getComponentName["default"])(Type);
+  /* istanbul ignore next */
+  // in environments where functions do not have names
+
   return type || 'Anonymous Component';
 }
 
 function validateElementType(Type, props, propName, componentName) {
   var type = props[propName].type;
 
-
   if (type === Type) {
     return null;
   }
 
-  return new TypeError(String(componentName) + '.' + String(propName) + ' must be a React element of type ' + String(getTypeName(Type)));
+  return new TypeError("".concat(componentName, ".").concat(propName, " must be a React element of type ").concat(getTypeName(Type)));
 }
 
 function elementTypeValidator(Type) {
   if (Type === '*') {
-    return (0, _wrapValidator2['default'])(_propTypes.element, 'elementType(*)', Type);
+    return (0, _wrapValidator["default"])(_propTypes.element, 'elementType(*)', Type);
   }
 
-  if (typeof Type !== 'string' && typeof Type !== 'function') {
-    throw new TypeError('Type must be a React Component, an HTML element tag name, or "*". Got an ' + (typeof Type === 'undefined' ? 'undefined' : _typeof(Type)));
+  if (!(0, _reactIs.isValidElementType)(Type)) {
+    throw new TypeError("Type must be a React Component, an HTML element tag name, or \"*\". Got an ".concat(_typeof(Type)));
   }
 
   function elementType(props, propName, componentName) {
@@ -40277,68 +40859,189 @@ function elementTypeValidator(Type) {
       return null;
     }
 
-    for (var _len = arguments.length, rest = Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
+    for (var _len = arguments.length, rest = new Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
       rest[_key - 3] = arguments[_key];
     }
 
-    return validateElementType.apply(undefined, [Type, props, propName, componentName].concat(rest));
+    return validateElementType.apply(void 0, [Type, props, propName, componentName].concat(rest));
   }
+
   elementType.isRequired = elementType; // covered by and + element
 
   var typeName = getTypeName(Type);
-  var validatorName = 'elementType(' + String(typeName) + ')';
-  return (0, _wrapValidator2['default'])((0, _and2['default'])([_propTypes.element, elementType], validatorName), validatorName, Type);
+  var validatorName = "elementType(".concat(typeName, ")");
+  return (0, _wrapValidator["default"])((0, _and["default"])([_propTypes.element, elementType], validatorName), validatorName, Type);
 }
 
-},{"prop-types":"../node_modules/prop-types/index.js","./and":"../node_modules/airbnb-prop-types/build/and.js","./helpers/getComponentName":"../node_modules/airbnb-prop-types/build/helpers/getComponentName.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/explicitNull.js":[function(require,module,exports) {
+},{"prop-types":"../node_modules/prop-types/index.js","react-is":"../node_modules/react-is/index.js","./and":"../node_modules/airbnb-prop-types/build/and.js","./helpers/getComponentName":"../node_modules/airbnb-prop-types/build/helpers/getComponentName.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/or.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports["default"] = or;
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
+var _propTypes = require("prop-types");
 
-var _wrapValidator = require('./helpers/wrapValidator');
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
 
-var _wrapValidator2 = _interopRequireDefault(_wrapValidator);
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _nonIterableSpread(); }
+
+function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance"); }
+
+function _iterableToArray(iter) { if (Symbol.iterator in Object(iter) || Object.prototype.toString.call(iter) === "[object Arguments]") return Array.from(iter); }
+
+function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = new Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } }
+
+function oneOfTypeValidator(validators) {
+  var validator = function oneOfType(props, propName, componentName) {
+    for (var _len = arguments.length, rest = new Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
+      rest[_key - 3] = arguments[_key];
+    }
+
+    var propValue = props[propName];
+
+    if (typeof propValue === 'undefined') {
+      return null;
+    }
+
+    var errors = validators.map(function (v) {
+      return v.apply(void 0, [props, propName, componentName].concat(rest));
+    }).filter(Boolean);
+
+    if (errors.length < validators.length) {
+      return null;
+    }
+
+    return new TypeError("".concat(componentName, ": invalid value supplied to ").concat(propName, "."));
+  };
+
+  validator.isRequired = function oneOfTypeRequired(props, propName, componentName) {
+    for (var _len2 = arguments.length, rest = new Array(_len2 > 3 ? _len2 - 3 : 0), _key2 = 3; _key2 < _len2; _key2++) {
+      rest[_key2 - 3] = arguments[_key2];
+    }
+
+    var propValue = props[propName];
+
+    if (typeof propValue === 'undefined') {
+      return new TypeError("".concat(componentName, ": missing value for required ").concat(propName, "."));
+    }
+
+    var errors = validators.map(function (v) {
+      return v.apply(void 0, [props, propName, componentName].concat(rest));
+    }).filter(Boolean);
+
+    if (errors.length === validators.length) {
+      return new TypeError("".concat(componentName, ": invalid value ").concat(errors, " supplied to required ").concat(propName, "."));
+    }
+
+    return null;
+  };
+
+  return (0, _wrapValidator["default"])(validator, 'oneOfType', validators);
+}
+
+function or(validators) {
+  var name = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'or';
+
+  if (!Array.isArray(validators)) {
+    throw new TypeError('or: 2 or more validators are required');
+  }
+
+  if (validators.length <= 1) {
+    throw new RangeError('or: 2 or more validators are required');
+  }
+
+  var validator = oneOfTypeValidator([(0, _propTypes.arrayOf)(oneOfTypeValidator(validators))].concat(_toConsumableArray(validators)));
+  return (0, _wrapValidator["default"])(validator, name, validators);
+}
+
+},{"prop-types":"../node_modules/prop-types/index.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/explicitNull.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+function _typeof(obj) { if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function explicitNull(props, propName, componentName) {
   if (props[propName] == null) {
     return null;
   }
-  return new TypeError(String(componentName) + ': prop \u201C' + String(propName) + '\u201D must be null or undefined; received ' + _typeof(props[propName]));
+
+  return new TypeError("".concat(componentName, ": prop \u201C").concat(propName, "\u201D must be null or undefined; received ").concat(_typeof(props[propName])));
 }
-explicitNull.isRequired = function () {
-  function explicitNullRequired(props, propName, componentName) {
-    if (props[propName] === null) {
-      return null;
-    }
-    return new TypeError(String(componentName) + ': prop \u201C' + String(propName) + '\u201D must be null; received ' + _typeof(props[propName]));
+
+explicitNull.isRequired = function explicitNullRequired(props, propName, componentName) {
+  if (props[propName] === null) {
+    return null;
   }
 
-  return explicitNullRequired;
-}();
-
-exports['default'] = function () {
-  return (0, _wrapValidator2['default'])(explicitNull, 'explicitNull');
+  return new TypeError("".concat(componentName, ": prop \u201C").concat(propName, "\u201D must be null; received ").concat(_typeof(props[propName])));
 };
 
-},{"./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/keysOf.js":[function(require,module,exports) {
+var _default = function _default() {
+  return (0, _wrapValidator["default"])(explicitNull, 'explicitNull');
+};
+
+exports["default"] = _default;
+
+},{"./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/empty.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports['default'] = keysOfValidator;
+exports["default"] = void 0;
 
-var _isPrimitive = require('./helpers/isPrimitive');
+var _propTypes = require("prop-types");
 
-var _isPrimitive2 = _interopRequireDefault(_isPrimitive);
+var _or = _interopRequireDefault(require("./or"));
 
-var _wrapValidator = require('./helpers/wrapValidator');
+var _explicitNull = _interopRequireDefault(require("./explicitNull"));
 
-var _wrapValidator2 = _interopRequireDefault(_wrapValidator);
+var _withShape = _interopRequireDefault(require("./withShape"));
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+var arrayOfValidator;
+var validator = (0, _or["default"])([_explicitNull["default"], // null/undefined
+(0, _propTypes.oneOf)([false, '', NaN]), (0, _withShape["default"])(_propTypes.array, {
+  length: (0, _propTypes.oneOf)([0]).isRequired
+}).isRequired, function () {
+  return arrayOfValidator.apply(void 0, arguments);
+}]);
+arrayOfValidator = (0, _propTypes.arrayOf)(validator).isRequired;
+
+var _default = function _default() {
+  return (0, _wrapValidator["default"])(validator, 'empty');
+};
+
+exports["default"] = _default;
+
+},{"prop-types":"../node_modules/prop-types/index.js","./or":"../node_modules/airbnb-prop-types/build/or.js","./explicitNull":"../node_modules/airbnb-prop-types/build/explicitNull.js","./withShape":"../node_modules/airbnb-prop-types/build/withShape.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/keysOf.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = keysOfValidator;
+
+var _isPrimitive = _interopRequireDefault(require("./helpers/isPrimitive"));
+
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
@@ -40349,65 +41052,55 @@ function keysOfValidator(propType) {
     throw new TypeError('argument to keysOf must be a valid PropType function');
   }
 
-  var validator = function () {
-    function keysOf(props, propName, componentName, location, propFullName) {
-      for (var _len = arguments.length, rest = Array(_len > 5 ? _len - 5 : 0), _key = 5; _key < _len; _key++) {
-        rest[_key - 5] = arguments[_key];
-      }
-
-      var propValue = props[propName];
-
-      if (propValue == null || (0, _isPrimitive2['default'])(propValue)) {
-        return null;
-      }
-
-      var firstError = null;
-      Object.keys(propValue).some(function (key) {
-        firstError = propType.apply(undefined, [_defineProperty({}, key, key), key, componentName, location, '(' + String(propFullName) + ').' + String(key)].concat(rest));
-        return firstError != null;
-      });
-      return firstError || null;
+  var validator = function keysOf(props, propName, componentName, location, propFullName) {
+    for (var _len = arguments.length, rest = new Array(_len > 5 ? _len - 5 : 0), _key = 5; _key < _len; _key++) {
+      rest[_key - 5] = arguments[_key];
     }
 
-    return keysOf;
-  }();
+    var propValue = props[propName];
 
-  validator.isRequired = function () {
-    function keyedByRequired(props, propName, componentName) {
-      var propValue = props[propName];
-
-      if (propValue == null) {
-        return new TypeError(String(componentName) + ': ' + String(propName) + ' is required, but value is ' + String(propValue));
-      }
-
-      for (var _len2 = arguments.length, rest = Array(_len2 > 3 ? _len2 - 3 : 0), _key2 = 3; _key2 < _len2; _key2++) {
-        rest[_key2 - 3] = arguments[_key2];
-      }
-
-      return validator.apply(undefined, [props, propName, componentName].concat(rest));
+    if (propValue == null || (0, _isPrimitive["default"])(propValue)) {
+      return null;
     }
 
-    return keyedByRequired;
-  }();
+    var firstError = null;
+    Object.keys(propValue).some(function (key) {
+      firstError = propType.apply(void 0, [_defineProperty({}, key, key), key, componentName, location, "(".concat(propFullName, ").").concat(key)].concat(rest));
+      return firstError != null;
+    });
+    return firstError || null;
+  };
 
-  return (0, _wrapValidator2['default'])(validator, name, propType);
+  validator.isRequired = function keyedByRequired(props, propName, componentName) {
+    var propValue = props[propName];
+
+    if (propValue == null) {
+      return new TypeError("".concat(componentName, ": ").concat(propName, " is required, but value is ").concat(propValue));
+    }
+
+    for (var _len2 = arguments.length, rest = new Array(_len2 > 3 ? _len2 - 3 : 0), _key2 = 3; _key2 < _len2; _key2++) {
+      rest[_key2 - 3] = arguments[_key2];
+    }
+
+    return validator.apply(void 0, [props, propName, componentName].concat(rest));
+  };
+
+  return (0, _wrapValidator["default"])(validator, name, propType);
 }
 
 },{"./helpers/isPrimitive":"../node_modules/airbnb-prop-types/build/helpers/isPrimitive.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/mutuallyExclusiveProps.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports['default'] = mutuallyExclusiveOfType;
+exports["default"] = mutuallyExclusiveOfType;
 
-var _object = require('object.assign');
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
 
-var _object2 = _interopRequireDefault(_object);
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _wrapValidator = require('./helpers/wrapValidator');
-
-var _wrapValidator2 = _interopRequireDefault(_wrapValidator);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
@@ -40416,7 +41109,7 @@ function mutuallyExclusiveOfType(propType) {
     throw new TypeError('a propType is required');
   }
 
-  for (var _len = arguments.length, exclusiveProps = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+  for (var _len = arguments.length, exclusiveProps = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
     exclusiveProps[_key - 1] = arguments[_key];
   }
 
@@ -40425,77 +41118,72 @@ function mutuallyExclusiveOfType(propType) {
   }
 
   var propList = exclusiveProps.join(', or ');
-
   var map = exclusiveProps.reduce(function (acc, prop) {
-    return (0, _object2['default'])({}, acc, _defineProperty({}, prop, true));
+    return _objectSpread({}, acc, _defineProperty({}, prop, true));
   }, {});
+
   var countProps = function countProps(count, prop) {
     return count + (map[prop] ? 1 : 0);
   };
 
-  var validator = function () {
-    function mutuallyExclusiveProps(props, propName, componentName) {
-      var exclusivePropCount = Object.keys(props).filter(function (prop) {
-        return props[prop] != null;
-      }).reduce(countProps, 0);
-      if (exclusivePropCount > 1) {
-        return new Error('A ' + String(componentName) + ' cannot have more than one of these props: ' + String(propList));
-      }
+  var validator = function mutuallyExclusiveProps(props, propName, componentName) {
+    var exclusivePropCount = Object.keys(props).filter(function (prop) {
+      return props[prop] != null;
+    }).reduce(countProps, 0);
 
-      for (var _len2 = arguments.length, rest = Array(_len2 > 3 ? _len2 - 3 : 0), _key2 = 3; _key2 < _len2; _key2++) {
-        rest[_key2 - 3] = arguments[_key2];
-      }
-
-      return propType.apply(undefined, [props, propName, componentName].concat(rest));
+    if (exclusivePropCount > 1) {
+      return new Error("A ".concat(componentName, " cannot have more than one of these props: ").concat(propList));
     }
 
-    return mutuallyExclusiveProps;
-  }();
-
-  validator.isRequired = function () {
-    function mutuallyExclusivePropsRequired(props, propName, componentName) {
-      var exclusivePropCount = Object.keys(props).filter(function (prop) {
-        return prop === propName || props[prop] != null;
-      }).reduce(countProps, 0);
-      if (exclusivePropCount > 1) {
-        return new Error('A ' + String(componentName) + ' cannot have more than one of these props: ' + String(propList));
-      }
-
-      for (var _len3 = arguments.length, rest = Array(_len3 > 3 ? _len3 - 3 : 0), _key3 = 3; _key3 < _len3; _key3++) {
-        rest[_key3 - 3] = arguments[_key3];
-      }
-
-      return propType.apply(undefined, [props, propName, componentName].concat(rest));
+    for (var _len2 = arguments.length, rest = new Array(_len2 > 3 ? _len2 - 3 : 0), _key2 = 3; _key2 < _len2; _key2++) {
+      rest[_key2 - 3] = arguments[_key2];
     }
 
-    return mutuallyExclusivePropsRequired;
-  }();
+    return propType.apply(void 0, [props, propName, componentName].concat(rest));
+  };
 
-  return (0, _wrapValidator2['default'])(validator, 'mutuallyExclusiveProps:' + String(propList), exclusiveProps);
+  validator.isRequired = function mutuallyExclusivePropsRequired(props, propName, componentName) {
+    var exclusivePropCount = Object.keys(props).filter(function (prop) {
+      return prop === propName || props[prop] != null;
+    }).reduce(countProps, 0);
+
+    if (exclusivePropCount > 1) {
+      return new Error("A ".concat(componentName, " cannot have more than one of these props: ").concat(propList));
+    }
+
+    for (var _len3 = arguments.length, rest = new Array(_len3 > 3 ? _len3 - 3 : 0), _key3 = 3; _key3 < _len3; _key3++) {
+      rest[_key3 - 3] = arguments[_key3];
+    }
+
+    return propType.apply(void 0, [props, propName, componentName].concat(rest));
+  };
+
+  return (0, _wrapValidator["default"])(validator, "mutuallyExclusiveProps:".concat(propList), exclusiveProps);
 }
 
-},{"object.assign":"../node_modules/object.assign/index.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/mutuallyExclusiveTrueProps.js":[function(require,module,exports) {
+},{"./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/mutuallyExclusiveTrueProps.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports['default'] = mutuallyExclusiveTrue;
+exports["default"] = mutuallyExclusiveTrue;
 
-var _propTypes = require('prop-types');
+var _propTypes = require("prop-types");
 
-var _wrapValidator = require('./helpers/wrapValidator');
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
 
-var _wrapValidator2 = _interopRequireDefault(_wrapValidator);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function mutuallyExclusiveTrue() {
-  for (var _len = arguments.length, exclusiveProps = Array(_len), _key = 0; _key < _len; _key++) {
+  for (var _len = arguments.length, exclusiveProps = new Array(_len), _key = 0; _key < _len; _key++) {
     exclusiveProps[_key] = arguments[_key];
   }
 
   if (exclusiveProps.length < 1) {
     throw new TypeError('at least one prop that is mutually exclusive is required');
   }
+
   if (!exclusiveProps.every(function (x) {
     return typeof x === 'string';
   })) {
@@ -40504,76 +41192,60 @@ function mutuallyExclusiveTrue() {
 
   var propsList = exclusiveProps.join(', or ');
 
-  var validator = function () {
-    function mutuallyExclusiveTrueProps(props, propName, componentName) {
-      var countProps = function () {
-        function countProps(count, prop) {
-          return count + (props[prop] ? 1 : 0);
-        }
+  var validator = function mutuallyExclusiveTrueProps(props, propName, componentName) {
+    var countProps = function countProps(count, prop) {
+      return count + (props[prop] ? 1 : 0);
+    };
 
-        return countProps;
-      }();
+    var exclusivePropCount = exclusiveProps.reduce(countProps, 0);
 
-      var exclusivePropCount = exclusiveProps.reduce(countProps, 0);
-      if (exclusivePropCount > 1) {
-        return new Error('A ' + String(componentName) + ' cannot have more than one of these boolean props be true: ' + String(propsList));
-      }
-
-      for (var _len2 = arguments.length, rest = Array(_len2 > 3 ? _len2 - 3 : 0), _key2 = 3; _key2 < _len2; _key2++) {
-        rest[_key2 - 3] = arguments[_key2];
-      }
-
-      return _propTypes.bool.apply(undefined, [props, propName, componentName].concat(rest));
+    if (exclusivePropCount > 1) {
+      return new Error("A ".concat(componentName, " cannot have more than one of these boolean props be true: ").concat(propsList));
     }
 
-    return mutuallyExclusiveTrueProps;
-  }();
-
-  validator.isRequired = function () {
-    function mutuallyExclusiveTruePropsRequired(props, propName, componentName) {
-      var countProps = function () {
-        function countProps(count, prop) {
-          return count + (props[prop] ? 1 : 0);
-        }
-
-        return countProps;
-      }();
-
-      var exclusivePropCount = exclusiveProps.reduce(countProps, 0);
-      if (exclusivePropCount > 1) {
-        return new Error('A ' + String(componentName) + ' cannot have more than one of these boolean props be true: ' + String(propsList));
-      }
-
-      for (var _len3 = arguments.length, rest = Array(_len3 > 3 ? _len3 - 3 : 0), _key3 = 3; _key3 < _len3; _key3++) {
-        rest[_key3 - 3] = arguments[_key3];
-      }
-
-      return _propTypes.bool.isRequired.apply(_propTypes.bool, [props, propName, componentName].concat(rest));
+    for (var _len2 = arguments.length, rest = new Array(_len2 > 3 ? _len2 - 3 : 0), _key2 = 3; _key2 < _len2; _key2++) {
+      rest[_key2 - 3] = arguments[_key2];
     }
 
-    return mutuallyExclusiveTruePropsRequired;
-  }();
+    return _propTypes.bool.apply(void 0, [props, propName, componentName].concat(rest));
+  };
 
-  return (0, _wrapValidator2['default'])(validator, 'mutuallyExclusiveTrueProps: ' + String(propsList), exclusiveProps);
+  validator.isRequired = function mutuallyExclusiveTruePropsRequired(props, propName, componentName) {
+    var countProps = function countProps(count, prop) {
+      return count + (props[prop] ? 1 : 0);
+    };
+
+    var exclusivePropCount = exclusiveProps.reduce(countProps, 0);
+
+    if (exclusivePropCount > 1) {
+      return new Error("A ".concat(componentName, " cannot have more than one of these boolean props be true: ").concat(propsList));
+    }
+
+    for (var _len3 = arguments.length, rest = new Array(_len3 > 3 ? _len3 - 3 : 0), _key3 = 3; _key3 < _len3; _key3++) {
+      rest[_key3 - 3] = arguments[_key3];
+    }
+
+    return _propTypes.bool.isRequired.apply(_propTypes.bool, [props, propName, componentName].concat(rest));
+  };
+
+  return (0, _wrapValidator["default"])(validator, "mutuallyExclusiveTrueProps: ".concat(propsList), exclusiveProps);
 }
 
 },{"prop-types":"../node_modules/prop-types/index.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/nChildren.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports['default'] = nChildren;
+exports["default"] = nChildren;
 
-var _react = require('react');
+var _react = _interopRequireDefault(require("react"));
 
-var _react2 = _interopRequireDefault(_react);
+var _propTypes = require("prop-types");
 
-var _propTypes = require('prop-types');
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
 
-var _wrapValidator = require('./helpers/wrapValidator');
-
-var _wrapValidator2 = _interopRequireDefault(_wrapValidator);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function nChildren(n) {
   var propType = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : _propTypes.node;
@@ -40582,235 +41254,148 @@ function nChildren(n) {
     throw new TypeError('a non-negative number is required');
   }
 
-  var validator = function () {
-    function nChildrenValidator(props, propName, componentName) {
-      if (propName !== 'children') {
-        return new TypeError(String(componentName) + ' is using the nChildren validator on a non-children prop');
-      }
-
-      var children = props.children;
-
-      var childrenCount = _react2['default'].Children.count(children);
-
-      if (childrenCount !== n) {
-        return new RangeError(String(componentName) + ' expects to receive ' + String(n) + ' children, but received ' + String(childrenCount) + ' children.');
-      }
-
-      for (var _len = arguments.length, rest = Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
-        rest[_key - 3] = arguments[_key];
-      }
-
-      return propType.apply(undefined, [props, propName, componentName].concat(rest));
+  var validator = function nChildrenValidator(props, propName, componentName) {
+    if (propName !== 'children') {
+      return new TypeError("".concat(componentName, " is using the nChildren validator on a non-children prop"));
     }
 
-    return nChildrenValidator;
-  }();
-  validator.isRequired = validator;
+    var children = props.children;
 
-  return (0, _wrapValidator2['default'])(validator, 'nChildren:' + String(n), n);
-}
+    var childrenCount = _react["default"].Children.count(children);
 
-},{"react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/numericString.js":[function(require,module,exports) {
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-
-var _propTypes = require('prop-types');
-
-var _wrapValidator = require('./helpers/wrapValidator');
-
-var _wrapValidator2 = _interopRequireDefault(_wrapValidator);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-var validNumericChars = /^[-+]?(?:[1-9][0-9]*(?:\.[0-9]+)?|0|0\.[0-9]+)$/;
-
-var validator = function () {
-  function numericString(props, propName, componentName) {
-    if (props[propName] == null) {
-      return null;
+    if (childrenCount !== n) {
+      return new RangeError("".concat(componentName, " expects to receive ").concat(n, " children, but received ").concat(childrenCount, " children."));
     }
 
-    for (var _len = arguments.length, rest = Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
+    for (var _len = arguments.length, rest = new Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
       rest[_key - 3] = arguments[_key];
     }
 
-    var stringError = _propTypes.string.apply(undefined, [props, propName, componentName].concat(rest));
-    if (stringError) {
-      return stringError;
-    }
+    return propType.apply(void 0, [props, propName, componentName].concat(rest));
+  };
 
-    var value = props[propName];
+  validator.isRequired = validator;
+  return (0, _wrapValidator["default"])(validator, "nChildren:".concat(n), n);
+}
 
-    var passesRegex = validNumericChars.test(value);
-    if (passesRegex) {
-      return null;
-    }
+},{"react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/numericString.js":[function(require,module,exports) {
+"use strict";
 
-    return new TypeError(String(componentName) + ': prop "' + String(propName) + '" (value "' + String(value) + '") must be a numeric string:\n    - starting with an optional + or -\n    - that does not have a leading zero\n    - with an optional decimal part (that contains only one decimal point, if present)\n    - that otherwise only contains digits (0-9)\n    - not +-NaN, or +-Infinity\n  ');
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _propTypes = require("prop-types");
+
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+var validNumericChars = /^[-+]?(?:[1-9][0-9]*(?:\.[0-9]+)?|0|0\.[0-9]+)$/;
+
+var validator = function numericString(props, propName, componentName) {
+  if (props[propName] == null) {
+    return null;
   }
 
-  return numericString;
-}();
-
-validator.isRequired = function () {
-  function numericStringRequired(props, propName, componentName) {
-    if (props[propName] == null) {
-      return new TypeError(String(componentName) + ': ' + String(propName) + ' is required');
-    }
-
-    for (var _len2 = arguments.length, rest = Array(_len2 > 3 ? _len2 - 3 : 0), _key2 = 3; _key2 < _len2; _key2++) {
-      rest[_key2 - 3] = arguments[_key2];
-    }
-
-    return validator.apply(undefined, [props, propName, componentName].concat(rest));
+  for (var _len = arguments.length, rest = new Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
+    rest[_key - 3] = arguments[_key];
   }
 
-  return numericStringRequired;
-}();
+  var stringError = _propTypes.string.apply(void 0, [props, propName, componentName].concat(rest));
 
-exports['default'] = function () {
-  return (0, _wrapValidator2['default'])(validator, 'numericString');
+  if (stringError) {
+    return stringError;
+  }
+
+  var value = props[propName];
+  var passesRegex = validNumericChars.test(value);
+
+  if (passesRegex) {
+    return null;
+  }
+
+  return new TypeError("".concat(componentName, ": prop \"").concat(propName, "\" (value \"").concat(value, "\") must be a numeric string:\n    - starting with an optional + or -\n    - that does not have a leading zero\n    - with an optional decimal part (that contains only one decimal point, if present)\n    - that otherwise only contains digits (0-9)\n    - not +-NaN, or +-Infinity\n  "));
 };
 
-},{"prop-types":"../node_modules/prop-types/index.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/or.js":[function(require,module,exports) {
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports['default'] = or;
-
-var _propTypes = require('prop-types');
-
-var _wrapValidator = require('./helpers/wrapValidator');
-
-var _wrapValidator2 = _interopRequireDefault(_wrapValidator);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-function _toConsumableArray(arr) { if (Array.isArray(arr)) { for (var i = 0, arr2 = Array(arr.length); i < arr.length; i++) { arr2[i] = arr[i]; } return arr2; } else { return Array.from(arr); } }
-
-function oneOfTypeValidator(validators) {
-  var validator = function () {
-    function oneOfType(props, propName, componentName) {
-      for (var _len = arguments.length, rest = Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
-        rest[_key - 3] = arguments[_key];
-      }
-
-      if (typeof props[propName] === 'undefined') {
-        return null;
-      }
-
-      var errors = validators.map(function (v) {
-        return v.apply(undefined, [props, propName, componentName].concat(rest));
-      }).filter(Boolean);
-
-      if (errors.length < validators.length) {
-        return null;
-      }
-      return new TypeError(String(componentName) + ': invalid value supplied to ' + String(propName) + '.');
-    }
-
-    return oneOfType;
-  }();
-  validator.isRequired = function () {
-    function oneOfTypeRequired(props, propName, componentName) {
-      for (var _len2 = arguments.length, rest = Array(_len2 > 3 ? _len2 - 3 : 0), _key2 = 3; _key2 < _len2; _key2++) {
-        rest[_key2 - 3] = arguments[_key2];
-      }
-
-      if (typeof props[propName] === 'undefined') {
-        return new TypeError(String(componentName) + ': missing value for required ' + String(propName) + '.');
-      }
-
-      var errors = validators.map(function (v) {
-        return v.apply(undefined, [props, propName, componentName].concat(rest));
-      }).filter(Boolean);
-
-      if (errors.length === validators.length) {
-        return new TypeError(String(componentName) + ': invalid value ' + String(errors) + ' supplied to required ' + String(propName) + '.');
-      }
-      return null;
-    }
-
-    return oneOfTypeRequired;
-  }();
-  return (0, _wrapValidator2['default'])(validator, 'oneOfType', validators);
-}
-
-function or(validators) {
-  var name = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'or';
-
-  if (!Array.isArray(validators)) {
-    throw new TypeError('or: 2 or more validators are required');
-  }
-  if (validators.length <= 1) {
-    throw new RangeError('or: 2 or more validators are required');
+validator.isRequired = function numericStringRequired(props, propName, componentName) {
+  if (props[propName] == null) {
+    return new TypeError("".concat(componentName, ": ").concat(propName, " is required"));
   }
 
-  var validator = oneOfTypeValidator([(0, _propTypes.arrayOf)(oneOfTypeValidator(validators))].concat(_toConsumableArray(validators)));
+  for (var _len2 = arguments.length, rest = new Array(_len2 > 3 ? _len2 - 3 : 0), _key2 = 3; _key2 < _len2; _key2++) {
+    rest[_key2 - 3] = arguments[_key2];
+  }
 
-  return (0, _wrapValidator2['default'])(validator, name, validators);
-}
+  return validator.apply(void 0, [props, propName, componentName].concat(rest));
+};
+
+var _default = function _default() {
+  return (0, _wrapValidator["default"])(validator, 'numericString');
+};
+
+exports["default"] = _default;
 
 },{"prop-types":"../node_modules/prop-types/index.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/range.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports['default'] = range;
+exports["default"] = range;
 
-var _and = require('./and');
+var _and = _interopRequireDefault(require("./and"));
 
-var _and2 = _interopRequireDefault(_and);
+var _between = _interopRequireDefault(require("./between"));
 
-var _between = require('./between');
+var _integer = _interopRequireDefault(require("./integer"));
 
-var _between2 = _interopRequireDefault(_between);
+var _isInteger = _interopRequireDefault(require("./helpers/isInteger"));
 
-var _integer = require('./integer');
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
 
-var _integer2 = _interopRequireDefault(_integer);
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _isInteger = require('./helpers/isInteger');
-
-var _isInteger2 = _interopRequireDefault(_isInteger);
-
-var _wrapValidator = require('./helpers/wrapValidator');
-
-var _wrapValidator2 = _interopRequireDefault(_wrapValidator);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
-
-var MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER || /* istanbul ignore next */Math.pow(2, 53) - 1;
+var MAX_SAFE_INTEGER = Number.MAX_SAFE_INTEGER ||
+/* istanbul ignore next */
+Math.pow(2, 53) - 1;
 
 function isValidLength(x) {
-  return (0, _isInteger2['default'])(x) && Math.abs(x) < MAX_SAFE_INTEGER;
+  return (0, _isInteger["default"])(x) && Math.abs(x) < MAX_SAFE_INTEGER;
 }
 
 function range(min, max) {
   if (!isValidLength(min) || !isValidLength(max)) {
-    throw new RangeError('"range" requires two integers: ' + String(min) + ' and ' + String(max) + ' given');
+    throw new RangeError("\"range\" requires two integers: ".concat(min, " and ").concat(max, " given"));
   }
+
   if (min === max) {
     throw new RangeError('min and max must not be the same');
   }
-  return (0, _wrapValidator2['default'])((0, _and2['default'])([(0, _integer2['default'])(), (0, _between2['default'])({ gte: min, lt: max })], 'range'), 'range', { min: min, max: max });
+
+  return (0, _wrapValidator["default"])((0, _and["default"])([(0, _integer["default"])(), (0, _between["default"])({
+    gte: min,
+    lt: max
+  })], 'range'), 'range', {
+    min: min,
+    max: max
+  });
 }
 
 },{"./and":"../node_modules/airbnb-prop-types/build/and.js","./between":"../node_modules/airbnb-prop-types/build/between.js","./integer":"../node_modules/airbnb-prop-types/build/integer.js","./helpers/isInteger":"../node_modules/airbnb-prop-types/build/helpers/isInteger.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/requiredBy.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports['default'] = getRequiredBy;
+exports["default"] = getRequiredBy;
 
-var _objectIs = require('object-is');
+var _objectIs = _interopRequireDefault(require("object-is"));
 
-var _objectIs2 = _interopRequireDefault(_objectIs);
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
 
-var _wrapValidator = require('./helpers/wrapValidator');
-
-var _wrapValidator2 = _interopRequireDefault(_wrapValidator);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function getRequiredBy(requiredByPropName, propType) {
   var defaultValue = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
@@ -40818,47 +41403,47 @@ function getRequiredBy(requiredByPropName, propType) {
   function requiredBy(props, propName, componentName) {
     if (props[requiredByPropName]) {
       var propValue = props[propName];
-      if ((0, _objectIs2['default'])(propValue, defaultValue) || typeof propValue === 'undefined') {
-        return new TypeError(String(componentName) + ': when ' + String(requiredByPropName) + ' is true, prop \u201C' + String(propName) + '\u201D must be present.');
+
+      if ((0, _objectIs["default"])(propValue, defaultValue) || typeof propValue === 'undefined') {
+        return new TypeError("".concat(componentName, ": when ").concat(requiredByPropName, " is true, prop \u201C").concat(propName, "\u201D must be present."));
       }
     }
 
-    for (var _len = arguments.length, rest = Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
+    for (var _len = arguments.length, rest = new Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
       rest[_key - 3] = arguments[_key];
     }
 
-    return propType.apply(undefined, [props, propName, componentName].concat(rest));
+    return propType.apply(void 0, [props, propName, componentName].concat(rest));
   }
-  requiredBy.isRequired = function () {
-    function requiredByRequired(props, propName, componentName) {
-      var propValue = props[propName];
-      if ((0, _objectIs2['default'])(propValue, defaultValue)) {
-        return new TypeError(String(componentName) + ': prop \u201C' + String(propName) + '\u201D must be present.');
-      }
 
-      for (var _len2 = arguments.length, rest = Array(_len2 > 3 ? _len2 - 3 : 0), _key2 = 3; _key2 < _len2; _key2++) {
-        rest[_key2 - 3] = arguments[_key2];
-      }
+  requiredBy.isRequired = function requiredByRequired(props, propName, componentName) {
+    var propValue = props[propName];
 
-      return propType.isRequired.apply(propType, [props, propName, componentName].concat(rest));
+    if ((0, _objectIs["default"])(propValue, defaultValue)) {
+      return new TypeError("".concat(componentName, ": prop \u201C").concat(propName, "\u201D must be present."));
     }
 
-    return requiredByRequired;
-  }();
+    for (var _len2 = arguments.length, rest = new Array(_len2 > 3 ? _len2 - 3 : 0), _key2 = 3; _key2 < _len2; _key2++) {
+      rest[_key2 - 3] = arguments[_key2];
+    }
 
-  return (0, _wrapValidator2['default'])(requiredBy, 'requiredBy \u201C' + String(requiredByPropName) + '\u201D', [requiredByPropName, defaultValue]);
+    return propType.isRequired.apply(propType, [props, propName, componentName].concat(rest));
+  };
+
+  return (0, _wrapValidator["default"])(requiredBy, "requiredBy \u201C".concat(requiredByPropName, "\u201D"), [requiredByPropName, defaultValue]);
 }
 
 },{"object-is":"../node_modules/object-is/index.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/restrictedProp.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports["default"] = void 0;
 
-var _wrapValidator = require('./helpers/wrapValidator');
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
 
-var _wrapValidator2 = _interopRequireDefault(_wrapValidator);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function customMessageWrapper(messsageFunction) {
   function restrictedProp(props, propName, componentName, location) {
@@ -40867,100 +41452,103 @@ function customMessageWrapper(messsageFunction) {
     }
 
     if (messsageFunction && typeof messsageFunction === 'function') {
-      for (var _len = arguments.length, rest = Array(_len > 4 ? _len - 4 : 0), _key = 4; _key < _len; _key++) {
+      for (var _len = arguments.length, rest = new Array(_len > 4 ? _len - 4 : 0), _key = 4; _key < _len; _key++) {
         rest[_key - 4] = arguments[_key];
       }
 
-      return new TypeError(messsageFunction.apply(undefined, [props, propName, componentName, location].concat(rest)));
+      return new TypeError(messsageFunction.apply(void 0, [props, propName, componentName, location].concat(rest)));
     }
-    return new TypeError('The ' + String(propName) + ' ' + String(location) + ' on ' + String(componentName) + ' is not allowed.');
+
+    return new TypeError("The ".concat(propName, " ").concat(location, " on ").concat(componentName, " is not allowed."));
   }
+
   restrictedProp.isRequired = restrictedProp;
   return restrictedProp;
 }
 
-exports['default'] = function () {
+var _default = function _default() {
   var messsageFunction = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
-  return (0, _wrapValidator2['default'])(customMessageWrapper(messsageFunction), 'restrictedProp');
+  return (0, _wrapValidator["default"])(customMessageWrapper(messsageFunction), 'restrictedProp');
 };
 
+exports["default"] = _default;
+
 },{"./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/stringStartsWith.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports['default'] = stringStartsWithValidator;
+exports["default"] = stringStartsWithValidator;
 
-var _propTypes = require('prop-types');
+var _propTypes = require("prop-types");
 
-var _wrapValidator = require('./helpers/wrapValidator');
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
 
-var _wrapValidator2 = _interopRequireDefault(_wrapValidator);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function stringStartsWithValidator(start) {
   if (typeof start !== 'string' || start.length === 0) {
     throw new TypeError('a non-empty string is required');
   }
 
-  var validator = function () {
-    function stringStartsWith(props, propName, componentName) {
-      var propValue = props[propName];
+  var validator = function stringStartsWith(props, propName, componentName) {
+    var propValue = props[propName];
 
-      if (propValue == null) {
-        return null;
-      }
-
-      for (var _len = arguments.length, rest = Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
-        rest[_key - 3] = arguments[_key];
-      }
-
-      var stringError = _propTypes.string.apply(undefined, [props, propName, componentName].concat(rest));
-      if (stringError) {
-        return stringError;
-      }
-
-      if (!propValue.startsWith(start) || propValue.length <= start.length) {
-        return new TypeError(String(componentName) + ': ' + String(propName) + ' does not start with "' + String(start) + '"');
-      }
+    if (propValue == null) {
       return null;
     }
 
-    return stringStartsWith;
-  }();
-
-  validator.isRequired = function () {
-    function requiredStringStartsWith() {
-      var stringError = _propTypes.string.isRequired.apply(_propTypes.string, arguments);
-      if (stringError) {
-        return stringError;
-      }
-      return validator.apply(undefined, arguments);
+    for (var _len = arguments.length, rest = new Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
+      rest[_key - 3] = arguments[_key];
     }
 
-    return requiredStringStartsWith;
-  }();
+    var stringError = _propTypes.string.apply(void 0, [props, propName, componentName].concat(rest));
 
-  return (0, _wrapValidator2['default'])(validator, 'stringStartsWith: ' + String(start));
+    if (stringError) {
+      return stringError;
+    }
+
+    if (!propValue.startsWith(start) || propValue.length <= start.length) {
+      return new TypeError("".concat(componentName, ": ").concat(propName, " does not start with \"").concat(start, "\""));
+    }
+
+    return null;
+  };
+
+  validator.isRequired = function requiredStringStartsWith() {
+    var stringError = _propTypes.string.isRequired.apply(_propTypes.string, arguments);
+
+    if (stringError) {
+      return stringError;
+    }
+
+    return validator.apply(void 0, arguments);
+  };
+
+  return (0, _wrapValidator["default"])(validator, "stringStartsWith: ".concat(start));
 }
 
 },{"prop-types":"../node_modules/prop-types/index.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/uniqueArray.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
+exports["default"] = void 0;
 
-var _propTypes = require('prop-types');
+var _propTypes = require("prop-types");
 
-var _wrapValidator = require('./helpers/wrapValidator');
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
 
-var _wrapValidator2 = _interopRequireDefault(_wrapValidator);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 function uniqueCountWithSet(arr) {
   return new Set(arr).size;
 }
 /* istanbul ignore next */
+
+
 function uniqueCountLegacy(arr) {
   var seen = [];
   arr.forEach(function (item) {
@@ -40971,69 +41559,74 @@ function uniqueCountLegacy(arr) {
   return seen.length;
 }
 
-var getUniqueCount = typeof Set === 'function' ? uniqueCountWithSet : /* istanbul ignore next */uniqueCountLegacy;
+var getUniqueCount = typeof Set === 'function' ? uniqueCountWithSet :
+/* istanbul ignore next */
+uniqueCountLegacy;
 
 function requiredUniqueArray(props, propName, componentName) {
-  for (var _len = arguments.length, rest = Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
+  for (var _len = arguments.length, rest = new Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
     rest[_key - 3] = arguments[_key];
   }
 
   var result = _propTypes.array.isRequired.apply(_propTypes.array, [props, propName, componentName].concat(rest));
+
   if (result != null) {
     return result;
   }
 
   var propValue = props[propName];
   var uniqueCount = getUniqueCount(propValue);
+
   if (uniqueCount !== propValue.length) {
-    return new RangeError(String(componentName) + ': values must be unique. ' + (propValue.length - uniqueCount) + ' duplicate values found.');
+    return new RangeError("".concat(componentName, ": values must be unique. ").concat(propValue.length - uniqueCount, " duplicate values found."));
   }
+
   return null;
 }
 
 function uniqueArray(props, propName) {
   var propValue = props[propName];
+
   if (propValue == null) {
     return null;
   }
 
-  for (var _len2 = arguments.length, rest = Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
+  for (var _len2 = arguments.length, rest = new Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
     rest[_key2 - 2] = arguments[_key2];
   }
 
-  return requiredUniqueArray.apply(undefined, [props, propName].concat(rest));
+  return requiredUniqueArray.apply(void 0, [props, propName].concat(rest));
 }
+
 uniqueArray.isRequired = requiredUniqueArray;
 
-exports['default'] = function () {
-  return (0, _wrapValidator2['default'])(uniqueArray, 'uniqueArray');
+var _default = function _default() {
+  return (0, _wrapValidator["default"])(uniqueArray, 'uniqueArray');
 };
 
+exports["default"] = _default;
+
 },{"prop-types":"../node_modules/prop-types/index.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/uniqueArrayOf.js":[function(require,module,exports) {
+"use strict";
+
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
-exports['default'] = uniqueArrayOfTypeValidator;
+exports["default"] = uniqueArrayOfTypeValidator;
 
-var _object = require('object.assign');
+var _propTypes = require("prop-types");
 
-var _object2 = _interopRequireDefault(_object);
+var _and = _interopRequireDefault(require("./and"));
 
-var _propTypes = require('prop-types');
+var _uniqueArray = _interopRequireDefault(require("./uniqueArray"));
 
-var _and = require('./and');
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
-var _and2 = _interopRequireDefault(_and);
-
-var _uniqueArray = require('./uniqueArray');
-
-var _uniqueArray2 = _interopRequireDefault(_uniqueArray);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; var ownKeys = Object.keys(source); if (typeof Object.getOwnPropertySymbols === 'function') { ownKeys = ownKeys.concat(Object.getOwnPropertySymbols(source).filter(function (sym) { return Object.getOwnPropertyDescriptor(source, sym).enumerable; })); } ownKeys.forEach(function (key) { _defineProperty(target, key, source[key]); }); } return target; }
 
 function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
 
-var unique = (0, _uniqueArray2['default'])();
+var unique = (0, _uniqueArray["default"])();
 
 function uniqueArrayOfTypeValidator(type) {
   if (typeof type !== 'function') {
@@ -41043,7 +41636,7 @@ function uniqueArrayOfTypeValidator(type) {
   var mapper = null;
   var name = 'uniqueArrayOfType';
 
-  for (var _len = arguments.length, rest = Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+  for (var _len = arguments.length, rest = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
     rest[_key - 1] = arguments[_key];
   }
 
@@ -41068,208 +41661,149 @@ function uniqueArrayOfTypeValidator(type) {
 
   function uniqueArrayOfMapped(props, propName) {
     var propValue = props[propName];
+
     if (propValue == null) {
       return null;
     }
 
     var values = propValue.map(mapper);
 
-    for (var _len2 = arguments.length, args = Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
+    for (var _len2 = arguments.length, args = new Array(_len2 > 2 ? _len2 - 2 : 0), _key2 = 2; _key2 < _len2; _key2++) {
       args[_key2 - 2] = arguments[_key2];
     }
 
-    return unique.apply(undefined, [(0, _object2['default'])({}, props, _defineProperty({}, propName, values)), propName].concat(args));
+    return unique.apply(void 0, [_objectSpread({}, props, _defineProperty({}, propName, values)), propName].concat(args));
   }
 
-  uniqueArrayOfMapped.isRequired = function () {
-    function isRequired(props, propName) {
-      var propValue = props[propName];
+  uniqueArrayOfMapped.isRequired = function isRequired(props, propName) {
+    var propValue = props[propName];
 
-      for (var _len3 = arguments.length, args = Array(_len3 > 2 ? _len3 - 2 : 0), _key3 = 2; _key3 < _len3; _key3++) {
-        args[_key3 - 2] = arguments[_key3];
-      }
-
-      if (propValue == null) {
-        return _propTypes.array.isRequired.apply(_propTypes.array, [props, propName].concat(args));
-      }
-      return uniqueArrayOfMapped.apply(undefined, [props, propName].concat(args));
+    for (var _len3 = arguments.length, args = new Array(_len3 > 2 ? _len3 - 2 : 0), _key3 = 2; _key3 < _len3; _key3++) {
+      args[_key3 - 2] = arguments[_key3];
     }
 
-    return isRequired;
-  }();
+    if (propValue == null) {
+      return _propTypes.array.isRequired.apply(_propTypes.array, [props, propName].concat(args));
+    }
+
+    return uniqueArrayOfMapped.apply(void 0, [props, propName].concat(args));
+  };
 
   var arrayValidator = (0, _propTypes.arrayOf)(type);
-
   var uniqueValidator = mapper ? uniqueArrayOfMapped : unique;
-
-  var validator = (0, _and2['default'])([arrayValidator, uniqueValidator], name);
-  validator.isRequired = (0, _and2['default'])([uniqueValidator.isRequired, arrayValidator.isRequired], String(name) + '.isRequired');
-
+  var validator = (0, _and["default"])([arrayValidator, uniqueValidator], name);
+  validator.isRequired = (0, _and["default"])([uniqueValidator.isRequired, arrayValidator.isRequired], "".concat(name, ".isRequired"));
   return validator;
 }
 
-},{"object.assign":"../node_modules/object.assign/index.js","prop-types":"../node_modules/prop-types/index.js","./and":"../node_modules/airbnb-prop-types/build/and.js","./uniqueArray":"../node_modules/airbnb-prop-types/build/uniqueArray.js"}],"../node_modules/airbnb-prop-types/build/index.js":[function(require,module,exports) {
-var _propTypesExact = require('prop-types-exact');
+},{"prop-types":"../node_modules/prop-types/index.js","./and":"../node_modules/airbnb-prop-types/build/and.js","./uniqueArray":"../node_modules/airbnb-prop-types/build/uniqueArray.js"}],"../node_modules/airbnb-prop-types/build/index.js":[function(require,module,exports) {
+"use strict";
 
-var _propTypesExact2 = _interopRequireDefault(_propTypesExact);
+var _propTypesExact = _interopRequireDefault(require("prop-types-exact"));
 
-var _and = require('./and');
+var _and = _interopRequireDefault(require("./and"));
 
-var _and2 = _interopRequireDefault(_and);
+var _between = _interopRequireDefault(require("./between"));
 
-var _between = require('./between');
+var _booleanSome = _interopRequireDefault(require("./booleanSome"));
 
-var _between2 = _interopRequireDefault(_between);
+var _childrenHavePropXorChildren = _interopRequireDefault(require("./childrenHavePropXorChildren"));
 
-var _booleanSome = require('./booleanSome');
+var _childrenOf = _interopRequireDefault(require("./childrenOf"));
 
-var _booleanSome2 = _interopRequireDefault(_booleanSome);
+var _childrenOfType = _interopRequireDefault(require("./childrenOfType"));
 
-var _childrenHavePropXorChildren = require('./childrenHavePropXorChildren');
+var _childrenSequenceOf = _interopRequireDefault(require("./childrenSequenceOf"));
 
-var _childrenHavePropXorChildren2 = _interopRequireDefault(_childrenHavePropXorChildren);
+var _componentWithName = _interopRequireDefault(require("./componentWithName"));
 
-var _childrenOf = require('./childrenOf');
+var _disallowedIf = _interopRequireDefault(require("./disallowedIf"));
 
-var _childrenOf2 = _interopRequireDefault(_childrenOf);
+var _elementType = _interopRequireDefault(require("./elementType"));
 
-var _childrenOfType = require('./childrenOfType');
+var _empty = _interopRequireDefault(require("./empty"));
 
-var _childrenOfType2 = _interopRequireDefault(_childrenOfType);
+var _explicitNull = _interopRequireDefault(require("./explicitNull"));
 
-var _childrenSequenceOf = require('./childrenSequenceOf');
+var _integer = _interopRequireDefault(require("./integer"));
 
-var _childrenSequenceOf2 = _interopRequireDefault(_childrenSequenceOf);
+var _keysOf = _interopRequireDefault(require("./keysOf"));
 
-var _componentWithName = require('./componentWithName');
+var _mutuallyExclusiveProps = _interopRequireDefault(require("./mutuallyExclusiveProps"));
 
-var _componentWithName2 = _interopRequireDefault(_componentWithName);
+var _mutuallyExclusiveTrueProps = _interopRequireDefault(require("./mutuallyExclusiveTrueProps"));
 
-var _elementType = require('./elementType');
+var _nChildren = _interopRequireDefault(require("./nChildren"));
 
-var _elementType2 = _interopRequireDefault(_elementType);
+var _nonNegativeInteger = _interopRequireDefault(require("./nonNegativeInteger"));
 
-var _explicitNull = require('./explicitNull');
+var _nonNegativeNumber = _interopRequireDefault(require("./nonNegativeNumber"));
 
-var _explicitNull2 = _interopRequireDefault(_explicitNull);
+var _numericString = _interopRequireDefault(require("./numericString"));
 
-var _integer = require('./integer');
+var _object = _interopRequireDefault(require("./object"));
 
-var _integer2 = _interopRequireDefault(_integer);
+var _or = _interopRequireDefault(require("./or"));
 
-var _keysOf = require('./keysOf');
+var _range = _interopRequireDefault(require("./range"));
 
-var _keysOf2 = _interopRequireDefault(_keysOf);
+var _requiredBy = _interopRequireDefault(require("./requiredBy"));
 
-var _mutuallyExclusiveProps = require('./mutuallyExclusiveProps');
+var _restrictedProp = _interopRequireDefault(require("./restrictedProp"));
 
-var _mutuallyExclusiveProps2 = _interopRequireDefault(_mutuallyExclusiveProps);
+var _sequenceOf = _interopRequireDefault(require("./sequenceOf"));
 
-var _mutuallyExclusiveTrueProps = require('./mutuallyExclusiveTrueProps');
+var _shape = _interopRequireDefault(require("./shape"));
 
-var _mutuallyExclusiveTrueProps2 = _interopRequireDefault(_mutuallyExclusiveTrueProps);
+var _stringStartsWith = _interopRequireDefault(require("./stringStartsWith"));
 
-var _nChildren = require('./nChildren');
+var _uniqueArray = _interopRequireDefault(require("./uniqueArray"));
 
-var _nChildren2 = _interopRequireDefault(_nChildren);
+var _uniqueArrayOf = _interopRequireDefault(require("./uniqueArrayOf"));
 
-var _nonNegativeInteger = require('./nonNegativeInteger');
+var _valuesOf = _interopRequireDefault(require("./valuesOf"));
 
-var _nonNegativeInteger2 = _interopRequireDefault(_nonNegativeInteger);
+var _withShape = _interopRequireDefault(require("./withShape"));
 
-var _nonNegativeNumber = require('./nonNegativeNumber');
-
-var _nonNegativeNumber2 = _interopRequireDefault(_nonNegativeNumber);
-
-var _numericString = require('./numericString');
-
-var _numericString2 = _interopRequireDefault(_numericString);
-
-var _object = require('./object');
-
-var _object2 = _interopRequireDefault(_object);
-
-var _or = require('./or');
-
-var _or2 = _interopRequireDefault(_or);
-
-var _range = require('./range');
-
-var _range2 = _interopRequireDefault(_range);
-
-var _requiredBy = require('./requiredBy');
-
-var _requiredBy2 = _interopRequireDefault(_requiredBy);
-
-var _restrictedProp = require('./restrictedProp');
-
-var _restrictedProp2 = _interopRequireDefault(_restrictedProp);
-
-var _sequenceOf = require('./sequenceOf');
-
-var _sequenceOf2 = _interopRequireDefault(_sequenceOf);
-
-var _shape = require('./shape');
-
-var _shape2 = _interopRequireDefault(_shape);
-
-var _stringStartsWith = require('./stringStartsWith');
-
-var _stringStartsWith2 = _interopRequireDefault(_stringStartsWith);
-
-var _uniqueArray = require('./uniqueArray');
-
-var _uniqueArray2 = _interopRequireDefault(_uniqueArray);
-
-var _uniqueArrayOf = require('./uniqueArrayOf');
-
-var _uniqueArrayOf2 = _interopRequireDefault(_uniqueArrayOf);
-
-var _valuesOf = require('./valuesOf');
-
-var _valuesOf2 = _interopRequireDefault(_valuesOf);
-
-var _withShape = require('./withShape');
-
-var _withShape2 = _interopRequireDefault(_withShape);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { 'default': obj }; }
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
 
 module.exports = {
-  and: _and2['default'],
-  between: _between2['default'],
-  booleanSome: _booleanSome2['default'],
-  childrenHavePropXorChildren: _childrenHavePropXorChildren2['default'],
-  childrenOf: _childrenOf2['default'],
-  childrenOfType: _childrenOfType2['default'],
-  childrenSequenceOf: _childrenSequenceOf2['default'],
-  componentWithName: _componentWithName2['default'],
-  elementType: _elementType2['default'],
-  explicitNull: _explicitNull2['default'],
-  forbidExtraProps: _propTypesExact2['default'],
-  integer: _integer2['default'],
-  keysOf: _keysOf2['default'],
-  mutuallyExclusiveProps: _mutuallyExclusiveProps2['default'],
-  mutuallyExclusiveTrueProps: _mutuallyExclusiveTrueProps2['default'],
-  nChildren: _nChildren2['default'],
-  nonNegativeInteger: _nonNegativeInteger2['default'],
-  nonNegativeNumber: _nonNegativeNumber2['default'],
-  numericString: _numericString2['default'],
-  object: _object2['default'],
-  or: _or2['default'],
-  range: _range2['default'],
-  requiredBy: _requiredBy2['default'],
-  restrictedProp: _restrictedProp2['default'],
-  sequenceOf: _sequenceOf2['default'],
-  shape: _shape2['default'],
-  stringStartsWith: _stringStartsWith2['default'],
-  uniqueArray: _uniqueArray2['default'],
-  uniqueArrayOf: _uniqueArrayOf2['default'],
-  valuesOf: _valuesOf2['default'],
-  withShape: _withShape2['default']
+  and: _and["default"],
+  between: _between["default"],
+  booleanSome: _booleanSome["default"],
+  childrenHavePropXorChildren: _childrenHavePropXorChildren["default"],
+  childrenOf: _childrenOf["default"],
+  childrenOfType: _childrenOfType["default"],
+  childrenSequenceOf: _childrenSequenceOf["default"],
+  componentWithName: _componentWithName["default"],
+  disallowedIf: _disallowedIf["default"],
+  elementType: _elementType["default"],
+  empty: _empty["default"],
+  explicitNull: _explicitNull["default"],
+  forbidExtraProps: _propTypesExact["default"],
+  integer: _integer["default"],
+  keysOf: _keysOf["default"],
+  mutuallyExclusiveProps: _mutuallyExclusiveProps["default"],
+  mutuallyExclusiveTrueProps: _mutuallyExclusiveTrueProps["default"],
+  nChildren: _nChildren["default"],
+  nonNegativeInteger: _nonNegativeInteger["default"],
+  nonNegativeNumber: _nonNegativeNumber["default"],
+  numericString: _numericString["default"],
+  object: _object["default"],
+  or: _or["default"],
+  range: _range["default"],
+  requiredBy: _requiredBy["default"],
+  restrictedProp: _restrictedProp["default"],
+  sequenceOf: _sequenceOf["default"],
+  shape: _shape["default"],
+  stringStartsWith: _stringStartsWith["default"],
+  uniqueArray: _uniqueArray["default"],
+  uniqueArrayOf: _uniqueArrayOf["default"],
+  valuesOf: _valuesOf["default"],
+  withShape: _withShape["default"]
 };
 
-},{"prop-types-exact":"../node_modules/prop-types-exact/build/index.js","./and":"../node_modules/airbnb-prop-types/build/and.js","./between":"../node_modules/airbnb-prop-types/build/between.js","./booleanSome":"../node_modules/airbnb-prop-types/build/booleanSome.js","./childrenHavePropXorChildren":"../node_modules/airbnb-prop-types/build/childrenHavePropXorChildren.js","./childrenOf":"../node_modules/airbnb-prop-types/build/childrenOf.js","./childrenOfType":"../node_modules/airbnb-prop-types/build/childrenOfType.js","./childrenSequenceOf":"../node_modules/airbnb-prop-types/build/childrenSequenceOf.js","./componentWithName":"../node_modules/airbnb-prop-types/build/componentWithName.js","./elementType":"../node_modules/airbnb-prop-types/build/elementType.js","./explicitNull":"../node_modules/airbnb-prop-types/build/explicitNull.js","./integer":"../node_modules/airbnb-prop-types/build/integer.js","./keysOf":"../node_modules/airbnb-prop-types/build/keysOf.js","./mutuallyExclusiveProps":"../node_modules/airbnb-prop-types/build/mutuallyExclusiveProps.js","./mutuallyExclusiveTrueProps":"../node_modules/airbnb-prop-types/build/mutuallyExclusiveTrueProps.js","./nChildren":"../node_modules/airbnb-prop-types/build/nChildren.js","./nonNegativeInteger":"../node_modules/airbnb-prop-types/build/nonNegativeInteger.js","./nonNegativeNumber":"../node_modules/airbnb-prop-types/build/nonNegativeNumber.js","./numericString":"../node_modules/airbnb-prop-types/build/numericString.js","./object":"../node_modules/airbnb-prop-types/build/object.js","./or":"../node_modules/airbnb-prop-types/build/or.js","./range":"../node_modules/airbnb-prop-types/build/range.js","./requiredBy":"../node_modules/airbnb-prop-types/build/requiredBy.js","./restrictedProp":"../node_modules/airbnb-prop-types/build/restrictedProp.js","./sequenceOf":"../node_modules/airbnb-prop-types/build/sequenceOf.js","./shape":"../node_modules/airbnb-prop-types/build/shape.js","./stringStartsWith":"../node_modules/airbnb-prop-types/build/stringStartsWith.js","./uniqueArray":"../node_modules/airbnb-prop-types/build/uniqueArray.js","./uniqueArrayOf":"../node_modules/airbnb-prop-types/build/uniqueArrayOf.js","./valuesOf":"../node_modules/airbnb-prop-types/build/valuesOf.js","./withShape":"../node_modules/airbnb-prop-types/build/withShape.js"}],"../node_modules/airbnb-prop-types/index.js":[function(require,module,exports) {
+},{"prop-types-exact":"../node_modules/prop-types-exact/build/index.js","./and":"../node_modules/airbnb-prop-types/build/and.js","./between":"../node_modules/airbnb-prop-types/build/between.js","./booleanSome":"../node_modules/airbnb-prop-types/build/booleanSome.js","./childrenHavePropXorChildren":"../node_modules/airbnb-prop-types/build/childrenHavePropXorChildren.js","./childrenOf":"../node_modules/airbnb-prop-types/build/childrenOf.js","./childrenOfType":"../node_modules/airbnb-prop-types/build/childrenOfType.js","./childrenSequenceOf":"../node_modules/airbnb-prop-types/build/childrenSequenceOf.js","./componentWithName":"../node_modules/airbnb-prop-types/build/componentWithName.js","./disallowedIf":"../node_modules/airbnb-prop-types/build/disallowedIf.js","./elementType":"../node_modules/airbnb-prop-types/build/elementType.js","./empty":"../node_modules/airbnb-prop-types/build/empty.js","./explicitNull":"../node_modules/airbnb-prop-types/build/explicitNull.js","./integer":"../node_modules/airbnb-prop-types/build/integer.js","./keysOf":"../node_modules/airbnb-prop-types/build/keysOf.js","./mutuallyExclusiveProps":"../node_modules/airbnb-prop-types/build/mutuallyExclusiveProps.js","./mutuallyExclusiveTrueProps":"../node_modules/airbnb-prop-types/build/mutuallyExclusiveTrueProps.js","./nChildren":"../node_modules/airbnb-prop-types/build/nChildren.js","./nonNegativeInteger":"../node_modules/airbnb-prop-types/build/nonNegativeInteger.js","./nonNegativeNumber":"../node_modules/airbnb-prop-types/build/nonNegativeNumber.js","./numericString":"../node_modules/airbnb-prop-types/build/numericString.js","./object":"../node_modules/airbnb-prop-types/build/object.js","./or":"../node_modules/airbnb-prop-types/build/or.js","./range":"../node_modules/airbnb-prop-types/build/range.js","./requiredBy":"../node_modules/airbnb-prop-types/build/requiredBy.js","./restrictedProp":"../node_modules/airbnb-prop-types/build/restrictedProp.js","./sequenceOf":"../node_modules/airbnb-prop-types/build/sequenceOf.js","./shape":"../node_modules/airbnb-prop-types/build/shape.js","./stringStartsWith":"../node_modules/airbnb-prop-types/build/stringStartsWith.js","./uniqueArray":"../node_modules/airbnb-prop-types/build/uniqueArray.js","./uniqueArrayOf":"../node_modules/airbnb-prop-types/build/uniqueArrayOf.js","./valuesOf":"../node_modules/airbnb-prop-types/build/valuesOf.js","./withShape":"../node_modules/airbnb-prop-types/build/withShape.js"}],"../node_modules/airbnb-prop-types/index.js":[function(require,module,exports) {
 module.exports = undefined === 'production' ? require('./build/mocks') : require('./build');
 },{"./build/mocks":"../node_modules/airbnb-prop-types/build/mocks/index.js","./build":"../node_modules/airbnb-prop-types/build/index.js"}],"../node_modules/react-dates/constants.js":[function(require,module,exports) {
 module.exports = {
@@ -41507,7 +42041,7 @@ var CalendarDayPhrases = exports.CalendarDayPhrases = {
 },{}],"../node_modules/classnames/index.js":[function(require,module,exports) {
 var define;
 /*!
-  Copyright (c) 2016 Jed Watson.
+  Copyright (c) 2017 Jed Watson.
   Licensed under the MIT License (MIT), see
   http://jedwatson.github.io/classnames
 */
@@ -41529,8 +42063,11 @@ var define;
 
 			if (argType === 'string' || argType === 'number') {
 				classes.push(arg);
-			} else if (Array.isArray(arg)) {
-				classes.push(classNames.apply(null, arg));
+			} else if (Array.isArray(arg) && arg.length) {
+				var inner = classNames.apply(null, arg);
+				if (inner) {
+					classes.push(inner);
+				}
 			} else if (argType === 'object') {
 				for (var key in arg) {
 					if (hasOwn.call(arg, key) && arg[key]) {
@@ -41544,6 +42081,7 @@ var define;
 	}
 
 	if (typeof module !== 'undefined' && module.exports) {
+		classNames.default = classNames;
 		module.exports = classNames;
 	} else if (typeof define === 'function' && typeof define.amd === 'object' && define.amd) {
 		// register as 'classnames', consistent with npm package name
@@ -42474,6 +43012,27 @@ function createInvalidRequiredErrorMessage(propName, componentName, value) {
   );
 }
 
+var independentGuardianValue = -1;
+
+function preValidationRequireCheck(isRequired, componentName, propFullName, propValue) {
+  var isPropValueUndefined = typeof propValue === 'undefined';
+  var isPropValueNull = propValue === null;
+
+  if (isRequired) {
+    if (isPropValueUndefined) {
+      return createInvalidRequiredErrorMessage(propFullName, componentName, 'undefined');
+    } else if (isPropValueNull) {
+      return createInvalidRequiredErrorMessage(propFullName, componentName, 'null');
+    }
+  }
+
+  if (isPropValueUndefined || isPropValueNull) {
+    return null;
+  }
+
+  return independentGuardianValue;
+}
+
 function createMomentChecker(type, typeValidator, validator, momentType) {
 
   function propValidator(
@@ -42488,21 +43047,15 @@ function createMomentChecker(type, typeValidator, validator, momentType) {
     var propValue = props[ propName ];
     var propType = typeof propValue;
 
-    var isPropValueUndefined = typeof propValue === 'undefined';
-    var isPropValueNull = propValue === null;
+    componentName = componentName || messages.anonymousMessage;
+    propFullName = propFullName || propName;
 
-    if (isRequired) {
-      componentName = componentName ||  messages.anonymousMessage;
-      propFullName = propFullName || propName;
-      if (isPropValueUndefined) {
-        return createInvalidRequiredErrorMessage(propFullName, componentName, 'undefined');
-      } else if (isPropValueNull) {
-        return createInvalidRequiredErrorMessage(propFullName, componentName, 'null');
-      }
-    }
+    var preValidationRequireCheckValue = preValidationRequireCheck(
+      isRequired, componentName, propFullName, propValue
+    );
 
-    if (isPropValueUndefined || isPropValueNull) {
-      return null;
+    if (preValidationRequireCheckValue !== independentGuardianValue) {
+      return preValidationRequireCheckValue;
     }
 
     if (typeValidator && !typeValidator(propValue)) {
@@ -42512,14 +43065,14 @@ function createMomentChecker(type, typeValidator, validator, momentType) {
       );
     }
 
-    if (! validator(propValue)) {
+    if (!validator(propValue)) {
       return new Error(
         messages.baseInvalidMessage + location + ' `' + propName + '` of type `' + propType + '` ' +
         'supplied to `' + componentName + '`, expected `' + momentType + '`.'
       );
     }
 
-    if (predicate && ! predicate(propValue)) {
+    if (predicate && !predicate(propValue)) {
       var predicateName = predicate.name || messages.anonymousMessage;
       return new Error(
         messages.baseInvalidMessage + location + ' `' + propName + '` of type `' + propType + '` ' +
@@ -42546,10 +43099,6 @@ module.exports = {
 var moment = require('moment');
 var momentValidationWrapper = require('./moment-validation-wrapper');
 var core = require('./core');
-
-moment.createFromInputFallback = function(config) {
-  config._d = new Date(config._i);
-};
 
 module.exports = {
 
@@ -42875,7 +43424,7 @@ function toLocalizedDateString(date, currentFormat) {
 
   return dateObj.format(_constants.DISPLAY_FORMAT);
 }
-},{"moment":"../node_modules/moment/moment.js","./toMomentObject":"../node_modules/react-dates/lib/utils/toMomentObject.js","../../constants":"../node_modules/react-dates/constants.js"}],"../node_modules/react-dates/node_modules/lodash/isObject.js":[function(require,module,exports) {
+},{"moment":"../node_modules/moment/moment.js","./toMomentObject":"../node_modules/react-dates/lib/utils/toMomentObject.js","../../constants":"../node_modules/react-dates/constants.js"}],"../node_modules/lodash/isObject.js":[function(require,module,exports) {
 /**
  * Checks if `value` is the
  * [language type](http://www.ecma-international.org/ecma-262/7.0/#sec-ecmascript-language-types)
@@ -42908,14 +43457,14 @@ function isObject(value) {
 
 module.exports = isObject;
 
-},{}],"../node_modules/react-dates/node_modules/lodash/_freeGlobal.js":[function(require,module,exports) {
+},{}],"../node_modules/lodash/_freeGlobal.js":[function(require,module,exports) {
 var global = arguments[3];
 /** Detect free variable `global` from Node.js. */
 var freeGlobal = typeof global == 'object' && global && global.Object === Object && global;
 
 module.exports = freeGlobal;
 
-},{}],"../node_modules/react-dates/node_modules/lodash/_root.js":[function(require,module,exports) {
+},{}],"../node_modules/lodash/_root.js":[function(require,module,exports) {
 var freeGlobal = require('./_freeGlobal');
 
 /** Detect free variable `self`. */
@@ -42926,7 +43475,7 @@ var root = freeGlobal || freeSelf || Function('return this')();
 
 module.exports = root;
 
-},{"./_freeGlobal":"../node_modules/react-dates/node_modules/lodash/_freeGlobal.js"}],"../node_modules/react-dates/node_modules/lodash/now.js":[function(require,module,exports) {
+},{"./_freeGlobal":"../node_modules/lodash/_freeGlobal.js"}],"../node_modules/lodash/now.js":[function(require,module,exports) {
 var root = require('./_root');
 
 /**
@@ -42951,7 +43500,7 @@ var now = function() {
 
 module.exports = now;
 
-},{"./_root":"../node_modules/react-dates/node_modules/lodash/_root.js"}],"../node_modules/react-dates/node_modules/lodash/_Symbol.js":[function(require,module,exports) {
+},{"./_root":"../node_modules/lodash/_root.js"}],"../node_modules/lodash/_Symbol.js":[function(require,module,exports) {
 var root = require('./_root');
 
 /** Built-in value references. */
@@ -42959,7 +43508,7 @@ var Symbol = root.Symbol;
 
 module.exports = Symbol;
 
-},{"./_root":"../node_modules/react-dates/node_modules/lodash/_root.js"}],"../node_modules/react-dates/node_modules/lodash/_getRawTag.js":[function(require,module,exports) {
+},{"./_root":"../node_modules/lodash/_root.js"}],"../node_modules/lodash/_getRawTag.js":[function(require,module,exports) {
 var Symbol = require('./_Symbol');
 
 /** Used for built-in method references. */
@@ -43007,7 +43556,7 @@ function getRawTag(value) {
 
 module.exports = getRawTag;
 
-},{"./_Symbol":"../node_modules/react-dates/node_modules/lodash/_Symbol.js"}],"../node_modules/react-dates/node_modules/lodash/_objectToString.js":[function(require,module,exports) {
+},{"./_Symbol":"../node_modules/lodash/_Symbol.js"}],"../node_modules/lodash/_objectToString.js":[function(require,module,exports) {
 /** Used for built-in method references. */
 var objectProto = Object.prototype;
 
@@ -43031,7 +43580,7 @@ function objectToString(value) {
 
 module.exports = objectToString;
 
-},{}],"../node_modules/react-dates/node_modules/lodash/_baseGetTag.js":[function(require,module,exports) {
+},{}],"../node_modules/lodash/_baseGetTag.js":[function(require,module,exports) {
 var Symbol = require('./_Symbol'),
     getRawTag = require('./_getRawTag'),
     objectToString = require('./_objectToString');
@@ -43061,7 +43610,7 @@ function baseGetTag(value) {
 
 module.exports = baseGetTag;
 
-},{"./_Symbol":"../node_modules/react-dates/node_modules/lodash/_Symbol.js","./_getRawTag":"../node_modules/react-dates/node_modules/lodash/_getRawTag.js","./_objectToString":"../node_modules/react-dates/node_modules/lodash/_objectToString.js"}],"../node_modules/react-dates/node_modules/lodash/isObjectLike.js":[function(require,module,exports) {
+},{"./_Symbol":"../node_modules/lodash/_Symbol.js","./_getRawTag":"../node_modules/lodash/_getRawTag.js","./_objectToString":"../node_modules/lodash/_objectToString.js"}],"../node_modules/lodash/isObjectLike.js":[function(require,module,exports) {
 /**
  * Checks if `value` is object-like. A value is object-like if it's not `null`
  * and has a `typeof` result of "object".
@@ -43092,7 +43641,7 @@ function isObjectLike(value) {
 
 module.exports = isObjectLike;
 
-},{}],"../node_modules/react-dates/node_modules/lodash/isSymbol.js":[function(require,module,exports) {
+},{}],"../node_modules/lodash/isSymbol.js":[function(require,module,exports) {
 var baseGetTag = require('./_baseGetTag'),
     isObjectLike = require('./isObjectLike');
 
@@ -43123,7 +43672,7 @@ function isSymbol(value) {
 
 module.exports = isSymbol;
 
-},{"./_baseGetTag":"../node_modules/react-dates/node_modules/lodash/_baseGetTag.js","./isObjectLike":"../node_modules/react-dates/node_modules/lodash/isObjectLike.js"}],"../node_modules/react-dates/node_modules/lodash/toNumber.js":[function(require,module,exports) {
+},{"./_baseGetTag":"../node_modules/lodash/_baseGetTag.js","./isObjectLike":"../node_modules/lodash/isObjectLike.js"}],"../node_modules/lodash/toNumber.js":[function(require,module,exports) {
 var isObject = require('./isObject'),
     isSymbol = require('./isSymbol');
 
@@ -43191,7 +43740,7 @@ function toNumber(value) {
 
 module.exports = toNumber;
 
-},{"./isObject":"../node_modules/react-dates/node_modules/lodash/isObject.js","./isSymbol":"../node_modules/react-dates/node_modules/lodash/isSymbol.js"}],"../node_modules/react-dates/node_modules/lodash/debounce.js":[function(require,module,exports) {
+},{"./isObject":"../node_modules/lodash/isObject.js","./isSymbol":"../node_modules/lodash/isSymbol.js"}],"../node_modules/lodash/debounce.js":[function(require,module,exports) {
 var isObject = require('./isObject'),
     now = require('./now'),
     toNumber = require('./toNumber');
@@ -43383,7 +43932,7 @@ function debounce(func, wait, options) {
 
 module.exports = debounce;
 
-},{"./isObject":"../node_modules/react-dates/node_modules/lodash/isObject.js","./now":"../node_modules/react-dates/node_modules/lodash/now.js","./toNumber":"../node_modules/react-dates/node_modules/lodash/toNumber.js"}],"../node_modules/react-dates/node_modules/lodash/throttle.js":[function(require,module,exports) {
+},{"./isObject":"../node_modules/lodash/isObject.js","./now":"../node_modules/lodash/now.js","./toNumber":"../node_modules/lodash/toNumber.js"}],"../node_modules/lodash/throttle.js":[function(require,module,exports) {
 var debounce = require('./debounce'),
     isObject = require('./isObject');
 
@@ -43454,7 +44003,7 @@ function throttle(func, wait, options) {
 
 module.exports = throttle;
 
-},{"./debounce":"../node_modules/react-dates/node_modules/lodash/debounce.js","./isObject":"../node_modules/react-dates/node_modules/lodash/isObject.js"}],"../node_modules/react-dates/lib/components/DateInput.js":[function(require,module,exports) {
+},{"./debounce":"../node_modules/lodash/debounce.js","./isObject":"../node_modules/lodash/isObject.js"}],"../node_modules/react-dates/lib/components/DateInput.js":[function(require,module,exports) {
 module.exports =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -43918,7 +44467,7 @@ module.exports = require("is-touch-device");
 /***/ })
 
 /******/ });
-},{"react":"../node_modules/react/index.js","airbnb-prop-types":"../node_modules/airbnb-prop-types/index.js","../shapes/OpenDirectionShape":"../node_modules/react-dates/lib/shapes/OpenDirectionShape.js","../../constants":"../node_modules/react-dates/constants.js","lodash/throttle":"../node_modules/react-dates/node_modules/lodash/throttle.js","prop-types":"../node_modules/prop-types/index.js","classnames":"../node_modules/classnames/index.js","is-touch-device":"../node_modules/is-touch-device/build/index.js"}],"../node_modules/react-dates/lib/components/DateRangePickerInput.js":[function(require,module,exports) {
+},{"react":"../node_modules/react/index.js","airbnb-prop-types":"../node_modules/airbnb-prop-types/index.js","../shapes/OpenDirectionShape":"../node_modules/react-dates/lib/shapes/OpenDirectionShape.js","../../constants":"../node_modules/react-dates/constants.js","lodash/throttle":"../node_modules/lodash/throttle.js","prop-types":"../node_modules/prop-types/index.js","classnames":"../node_modules/classnames/index.js","is-touch-device":"../node_modules/is-touch-device/build/index.js"}],"../node_modules/react-dates/lib/components/DateRangePickerInput.js":[function(require,module,exports) {
 module.exports =
 /******/ (function(modules) { // webpackBootstrap
 /******/ 	// The module cache
@@ -49501,7 +50050,7 @@ DayPicker.defaultProps = defaultProps;
 
 /***/ })
 /******/ ]);
-},{"react":"../node_modules/react/index.js","airbnb-prop-types":"../node_modules/airbnb-prop-types/index.js","../../constants":"../node_modules/react-dates/constants.js","../defaultPhrases":"../node_modules/react-dates/lib/defaultPhrases.js","prop-types":"../node_modules/prop-types/index.js","../utils/getPhrasePropTypes":"../node_modules/react-dates/lib/utils/getPhrasePropTypes.js","classnames":"../node_modules/classnames/index.js","moment":"../node_modules/moment/moment.js","../shapes/ScrollableOrientationShape":"../node_modules/react-dates/lib/shapes/ScrollableOrientationShape.js","is-touch-device":"../node_modules/is-touch-device/build/index.js","../shapes/DayOfWeekShape":"../node_modules/react-dates/lib/shapes/DayOfWeekShape.js","react-addons-shallow-compare":"../node_modules/react-addons-shallow-compare/index.js","./OutsideClickHandler":"../node_modules/react-dates/lib/components/OutsideClickHandler.js","../utils/isDayVisible":"../node_modules/react-dates/lib/utils/isDayVisible.js","../utils/getCalendarMonthWidth":"../node_modules/react-dates/lib/utils/getCalendarMonthWidth.js","../utils/getTransformStyles":"../node_modules/react-dates/lib/utils/getTransformStyles.js","lodash/throttle":"../node_modules/react-dates/node_modules/lodash/throttle.js","react-dom":"../node_modules/react-dom/index.js","../utils/getActiveElement":"../node_modules/react-dates/lib/utils/getActiveElement.js","./CalendarMonthGrid":"../node_modules/react-dates/lib/components/CalendarMonthGrid.js","./DayPickerKeyboardShortcuts":"../node_modules/react-dates/lib/components/DayPickerKeyboardShortcuts.js","./DayPickerNavigation":"../node_modules/react-dates/lib/components/DayPickerNavigation.js"}],"../node_modules/object.values/implementation.js":[function(require,module,exports) {
+},{"react":"../node_modules/react/index.js","airbnb-prop-types":"../node_modules/airbnb-prop-types/index.js","../../constants":"../node_modules/react-dates/constants.js","../defaultPhrases":"../node_modules/react-dates/lib/defaultPhrases.js","prop-types":"../node_modules/prop-types/index.js","../utils/getPhrasePropTypes":"../node_modules/react-dates/lib/utils/getPhrasePropTypes.js","classnames":"../node_modules/classnames/index.js","moment":"../node_modules/moment/moment.js","../shapes/ScrollableOrientationShape":"../node_modules/react-dates/lib/shapes/ScrollableOrientationShape.js","is-touch-device":"../node_modules/is-touch-device/build/index.js","../shapes/DayOfWeekShape":"../node_modules/react-dates/lib/shapes/DayOfWeekShape.js","react-addons-shallow-compare":"../node_modules/react-addons-shallow-compare/index.js","./OutsideClickHandler":"../node_modules/react-dates/lib/components/OutsideClickHandler.js","../utils/isDayVisible":"../node_modules/react-dates/lib/utils/isDayVisible.js","../utils/getCalendarMonthWidth":"../node_modules/react-dates/lib/utils/getCalendarMonthWidth.js","../utils/getTransformStyles":"../node_modules/react-dates/lib/utils/getTransformStyles.js","lodash/throttle":"../node_modules/lodash/throttle.js","react-dom":"../node_modules/react-dom/index.js","../utils/getActiveElement":"../node_modules/react-dates/lib/utils/getActiveElement.js","./CalendarMonthGrid":"../node_modules/react-dates/lib/components/CalendarMonthGrid.js","./DayPickerKeyboardShortcuts":"../node_modules/react-dates/lib/components/DayPickerKeyboardShortcuts.js","./DayPickerNavigation":"../node_modules/react-dates/lib/components/DayPickerNavigation.js"}],"../node_modules/object.values/implementation.js":[function(require,module,exports) {
 'use strict';
 
 var ES = require('es-abstract/es7');
@@ -54954,7 +55503,7 @@ function getBundleURL() {
   try {
     throw new Error();
   } catch (err) {
-    var matches = ('' + err.stack).match(/(https?|file|ftp):\/\/[^)\n]+/g);
+    var matches = ('' + err.stack).match(/(https?|file|ftp|chrome-extension|moz-extension):\/\/[^)\n]+/g);
 
     if (matches) {
       return getBaseURL(matches[0]);
@@ -54965,7 +55514,7 @@ function getBundleURL() {
 }
 
 function getBaseURL(url) {
-  return ('' + url).replace(/^((?:https?|file|ftp):\/\/.+)\/[^/]+$/, '$1') + '/';
+  return ('' + url).replace(/^((?:https?|file|ftp|chrome-extension|moz-extension):\/\/.+)\/[^/]+$/, '$1') + '/';
 }
 
 exports.getBundleURL = getBundleURLCached;
@@ -69888,7 +70437,6 @@ Item.prototype.run = function () {
 };
 
 process.title = 'browser';
-process.browser = true;
 process.env = {};
 process.argv = [];
 process.version = ''; // empty string to avoid regexp issues
@@ -81514,7 +82062,7 @@ function genericHashLink(props, As) {
     }
     if (hashFragment !== '') {
       scrollFunction = props.scroll || function (el) {
-        return el.scrollIntoView(props.smooth ? { behavior: 'smooth' } : undefined);
+        return props.smooth ? el.scrollIntoView({ behavior: "smooth" }) : el.scrollIntoView();
       };
       hashLinkScroll();
     }
@@ -83019,26 +83567,46 @@ function Module(moduleName) {
 }
 
 module.bundle.Module = Module;
+var checkedAssets, assetsToAccept;
 var parent = module.bundle.parent;
 
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "33831" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "36301" + '/');
 
   ws.onmessage = function (event) {
+    checkedAssets = {};
+    assetsToAccept = [];
     var data = JSON.parse(event.data);
 
     if (data.type === 'update') {
-      console.clear();
-      data.assets.forEach(function (asset) {
-        hmrApply(global.parcelRequire, asset);
-      });
+      var handled = false;
       data.assets.forEach(function (asset) {
         if (!asset.isNew) {
-          hmrAccept(global.parcelRequire, asset.id);
+          var didAccept = hmrAcceptCheck(global.parcelRequire, asset.id);
+
+          if (didAccept) {
+            handled = true;
+          }
         }
+      }); // Enable HMR for CSS by default.
+
+      handled = handled || data.assets.every(function (asset) {
+        return asset.type === 'css' && asset.generated.js;
       });
+
+      if (handled) {
+        console.clear();
+        data.assets.forEach(function (asset) {
+          hmrApply(global.parcelRequire, asset);
+        });
+        assetsToAccept.forEach(function (v) {
+          hmrAcceptRun(v[0], v[1]);
+        });
+      } else {
+        window.location.reload();
+      }
     }
 
     if (data.type === 'reload') {
@@ -83126,7 +83694,7 @@ function hmrApply(bundle, asset) {
   }
 }
 
-function hmrAccept(bundle, id) {
+function hmrAcceptCheck(bundle, id) {
   var modules = bundle.modules;
 
   if (!modules) {
@@ -83134,9 +83702,27 @@ function hmrAccept(bundle, id) {
   }
 
   if (!modules[id] && bundle.parent) {
-    return hmrAccept(bundle.parent, id);
+    return hmrAcceptCheck(bundle.parent, id);
   }
 
+  if (checkedAssets[id]) {
+    return;
+  }
+
+  checkedAssets[id] = true;
+  var cached = bundle.cache[id];
+  assetsToAccept.push([bundle, id]);
+
+  if (cached && cached.hot && cached.hot._acceptCallbacks.length) {
+    return true;
+  }
+
+  return getParents(global.parcelRequire, id).some(function (id) {
+    return hmrAcceptCheck(global.parcelRequire, id);
+  });
+}
+
+function hmrAcceptRun(bundle, id) {
   var cached = bundle.cache[id];
   bundle.hotData = {};
 
@@ -83161,10 +83747,6 @@ function hmrAccept(bundle, id) {
 
     return true;
   }
-
-  return getParents(global.parcelRequire, id).some(function (id) {
-    return hmrAccept(global.parcelRequire, id);
-  });
 }
 },{}]},{},["../node_modules/parcel-bundler/src/builtins/hmr-runtime.js","../src/app.js"], null)
-//# sourceMappingURL=/app.581aa3f0.map
+//# sourceMappingURL=/app.581aa3f0.js.map
