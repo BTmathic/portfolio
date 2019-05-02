@@ -4,6 +4,9 @@
   "main": "index.js",
   "author": "Alexander Molnar",
   "license": "MIT",
+  "engines": {
+    "node": "9.4.0"
+  },
   "scripts": {
     "dev": "parcel public/index.html",
     "build": "parcel build public/index.html --out-dir prod",
