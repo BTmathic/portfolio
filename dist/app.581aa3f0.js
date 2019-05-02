@@ -28555,13 +28555,13 @@ var _withRouter2 = _interopRequireDefault(require("./withRouter"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 },{"./BrowserRouter":"../node_modules/react-router-dom/es/BrowserRouter.js","./HashRouter":"../node_modules/react-router-dom/es/HashRouter.js","./Link":"../node_modules/react-router-dom/es/Link.js","./MemoryRouter":"../node_modules/react-router-dom/es/MemoryRouter.js","./NavLink":"../node_modules/react-router-dom/es/NavLink.js","./Prompt":"../node_modules/react-router-dom/es/Prompt.js","./Redirect":"../node_modules/react-router-dom/es/Redirect.js","./Route":"../node_modules/react-router-dom/es/Route.js","./Router":"../node_modules/react-router-dom/es/Router.js","./StaticRouter":"../node_modules/react-router-dom/es/StaticRouter.js","./Switch":"../node_modules/react-router-dom/es/Switch.js","./matchPath":"../node_modules/react-router-dom/es/matchPath.js","./withRouter":"../node_modules/react-router-dom/es/withRouter.js"}],"Images/react-logo.svg":[function(require,module,exports) {
-module.exports = "/../react-logo.51016585.svg";
+module.exports = "/react-logo.51016585.svg";
 },{}],"Images/redux-logo.svg":[function(require,module,exports) {
-module.exports = "/../redux-logo.e9e7de85.svg";
+module.exports = "/redux-logo.e9e7de85.svg";
 },{}],"Images/nodejs-logo.svg":[function(require,module,exports) {
-module.exports = "/../nodejs-logo.579f72b0.svg";
+module.exports = "/nodejs-logo.579f72b0.svg";
 },{}],"Images/d3-logo.svg":[function(require,module,exports) {
-module.exports = "/../d3-logo.1924b5ee.svg";
+module.exports = "/d3-logo.1924b5ee.svg";
 },{}],"../src/components/Header.js":[function(require,module,exports) {
 "use strict";
 
@@ -28641,7 +28641,7 @@ var _default = function _default() {
 
 exports.default = _default;
 },{"react":"../node_modules/react/index.js","../../public/Images/react-logo.svg":"Images/react-logo.svg","../../public/Images/redux-logo.svg":"Images/redux-logo.svg","../../public/Images/nodejs-logo.svg":"Images/nodejs-logo.svg","../../public/Images/d3-logo.svg":"Images/d3-logo.svg"}],"Images/myAvatar.svg":[function(require,module,exports) {
-module.exports = "/../myAvatar.7b33cc42.svg";
+module.exports = "/myAvatar.7b33cc42.svg";
 },{}],"../src/components/AboutMe.js":[function(require,module,exports) {
 "use strict";
 
@@ -28676,13 +28676,13 @@ var AboutMe = function AboutMe(props) {
 var _default = AboutMe;
 exports.default = _default;
 },{"react":"../node_modules/react/index.js","../../public/Images/myAvatar.svg":"Images/myAvatar.svg"}],"Images/github-logo.png":[function(require,module,exports) {
-module.exports = "/../github-logo.fc9f07b2.png";
+module.exports = "/github-logo.fc9f07b2.png";
 },{}],"Images/codepen-logo.png":[function(require,module,exports) {
-module.exports = "/../codepen-logo.e949f64f.png";
+module.exports = "/codepen-logo.e949f64f.png";
 },{}],"Images/linkedin-logo.png":[function(require,module,exports) {
-module.exports = "/../linkedin-logo.6751d16e.png";
+module.exports = "/linkedin-logo.6751d16e.png";
 },{}],"Images/email.png":[function(require,module,exports) {
-module.exports = "/../email.260fe56d.png";
+module.exports = "/email.260fe56d.png";
 },{}],"../src/components/Contact.js":[function(require,module,exports) {
 "use strict";
 
@@ -28746,17 +28746,17 @@ var Contact = function Contact() {
 var _default = Contact;
 exports.default = _default;
 },{"react":"../node_modules/react/index.js","../../public/Images/github-logo.png":"Images/github-logo.png","../../public/Images/codepen-logo.png":"Images/codepen-logo.png","../../public/Images/linkedin-logo.png":"Images/linkedin-logo.png","../../public/Images/email.png":"Images/email.png"}],"Images/tilemap.png":[function(require,module,exports) {
-module.exports = "/../tilemap.bca73ab2.png";
+module.exports = "/tilemap.bca73ab2.png";
 },{}],"Images/coffee-house.png":[function(require,module,exports) {
-module.exports = "/../coffee-house.6a00f27e.png";
+module.exports = "/coffee-house.6a00f27e.png";
 },{}],"Images/expensify.png":[function(require,module,exports) {
-module.exports = "/../expensify.9f03f931.png";
+module.exports = "/expensify.9f03f931.png";
 },{}],"Images/thai-restaurant.png":[function(require,module,exports) {
-module.exports = "/../thai-restaurant.fdc9e64e.png";
+module.exports = "/thai-restaurant.fdc9e64e.png";
 },{}],"Images/dungeon-crawler.png":[function(require,module,exports) {
-module.exports = "/../dungeon-crawler.fdac0712.png";
+module.exports = "/dungeon-crawler.fdac0712.png";
 },{}],"Images/landing-page.png":[function(require,module,exports) {
-module.exports = "/../landing-page.04d790d1.png";
+module.exports = "/landing-page.04d790d1.png";
 },{}],"../src/projects/projects.js":[function(require,module,exports) {
 "use strict";
 
@@ -28915,9 +28915,9 @@ function (_React$Component) {
 var _default = Projects;
 exports.default = _default;
 },{"react":"../node_modules/react/index.js","react-router-dom":"../node_modules/react-router-dom/es/index.js","../projects/projects":"../src/projects/projects.js"}],"Images/freeCodeCamp.png":[function(require,module,exports) {
-module.exports = "/../freeCodeCamp.aadbed67.png";
+module.exports = "/freeCodeCamp.aadbed67.png";
 },{}],"Images/hacktober.png":[function(require,module,exports) {
-module.exports = "/../hacktober.c4069b8e.png";
+module.exports = "/hacktober.c4069b8e.png";
 },{}],"../src/components/OpenSource.js":[function(require,module,exports) {
 "use strict";
 
@@ -36627,6 +36627,8 @@ if (!Object.keys) {
     $frames: true,
     $innerHeight: true,
     $innerWidth: true,
+    $onmozfullscreenchange: true,
+    $onmozfullscreenerror: true,
     $outerHeight: true,
     $outerWidth: true,
     $pageXOffset: true,
@@ -36832,7 +36834,192 @@ var defineProperties = function (object, map) {
 
 defineProperties.supportsDescriptors = !!supportsDescriptors;
 module.exports = defineProperties;
-},{"object-keys":"../node_modules/object-keys/index.js"}],"../node_modules/function-bind/implementation.js":[function(require,module,exports) {
+},{"object-keys":"../node_modules/object-keys/index.js"}],"../node_modules/object.assign/node_modules/object-keys/isArguments.js":[function(require,module,exports) {
+'use strict';
+
+var toStr = Object.prototype.toString;
+
+module.exports = function isArguments(value) {
+  var str = toStr.call(value);
+  var isArgs = str === '[object Arguments]';
+
+  if (!isArgs) {
+    isArgs = str !== '[object Array]' && value !== null && typeof value === 'object' && typeof value.length === 'number' && value.length >= 0 && toStr.call(value.callee) === '[object Function]';
+  }
+
+  return isArgs;
+};
+},{}],"../node_modules/object.assign/node_modules/object-keys/implementation.js":[function(require,module,exports) {
+'use strict';
+
+var keysShim;
+
+if (!Object.keys) {
+  // modified from https://github.com/es-shims/es5-shim
+  var has = Object.prototype.hasOwnProperty;
+  var toStr = Object.prototype.toString;
+
+  var isArgs = require('./isArguments'); // eslint-disable-line global-require
+
+
+  var isEnumerable = Object.prototype.propertyIsEnumerable;
+  var hasDontEnumBug = !isEnumerable.call({
+    toString: null
+  }, 'toString');
+  var hasProtoEnumBug = isEnumerable.call(function () {}, 'prototype');
+  var dontEnums = ['toString', 'toLocaleString', 'valueOf', 'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'constructor'];
+
+  var equalsConstructorPrototype = function (o) {
+    var ctor = o.constructor;
+    return ctor && ctor.prototype === o;
+  };
+
+  var excludedKeys = {
+    $applicationCache: true,
+    $console: true,
+    $external: true,
+    $frame: true,
+    $frameElement: true,
+    $frames: true,
+    $innerHeight: true,
+    $innerWidth: true,
+    $outerHeight: true,
+    $outerWidth: true,
+    $pageXOffset: true,
+    $pageYOffset: true,
+    $parent: true,
+    $scrollLeft: true,
+    $scrollTop: true,
+    $scrollX: true,
+    $scrollY: true,
+    $self: true,
+    $webkitIndexedDB: true,
+    $webkitStorageInfo: true,
+    $window: true
+  };
+
+  var hasAutomationEqualityBug = function () {
+    /* global window */
+    if (typeof window === 'undefined') {
+      return false;
+    }
+
+    for (var k in window) {
+      try {
+        if (!excludedKeys['$' + k] && has.call(window, k) && window[k] !== null && typeof window[k] === 'object') {
+          try {
+            equalsConstructorPrototype(window[k]);
+          } catch (e) {
+            return true;
+          }
+        }
+      } catch (e) {
+        return true;
+      }
+    }
+
+    return false;
+  }();
+
+  var equalsConstructorPrototypeIfNotBuggy = function (o) {
+    /* global window */
+    if (typeof window === 'undefined' || !hasAutomationEqualityBug) {
+      return equalsConstructorPrototype(o);
+    }
+
+    try {
+      return equalsConstructorPrototype(o);
+    } catch (e) {
+      return false;
+    }
+  };
+
+  keysShim = function keys(object) {
+    var isObject = object !== null && typeof object === 'object';
+    var isFunction = toStr.call(object) === '[object Function]';
+    var isArguments = isArgs(object);
+    var isString = isObject && toStr.call(object) === '[object String]';
+    var theKeys = [];
+
+    if (!isObject && !isFunction && !isArguments) {
+      throw new TypeError('Object.keys called on a non-object');
+    }
+
+    var skipProto = hasProtoEnumBug && isFunction;
+
+    if (isString && object.length > 0 && !has.call(object, 0)) {
+      for (var i = 0; i < object.length; ++i) {
+        theKeys.push(String(i));
+      }
+    }
+
+    if (isArguments && object.length > 0) {
+      for (var j = 0; j < object.length; ++j) {
+        theKeys.push(String(j));
+      }
+    } else {
+      for (var name in object) {
+        if (!(skipProto && name === 'prototype') && has.call(object, name)) {
+          theKeys.push(String(name));
+        }
+      }
+    }
+
+    if (hasDontEnumBug) {
+      var skipConstructor = equalsConstructorPrototypeIfNotBuggy(object);
+
+      for (var k = 0; k < dontEnums.length; ++k) {
+        if (!(skipConstructor && dontEnums[k] === 'constructor') && has.call(object, dontEnums[k])) {
+          theKeys.push(dontEnums[k]);
+        }
+      }
+    }
+
+    return theKeys;
+  };
+}
+
+module.exports = keysShim;
+},{"./isArguments":"../node_modules/object.assign/node_modules/object-keys/isArguments.js"}],"../node_modules/object.assign/node_modules/object-keys/index.js":[function(require,module,exports) {
+'use strict';
+
+var slice = Array.prototype.slice;
+
+var isArgs = require('./isArguments');
+
+var origKeys = Object.keys;
+var keysShim = origKeys ? function keys(o) {
+  return origKeys(o);
+} : require('./implementation');
+var originalKeys = Object.keys;
+
+keysShim.shim = function shimObjectKeys() {
+  if (Object.keys) {
+    var keysWorksWithArguments = function () {
+      // Safari 5.0 bug
+      var args = Object.keys(arguments);
+      return args && args.length === arguments.length;
+    }(1, 2);
+
+    if (!keysWorksWithArguments) {
+      Object.keys = function keys(object) {
+        // eslint-disable-line func-name-matching
+        if (isArgs(object)) {
+          return originalKeys(slice.call(object));
+        }
+
+        return originalKeys(object);
+      };
+    }
+  } else {
+    Object.keys = keysShim;
+  }
+
+  return Object.keys || keysShim;
+};
+
+module.exports = keysShim;
+},{"./isArguments":"../node_modules/object.assign/node_modules/object-keys/isArguments.js","./implementation":"../node_modules/object.assign/node_modules/object-keys/implementation.js"}],"../node_modules/function-bind/implementation.js":[function(require,module,exports) {
 'use strict';
 
 /* eslint no-invalid-this: 1 */
@@ -37019,7 +37206,7 @@ module.exports = function assign(target, source1) {
 
   return objTarget;
 };
-},{"object-keys":"../node_modules/object-keys/index.js","function-bind":"../node_modules/function-bind/index.js","has-symbols/shams":"../node_modules/has-symbols/shams.js"}],"../node_modules/object.assign/polyfill.js":[function(require,module,exports) {
+},{"object-keys":"../node_modules/object.assign/node_modules/object-keys/index.js","function-bind":"../node_modules/function-bind/index.js","has-symbols/shams":"../node_modules/has-symbols/shams.js"}],"../node_modules/object.assign/polyfill.js":[function(require,module,exports) {
 'use strict';
 
 var implementation = require('./implementation');
@@ -83573,7 +83760,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "36301" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "43719" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

@@ -33,7 +33,7 @@
     "nodemailer": "^4.6.8",
     "normalize.css": "8.0.1",
     "numeral": "2.0.6",
-    "parcel-bundler": "^1.11.0",
+    "parcel-bundler": "1.12.3",
     "raf": "3.3.2",
     "react": "16.0.0",
     "react-addons-shallow-compare": "^15.6.2",
