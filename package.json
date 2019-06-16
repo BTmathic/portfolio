@@ -5,11 +5,12 @@
   "author": "Alexander Molnar",
   "license": "MIT",
   "engines": {
-    "node": "9.4.0"
+    "node": "12.2.0"
   },
   "scripts": {
     "dev": "parcel public/index.html",
-    "build": "parcel build public/index.html --out-dir prod",
+    "build": "parcel build public/index.html --out-dir prod && npm run sass",
+    "sass": "sass",
     "start": "node server/server.js",
     "heroku-postbuild": "yarn run build"
   },
@@ -29,7 +30,7 @@
     "history": "^4.7.2",
     "marked": "^0.4.0",
     "moment": "^2.22.1",
-    "node-sass": "4.5.3",
+    "node-sass": "^4.12.0",
     "nodemailer": "^4.6.8",
     "normalize.css": "8.0.1",
     "numeral": "2.0.6",

@@ -1389,6 +1389,8 @@ button:disabled {
           margin: 2rem auto 1rem;
           padding: 1rem 2rem;
           width: 50%; }
+  .full-blog-post img {
+    max-width: 100%; }
   .full-blog-post footer {
     font-size: 80%;
     padding: 0.5rem 0;

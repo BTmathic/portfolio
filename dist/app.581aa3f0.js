@@ -2544,7 +2544,7 @@ if (performance.now) {
 
 module.exports = performanceNow;
 },{"./performance":"../node_modules/fbjs/lib/performance.js"}],"../node_modules/react-is/cjs/react-is.development.js":[function(require,module,exports) {
-/** @license React v16.8.4
+/** @license React v16.8.6
  * react-is.development.js
  *
  * Copyright (c) Facebook, Inc. and its affiliates.
@@ -23810,63 +23810,7 @@ var _default = function _default() {
 };
 
 exports.default = _default;
-},{"redux":"../node_modules/redux/es/index.js","redux-thunk":"../node_modules/redux-thunk/lib/index.js","../reducers/filters":"../src/reducers/filters.js","../reducers/posts":"../src/reducers/posts.js","../reducers/auth":"../src/reducers/auth.js"}],"../node_modules/warning/browser.js":[function(require,module,exports) {
-/**
- * Copyright 2014-2015, Facebook, Inc.
- * All rights reserved.
- *
- * This source code is licensed under the BSD-style license found in the
- * LICENSE file in the root directory of this source tree. An additional grant
- * of patent rights can be found in the PATENTS file in the same directory.
- */
-'use strict';
-/**
- * Similar to invariant but only logs a warning if the condition is not met.
- * This can be used to log issues in development environments in critical
- * paths. Removing the logging code for production environments will keep the
- * same logic and follow the same code paths.
- */
-
-var warning = function () {};
-
-if (undefined !== 'production') {
-  warning = function (condition, format, args) {
-    var len = arguments.length;
-    args = new Array(len > 2 ? len - 2 : 0);
-
-    for (var key = 2; key < len; key++) {
-      args[key - 2] = arguments[key];
-    }
-
-    if (format === undefined) {
-      throw new Error('`warning(condition, format, ...args)` requires a warning ' + 'message argument');
-    }
-
-    if (format.length < 10 || /^[s\W]*$/.test(format)) {
-      throw new Error('The warning format should be able to uniquely identify this ' + 'warning. Please, use a more descriptive format than: ' + format);
-    }
-
-    if (!condition) {
-      var argIndex = 0;
-      var message = 'Warning: ' + format.replace(/%s/g, function () {
-        return args[argIndex++];
-      });
-
-      if (typeof console !== 'undefined') {
-        console.error(message);
-      }
-
-      try {
-        // This error was thrown as a convenience so that you can use this stack
-        // to find the callsite that caused this warning to fire.
-        throw new Error(message);
-      } catch (x) {}
-    }
-  };
-}
-
-module.exports = warning;
-},{}],"../node_modules/resolve-pathname/index.js":[function(require,module,exports) {
+},{"redux":"../node_modules/redux/es/index.js","redux-thunk":"../node_modules/redux-thunk/lib/index.js","../reducers/filters":"../src/reducers/filters.js","../reducers/posts":"../src/reducers/posts.js","../reducers/auth":"../src/reducers/auth.js"}],"../node_modules/resolve-pathname/index.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -23987,42 +23931,118 @@ function valueEqual(a, b) {
 
 var _default = valueEqual;
 exports.default = _default;
-},{}],"../node_modules/history/PathUtils.js":[function(require,module,exports) {
-'use strict';
+},{}],"../node_modules/tiny-warning/dist/tiny-warning.esm.js":[function(require,module,exports) {
+"use strict";
 
-exports.__esModule = true;
-var addLeadingSlash = exports.addLeadingSlash = function addLeadingSlash(path) {
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+var isProduction = undefined === 'production';
+
+function warning(condition, message) {
+  if (!isProduction) {
+    if (condition) {
+      return;
+    }
+
+    var text = "Warning: " + message;
+
+    if (typeof console !== 'undefined') {
+      console.warn(text);
+    }
+
+    try {
+      throw Error(text);
+    } catch (x) {}
+  }
+}
+
+var _default = warning;
+exports.default = _default;
+},{}],"../node_modules/tiny-invariant/dist/tiny-invariant.esm.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+var isProduction = undefined === 'production';
+var prefix = 'Invariant failed';
+
+function invariant(condition, message) {
+  if (condition) {
+    return;
+  }
+
+  if (isProduction) {
+    throw new Error(prefix);
+  } else {
+    throw new Error(prefix + ": " + (message || ''));
+  }
+}
+
+var _default = invariant;
+exports.default = _default;
+},{}],"../node_modules/history/esm/history.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.createBrowserHistory = createBrowserHistory;
+exports.createHashHistory = createHashHistory;
+exports.createMemoryHistory = createMemoryHistory;
+exports.createLocation = createLocation;
+exports.locationsAreEqual = locationsAreEqual;
+exports.parsePath = parsePath;
+exports.createPath = createPath;
+
+var _extends2 = _interopRequireDefault(require("@babel/runtime/helpers/esm/extends"));
+
+var _resolvePathname = _interopRequireDefault(require("resolve-pathname"));
+
+var _valueEqual = _interopRequireDefault(require("value-equal"));
+
+var _tinyWarning = _interopRequireDefault(require("tiny-warning"));
+
+var _tinyInvariant = _interopRequireDefault(require("tiny-invariant"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function addLeadingSlash(path) {
   return path.charAt(0) === '/' ? path : '/' + path;
-};
+}
 
-var stripLeadingSlash = exports.stripLeadingSlash = function stripLeadingSlash(path) {
+function stripLeadingSlash(path) {
   return path.charAt(0) === '/' ? path.substr(1) : path;
-};
+}
 
-var hasBasename = exports.hasBasename = function hasBasename(path, prefix) {
+function hasBasename(path, prefix) {
   return new RegExp('^' + prefix + '(\\/|\\?|#|$)', 'i').test(path);
-};
+}
 
-var stripBasename = exports.stripBasename = function stripBasename(path, prefix) {
+function stripBasename(path, prefix) {
   return hasBasename(path, prefix) ? path.substr(prefix.length) : path;
-};
+}
 
-var stripTrailingSlash = exports.stripTrailingSlash = function stripTrailingSlash(path) {
+function stripTrailingSlash(path) {
   return path.charAt(path.length - 1) === '/' ? path.slice(0, -1) : path;
-};
+}
 
-var parsePath = exports.parsePath = function parsePath(path) {
+function parsePath(path) {
   var pathname = path || '/';
   var search = '';
   var hash = '';
-
   var hashIndex = pathname.indexOf('#');
+
   if (hashIndex !== -1) {
     hash = pathname.substr(hashIndex);
     pathname = pathname.substr(0, hashIndex);
   }
 
   var searchIndex = pathname.indexOf('?');
+
   if (searchIndex !== -1) {
     search = pathname.substr(searchIndex);
     pathname = pathname.substr(0, searchIndex);
@@ -24033,52 +24053,28 @@ var parsePath = exports.parsePath = function parsePath(path) {
     search: search === '?' ? '' : search,
     hash: hash === '#' ? '' : hash
   };
-};
+}
 
-var createPath = exports.createPath = function createPath(location) {
+function createPath(location) {
   var pathname = location.pathname,
       search = location.search,
       hash = location.hash;
-
-
   var path = pathname || '/';
-
-  if (search && search !== '?') path += search.charAt(0) === '?' ? search : '?' + search;
-
-  if (hash && hash !== '#') path += hash.charAt(0) === '#' ? hash : '#' + hash;
-
+  if (search && search !== '?') path += search.charAt(0) === '?' ? search : "?" + search;
+  if (hash && hash !== '#') path += hash.charAt(0) === '#' ? hash : "#" + hash;
   return path;
-};
-},{}],"../node_modules/history/LocationUtils.js":[function(require,module,exports) {
-'use strict';
+}
 
-exports.__esModule = true;
-exports.locationsAreEqual = exports.createLocation = undefined;
+function createLocation(path, state, key, currentLocation) {
+  var location;
 
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-var _resolvePathname = require('resolve-pathname');
-
-var _resolvePathname2 = _interopRequireDefault(_resolvePathname);
-
-var _valueEqual = require('value-equal');
-
-var _valueEqual2 = _interopRequireDefault(_valueEqual);
-
-var _PathUtils = require('./PathUtils');
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var createLocation = exports.createLocation = function createLocation(path, state, key, currentLocation) {
-  var location = void 0;
   if (typeof path === 'string') {
     // Two-arg form: push(path, state)
-    location = (0, _PathUtils.parsePath)(path);
+    location = parsePath(path);
     location.state = state;
   } else {
     // One-arg form: push(location)
-    location = _extends({}, path);
-
+    location = (0, _extends2.default)({}, path);
     if (location.pathname === undefined) location.pathname = '';
 
     if (location.search) {
@@ -24113,7 +24109,7 @@ var createLocation = exports.createLocation = function createLocation(path, stat
     if (!location.pathname) {
       location.pathname = currentLocation.pathname;
     } else if (location.pathname.charAt(0) !== '/') {
-      location.pathname = (0, _resolvePathname2.default)(location.pathname, currentLocation.pathname);
+      location.pathname = (0, _resolvePathname.default)(location.pathname, currentLocation.pathname);
     }
   } else {
     // When there is no prior location and pathname is empty, set it to /
@@ -24123,36 +24119,24 @@ var createLocation = exports.createLocation = function createLocation(path, stat
   }
 
   return location;
-};
+}
 
-var locationsAreEqual = exports.locationsAreEqual = function locationsAreEqual(a, b) {
-  return a.pathname === b.pathname && a.search === b.search && a.hash === b.hash && a.key === b.key && (0, _valueEqual2.default)(a.state, b.state);
-};
-},{"resolve-pathname":"../node_modules/resolve-pathname/index.js","value-equal":"../node_modules/value-equal/index.js","./PathUtils":"../node_modules/history/PathUtils.js"}],"../node_modules/history/createTransitionManager.js":[function(require,module,exports) {
-'use strict';
+function locationsAreEqual(a, b) {
+  return a.pathname === b.pathname && a.search === b.search && a.hash === b.hash && a.key === b.key && (0, _valueEqual.default)(a.state, b.state);
+}
 
-exports.__esModule = true;
-
-var _warning = require('warning');
-
-var _warning2 = _interopRequireDefault(_warning);
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var createTransitionManager = function createTransitionManager() {
+function createTransitionManager() {
   var prompt = null;
 
-  var setPrompt = function setPrompt(nextPrompt) {
-    (0, _warning2.default)(prompt == null, 'A history supports only one prompt at a time');
-
+  function setPrompt(nextPrompt) {
+    undefined !== "production" ? (0, _tinyWarning.default)(prompt == null, 'A history supports only one prompt at a time') : void 0;
     prompt = nextPrompt;
-
     return function () {
       if (prompt === nextPrompt) prompt = null;
     };
-  };
+  }
 
-  var confirmTransitionTo = function confirmTransitionTo(location, action, getUserConfirmation, callback) {
+  function confirmTransitionTo(location, action, getUserConfirmation, callback) {
     // TODO: If another transition starts while we're still confirming
     // the previous one, we may end up in a weird state. Figure out the
     // best way to handle this.
@@ -24163,8 +24147,7 @@ var createTransitionManager = function createTransitionManager() {
         if (typeof getUserConfirmation === 'function') {
           getUserConfirmation(result, callback);
         } else {
-          (0, _warning2.default)(false, 'A history needs a getUserConfirmation function in order to use a prompt message');
-
+          undefined !== "production" ? (0, _tinyWarning.default)(false, 'A history needs a getUserConfirmation function in order to use a prompt message') : void 0;
           callback(true);
         }
       } else {
@@ -24174,36 +24157,35 @@ var createTransitionManager = function createTransitionManager() {
     } else {
       callback(true);
     }
-  };
+  }
 
   var listeners = [];
 
-  var appendListener = function appendListener(fn) {
+  function appendListener(fn) {
     var isActive = true;
 
-    var listener = function listener() {
-      if (isActive) fn.apply(undefined, arguments);
-    };
+    function listener() {
+      if (isActive) fn.apply(void 0, arguments);
+    }
 
     listeners.push(listener);
-
     return function () {
       isActive = false;
       listeners = listeners.filter(function (item) {
         return item !== listener;
       });
     };
-  };
+  }
 
-  var notifyListeners = function notifyListeners() {
-    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+  function notifyListeners() {
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
       args[_key] = arguments[_key];
     }
 
     listeners.forEach(function (listener) {
-      return listener.apply(undefined, args);
+      return listener.apply(void 0, args);
     });
-  };
+  }
 
   return {
     setPrompt: setPrompt,
@@ -24211,27 +24193,13 @@ var createTransitionManager = function createTransitionManager() {
     appendListener: appendListener,
     notifyListeners: notifyListeners
   };
-};
+}
 
-exports.default = createTransitionManager;
-},{"warning":"../node_modules/warning/browser.js"}],"../node_modules/history/DOMUtils.js":[function(require,module,exports) {
-'use strict';
+var canUseDOM = !!(typeof window !== 'undefined' && window.document && window.document.createElement);
 
-exports.__esModule = true;
-var canUseDOM = exports.canUseDOM = !!(typeof window !== 'undefined' && window.document && window.document.createElement);
-
-var addEventListener = exports.addEventListener = function addEventListener(node, event, listener) {
-  return node.addEventListener ? node.addEventListener(event, listener, false) : node.attachEvent('on' + event, listener);
-};
-
-var removeEventListener = exports.removeEventListener = function removeEventListener(node, event, listener) {
-  return node.removeEventListener ? node.removeEventListener(event, listener, false) : node.detachEvent('on' + event, listener);
-};
-
-var getConfirmation = exports.getConfirmation = function getConfirmation(message, callback) {
-  return callback(window.confirm(message));
-}; // eslint-disable-line no-alert
-
+function getConfirmation(message, callback) {
+  callback(window.confirm(message)); // eslint-disable-line no-alert
+}
 /**
  * Returns true if the HTML5 history API is supported. Taken from Modernizr.
  *
@@ -24239,70 +24207,45 @@ var getConfirmation = exports.getConfirmation = function getConfirmation(message
  * https://github.com/Modernizr/Modernizr/blob/master/feature-detects/history.js
  * changed to avoid false negatives for Windows Phones: https://github.com/reactjs/react-router/issues/586
  */
-var supportsHistory = exports.supportsHistory = function supportsHistory() {
+
+
+function supportsHistory() {
   var ua = window.navigator.userAgent;
-
   if ((ua.indexOf('Android 2.') !== -1 || ua.indexOf('Android 4.0') !== -1) && ua.indexOf('Mobile Safari') !== -1 && ua.indexOf('Chrome') === -1 && ua.indexOf('Windows Phone') === -1) return false;
-
   return window.history && 'pushState' in window.history;
-};
-
+}
 /**
  * Returns true if browser fires popstate on hash change.
  * IE10 and IE11 do not.
  */
-var supportsPopStateOnHashChange = exports.supportsPopStateOnHashChange = function supportsPopStateOnHashChange() {
-  return window.navigator.userAgent.indexOf('Trident') === -1;
-};
 
+
+function supportsPopStateOnHashChange() {
+  return window.navigator.userAgent.indexOf('Trident') === -1;
+}
 /**
  * Returns false if using go(n) with hash history causes a full page reload.
  */
-var supportsGoWithoutReloadUsingHash = exports.supportsGoWithoutReloadUsingHash = function supportsGoWithoutReloadUsingHash() {
-  return window.navigator.userAgent.indexOf('Firefox') === -1;
-};
 
+
+function supportsGoWithoutReloadUsingHash() {
+  return window.navigator.userAgent.indexOf('Firefox') === -1;
+}
 /**
  * Returns true if a given popstate event is an extraneous WebKit event.
  * Accounts for the fact that Chrome on iOS fires real popstate events
  * containing undefined state when pressing the back button.
  */
-var isExtraneousPopstateEvent = exports.isExtraneousPopstateEvent = function isExtraneousPopstateEvent(event) {
-  return event.state === undefined && navigator.userAgent.indexOf('CriOS') === -1;
-};
-},{}],"../node_modules/history/createBrowserHistory.js":[function(require,module,exports) {
-'use strict';
 
-exports.__esModule = true;
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-var _warning = require('warning');
-
-var _warning2 = _interopRequireDefault(_warning);
-
-var _invariant = require('invariant');
-
-var _invariant2 = _interopRequireDefault(_invariant);
-
-var _LocationUtils = require('./LocationUtils');
-
-var _PathUtils = require('./PathUtils');
-
-var _createTransitionManager = require('./createTransitionManager');
-
-var _createTransitionManager2 = _interopRequireDefault(_createTransitionManager);
-
-var _DOMUtils = require('./DOMUtils');
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function isExtraneousPopstateEvent(event) {
+  event.state === undefined && navigator.userAgent.indexOf('CriOS') === -1;
+}
 
 var PopStateEvent = 'popstate';
 var HashChangeEvent = 'hashchange';
 
-var getHistoryState = function getHistoryState() {
+function getHistoryState() {
   try {
     return window.history.state || {};
   } catch (e) {
@@ -24310,31 +24253,32 @@ var getHistoryState = function getHistoryState() {
     // See https://github.com/ReactTraining/history/pull/289
     return {};
   }
-};
-
+}
 /**
  * Creates a history object that uses the HTML5 history API including
  * pushState, replaceState, and the popstate event.
  */
-var createBrowserHistory = function createBrowserHistory() {
-  var props = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
 
-  (0, _invariant2.default)(_DOMUtils.canUseDOM, 'Browser history needs a DOM');
 
+function createBrowserHistory(props) {
+  if (props === void 0) {
+    props = {};
+  }
+
+  !canUseDOM ? undefined !== "production" ? (0, _tinyInvariant.default)(false, 'Browser history needs a DOM') : (0, _tinyInvariant.default)(false) : void 0;
   var globalHistory = window.history;
-  var canUseHistory = (0, _DOMUtils.supportsHistory)();
-  var needsHashChangeListener = !(0, _DOMUtils.supportsPopStateOnHashChange)();
+  var canUseHistory = supportsHistory();
+  var needsHashChangeListener = !supportsPopStateOnHashChange();
+  var _props = props,
+      _props$forceRefresh = _props.forceRefresh,
+      forceRefresh = _props$forceRefresh === void 0 ? false : _props$forceRefresh,
+      _props$getUserConfirm = _props.getUserConfirmation,
+      getUserConfirmation = _props$getUserConfirm === void 0 ? getConfirmation : _props$getUserConfirm,
+      _props$keyLength = _props.keyLength,
+      keyLength = _props$keyLength === void 0 ? 6 : _props$keyLength;
+  var basename = props.basename ? stripTrailingSlash(addLeadingSlash(props.basename)) : '';
 
-  var _props$forceRefresh = props.forceRefresh,
-      forceRefresh = _props$forceRefresh === undefined ? false : _props$forceRefresh,
-      _props$getUserConfirm = props.getUserConfirmation,
-      getUserConfirmation = _props$getUserConfirm === undefined ? _DOMUtils.getConfirmation : _props$getUserConfirm,
-      _props$keyLength = props.keyLength,
-      keyLength = _props$keyLength === undefined ? 6 : _props$keyLength;
-
-  var basename = props.basename ? (0, _PathUtils.stripTrailingSlash)((0, _PathUtils.addLeadingSlash)(props.basename)) : '';
-
-  var getDOMLocation = function getDOMLocation(historyState) {
+  function getDOMLocation(historyState) {
     var _ref = historyState || {},
         key = _ref.key,
         state = _ref.state;
@@ -24343,195 +24287,179 @@ var createBrowserHistory = function createBrowserHistory() {
         pathname = _window$location.pathname,
         search = _window$location.search,
         hash = _window$location.hash;
-
-
     var path = pathname + search + hash;
+    undefined !== "production" ? (0, _tinyWarning.default)(!basename || hasBasename(path, basename), 'You are attempting to use a basename on a page whose URL path does not begin ' + 'with the basename. Expected path "' + path + '" to begin with "' + basename + '".') : void 0;
+    if (basename) path = stripBasename(path, basename);
+    return createLocation(path, state, key);
+  }
 
-    (0, _warning2.default)(!basename || (0, _PathUtils.hasBasename)(path, basename), 'You are attempting to use a basename on a page whose URL path does not begin ' + 'with the basename. Expected path "' + path + '" to begin with "' + basename + '".');
-
-    if (basename) path = (0, _PathUtils.stripBasename)(path, basename);
-
-    return (0, _LocationUtils.createLocation)(path, state, key);
-  };
-
-  var createKey = function createKey() {
+  function createKey() {
     return Math.random().toString(36).substr(2, keyLength);
-  };
+  }
 
-  var transitionManager = (0, _createTransitionManager2.default)();
+  var transitionManager = createTransitionManager();
 
-  var setState = function setState(nextState) {
-    _extends(history, nextState);
-
+  function setState(nextState) {
+    (0, _extends2.default)(history, nextState);
     history.length = globalHistory.length;
-
     transitionManager.notifyListeners(history.location, history.action);
-  };
+  }
 
-  var handlePopState = function handlePopState(event) {
+  function handlePopState(event) {
     // Ignore extraneous popstate events in WebKit.
-    if ((0, _DOMUtils.isExtraneousPopstateEvent)(event)) return;
-
+    if (isExtraneousPopstateEvent(event)) return;
     handlePop(getDOMLocation(event.state));
-  };
+  }
 
-  var handleHashChange = function handleHashChange() {
+  function handleHashChange() {
     handlePop(getDOMLocation(getHistoryState()));
-  };
+  }
 
   var forceNextPop = false;
 
-  var handlePop = function handlePop(location) {
+  function handlePop(location) {
     if (forceNextPop) {
       forceNextPop = false;
       setState();
     } else {
       var action = 'POP';
-
       transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
         if (ok) {
-          setState({ action: action, location: location });
+          setState({
+            action: action,
+            location: location
+          });
         } else {
           revertPop(location);
         }
       });
     }
-  };
+  }
 
-  var revertPop = function revertPop(fromLocation) {
-    var toLocation = history.location;
-
-    // TODO: We could probably make this more reliable by
+  function revertPop(fromLocation) {
+    var toLocation = history.location; // TODO: We could probably make this more reliable by
     // keeping a list of keys we've seen in sessionStorage.
     // Instead, we just default to 0 for keys we don't know.
 
     var toIndex = allKeys.indexOf(toLocation.key);
-
     if (toIndex === -1) toIndex = 0;
-
     var fromIndex = allKeys.indexOf(fromLocation.key);
-
     if (fromIndex === -1) fromIndex = 0;
-
     var delta = toIndex - fromIndex;
 
     if (delta) {
       forceNextPop = true;
       go(delta);
     }
-  };
+  }
 
   var initialLocation = getDOMLocation(getHistoryState());
-  var allKeys = [initialLocation.key];
+  var allKeys = [initialLocation.key]; // Public interface
 
-  // Public interface
+  function createHref(location) {
+    return basename + createPath(location);
+  }
 
-  var createHref = function createHref(location) {
-    return basename + (0, _PathUtils.createPath)(location);
-  };
-
-  var push = function push(path, state) {
-    (0, _warning2.default)(!((typeof path === 'undefined' ? 'undefined' : _typeof(path)) === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to push when the 1st ' + 'argument is a location-like object that already has state; it is ignored');
-
+  function push(path, state) {
+    undefined !== "production" ? (0, _tinyWarning.default)(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to push when the 1st ' + 'argument is a location-like object that already has state; it is ignored') : void 0;
     var action = 'PUSH';
-    var location = (0, _LocationUtils.createLocation)(path, state, createKey(), history.location);
-
+    var location = createLocation(path, state, createKey(), history.location);
     transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
       if (!ok) return;
-
       var href = createHref(location);
       var key = location.key,
           state = location.state;
 
-
       if (canUseHistory) {
-        globalHistory.pushState({ key: key, state: state }, null, href);
+        globalHistory.pushState({
+          key: key,
+          state: state
+        }, null, href);
 
         if (forceRefresh) {
           window.location.href = href;
         } else {
           var prevIndex = allKeys.indexOf(history.location.key);
           var nextKeys = allKeys.slice(0, prevIndex === -1 ? 0 : prevIndex + 1);
-
           nextKeys.push(location.key);
           allKeys = nextKeys;
-
-          setState({ action: action, location: location });
+          setState({
+            action: action,
+            location: location
+          });
         }
       } else {
-        (0, _warning2.default)(state === undefined, 'Browser history cannot push state in browsers that do not support HTML5 history');
-
+        undefined !== "production" ? (0, _tinyWarning.default)(state === undefined, 'Browser history cannot push state in browsers that do not support HTML5 history') : void 0;
         window.location.href = href;
       }
     });
-  };
+  }
 
-  var replace = function replace(path, state) {
-    (0, _warning2.default)(!((typeof path === 'undefined' ? 'undefined' : _typeof(path)) === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to replace when the 1st ' + 'argument is a location-like object that already has state; it is ignored');
-
+  function replace(path, state) {
+    undefined !== "production" ? (0, _tinyWarning.default)(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to replace when the 1st ' + 'argument is a location-like object that already has state; it is ignored') : void 0;
     var action = 'REPLACE';
-    var location = (0, _LocationUtils.createLocation)(path, state, createKey(), history.location);
-
+    var location = createLocation(path, state, createKey(), history.location);
     transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
       if (!ok) return;
-
       var href = createHref(location);
       var key = location.key,
           state = location.state;
 
-
       if (canUseHistory) {
-        globalHistory.replaceState({ key: key, state: state }, null, href);
+        globalHistory.replaceState({
+          key: key,
+          state: state
+        }, null, href);
 
         if (forceRefresh) {
           window.location.replace(href);
         } else {
           var prevIndex = allKeys.indexOf(history.location.key);
-
           if (prevIndex !== -1) allKeys[prevIndex] = location.key;
-
-          setState({ action: action, location: location });
+          setState({
+            action: action,
+            location: location
+          });
         }
       } else {
-        (0, _warning2.default)(state === undefined, 'Browser history cannot replace state in browsers that do not support HTML5 history');
-
+        undefined !== "production" ? (0, _tinyWarning.default)(state === undefined, 'Browser history cannot replace state in browsers that do not support HTML5 history') : void 0;
         window.location.replace(href);
       }
     });
-  };
+  }
 
-  var go = function go(n) {
+  function go(n) {
     globalHistory.go(n);
-  };
+  }
 
-  var goBack = function goBack() {
-    return go(-1);
-  };
+  function goBack() {
+    go(-1);
+  }
 
-  var goForward = function goForward() {
-    return go(1);
-  };
+  function goForward() {
+    go(1);
+  }
 
   var listenerCount = 0;
 
-  var checkDOMListeners = function checkDOMListeners(delta) {
+  function checkDOMListeners(delta) {
     listenerCount += delta;
 
-    if (listenerCount === 1) {
-      (0, _DOMUtils.addEventListener)(window, PopStateEvent, handlePopState);
-
-      if (needsHashChangeListener) (0, _DOMUtils.addEventListener)(window, HashChangeEvent, handleHashChange);
+    if (listenerCount === 1 && delta === 1) {
+      window.addEventListener(PopStateEvent, handlePopState);
+      if (needsHashChangeListener) window.addEventListener(HashChangeEvent, handleHashChange);
     } else if (listenerCount === 0) {
-      (0, _DOMUtils.removeEventListener)(window, PopStateEvent, handlePopState);
-
-      if (needsHashChangeListener) (0, _DOMUtils.removeEventListener)(window, HashChangeEvent, handleHashChange);
+      window.removeEventListener(PopStateEvent, handlePopState);
+      if (needsHashChangeListener) window.removeEventListener(HashChangeEvent, handleHashChange);
     }
-  };
+  }
 
   var isBlocked = false;
 
-  var block = function block() {
-    var prompt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
+  function block(prompt) {
+    if (prompt === void 0) {
+      prompt = false;
+    }
 
     var unblock = transitionManager.setPrompt(prompt);
 
@@ -24548,17 +24476,16 @@ var createBrowserHistory = function createBrowserHistory() {
 
       return unblock();
     };
-  };
+  }
 
-  var listen = function listen(listener) {
+  function listen(listener) {
     var unlisten = transitionManager.appendListener(listener);
     checkDOMListeners(1);
-
     return function () {
       checkDOMListeners(-1);
       unlisten();
     };
-  };
+  }
 
   var history = {
     length: globalHistory.length,
@@ -24573,12 +24500,1454 @@ var createBrowserHistory = function createBrowserHistory() {
     block: block,
     listen: listen
   };
-
   return history;
+}
+
+var HashChangeEvent$1 = 'hashchange';
+var HashPathCoders = {
+  hashbang: {
+    encodePath: function encodePath(path) {
+      return path.charAt(0) === '!' ? path : '!/' + stripLeadingSlash(path);
+    },
+    decodePath: function decodePath(path) {
+      return path.charAt(0) === '!' ? path.substr(1) : path;
+    }
+  },
+  noslash: {
+    encodePath: stripLeadingSlash,
+    decodePath: addLeadingSlash
+  },
+  slash: {
+    encodePath: addLeadingSlash,
+    decodePath: addLeadingSlash
+  }
 };
 
-exports.default = createBrowserHistory;
-},{"warning":"../node_modules/warning/browser.js","invariant":"../node_modules/invariant/browser.js","./LocationUtils":"../node_modules/history/LocationUtils.js","./PathUtils":"../node_modules/history/PathUtils.js","./createTransitionManager":"../node_modules/history/createTransitionManager.js","./DOMUtils":"../node_modules/history/DOMUtils.js"}],"../node_modules/react-router/node_modules/warning/warning.js":[function(require,module,exports) {
+function getHashPath() {
+  // We can't use window.location.hash here because it's not
+  // consistent across browsers - Firefox will pre-decode it!
+  var href = window.location.href;
+  var hashIndex = href.indexOf('#');
+  return hashIndex === -1 ? '' : href.substring(hashIndex + 1);
+}
+
+function pushHashPath(path) {
+  window.location.hash = path;
+}
+
+function replaceHashPath(path) {
+  var hashIndex = window.location.href.indexOf('#');
+  window.location.replace(window.location.href.slice(0, hashIndex >= 0 ? hashIndex : 0) + '#' + path);
+}
+
+function createHashHistory(props) {
+  if (props === void 0) {
+    props = {};
+  }
+
+  !canUseDOM ? undefined !== "production" ? (0, _tinyInvariant.default)(false, 'Hash history needs a DOM') : (0, _tinyInvariant.default)(false) : void 0;
+  var globalHistory = window.history;
+  var canGoWithoutReload = supportsGoWithoutReloadUsingHash();
+  var _props = props,
+      _props$getUserConfirm = _props.getUserConfirmation,
+      getUserConfirmation = _props$getUserConfirm === void 0 ? getConfirmation : _props$getUserConfirm,
+      _props$hashType = _props.hashType,
+      hashType = _props$hashType === void 0 ? 'slash' : _props$hashType;
+  var basename = props.basename ? stripTrailingSlash(addLeadingSlash(props.basename)) : '';
+  var _HashPathCoders$hashT = HashPathCoders[hashType],
+      encodePath = _HashPathCoders$hashT.encodePath,
+      decodePath = _HashPathCoders$hashT.decodePath;
+
+  function getDOMLocation() {
+    var path = decodePath(getHashPath());
+    undefined !== "production" ? (0, _tinyWarning.default)(!basename || hasBasename(path, basename), 'You are attempting to use a basename on a page whose URL path does not begin ' + 'with the basename. Expected path "' + path + '" to begin with "' + basename + '".') : void 0;
+    if (basename) path = stripBasename(path, basename);
+    return createLocation(path);
+  }
+
+  var transitionManager = createTransitionManager();
+
+  function setState(nextState) {
+    (0, _extends2.default)(history, nextState);
+    history.length = globalHistory.length;
+    transitionManager.notifyListeners(history.location, history.action);
+  }
+
+  var forceNextPop = false;
+  var ignorePath = null;
+
+  function handleHashChange() {
+    var path = getHashPath();
+    var encodedPath = encodePath(path);
+
+    if (path !== encodedPath) {
+      // Ensure we always have a properly-encoded hash.
+      replaceHashPath(encodedPath);
+    } else {
+      var location = getDOMLocation();
+      var prevLocation = history.location;
+      if (!forceNextPop && locationsAreEqual(prevLocation, location)) return; // A hashchange doesn't always == location change.
+
+      if (ignorePath === createPath(location)) return; // Ignore this change; we already setState in push/replace.
+
+      ignorePath = null;
+      handlePop(location);
+    }
+  }
+
+  function handlePop(location) {
+    if (forceNextPop) {
+      forceNextPop = false;
+      setState();
+    } else {
+      var action = 'POP';
+      transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+        if (ok) {
+          setState({
+            action: action,
+            location: location
+          });
+        } else {
+          revertPop(location);
+        }
+      });
+    }
+  }
+
+  function revertPop(fromLocation) {
+    var toLocation = history.location; // TODO: We could probably make this more reliable by
+    // keeping a list of paths we've seen in sessionStorage.
+    // Instead, we just default to 0 for paths we don't know.
+
+    var toIndex = allPaths.lastIndexOf(createPath(toLocation));
+    if (toIndex === -1) toIndex = 0;
+    var fromIndex = allPaths.lastIndexOf(createPath(fromLocation));
+    if (fromIndex === -1) fromIndex = 0;
+    var delta = toIndex - fromIndex;
+
+    if (delta) {
+      forceNextPop = true;
+      go(delta);
+    }
+  } // Ensure the hash is encoded properly before doing anything else.
+
+
+  var path = getHashPath();
+  var encodedPath = encodePath(path);
+  if (path !== encodedPath) replaceHashPath(encodedPath);
+  var initialLocation = getDOMLocation();
+  var allPaths = [createPath(initialLocation)]; // Public interface
+
+  function createHref(location) {
+    return '#' + encodePath(basename + createPath(location));
+  }
+
+  function push(path, state) {
+    undefined !== "production" ? (0, _tinyWarning.default)(state === undefined, 'Hash history cannot push state; it is ignored') : void 0;
+    var action = 'PUSH';
+    var location = createLocation(path, undefined, undefined, history.location);
+    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+      if (!ok) return;
+      var path = createPath(location);
+      var encodedPath = encodePath(basename + path);
+      var hashChanged = getHashPath() !== encodedPath;
+
+      if (hashChanged) {
+        // We cannot tell if a hashchange was caused by a PUSH, so we'd
+        // rather setState here and ignore the hashchange. The caveat here
+        // is that other hash histories in the page will consider it a POP.
+        ignorePath = path;
+        pushHashPath(encodedPath);
+        var prevIndex = allPaths.lastIndexOf(createPath(history.location));
+        var nextPaths = allPaths.slice(0, prevIndex === -1 ? 0 : prevIndex + 1);
+        nextPaths.push(path);
+        allPaths = nextPaths;
+        setState({
+          action: action,
+          location: location
+        });
+      } else {
+        undefined !== "production" ? (0, _tinyWarning.default)(false, 'Hash history cannot PUSH the same path; a new entry will not be added to the history stack') : void 0;
+        setState();
+      }
+    });
+  }
+
+  function replace(path, state) {
+    undefined !== "production" ? (0, _tinyWarning.default)(state === undefined, 'Hash history cannot replace state; it is ignored') : void 0;
+    var action = 'REPLACE';
+    var location = createLocation(path, undefined, undefined, history.location);
+    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+      if (!ok) return;
+      var path = createPath(location);
+      var encodedPath = encodePath(basename + path);
+      var hashChanged = getHashPath() !== encodedPath;
+
+      if (hashChanged) {
+        // We cannot tell if a hashchange was caused by a REPLACE, so we'd
+        // rather setState here and ignore the hashchange. The caveat here
+        // is that other hash histories in the page will consider it a POP.
+        ignorePath = path;
+        replaceHashPath(encodedPath);
+      }
+
+      var prevIndex = allPaths.indexOf(createPath(history.location));
+      if (prevIndex !== -1) allPaths[prevIndex] = path;
+      setState({
+        action: action,
+        location: location
+      });
+    });
+  }
+
+  function go(n) {
+    undefined !== "production" ? (0, _tinyWarning.default)(canGoWithoutReload, 'Hash history go(n) causes a full page reload in this browser') : void 0;
+    globalHistory.go(n);
+  }
+
+  function goBack() {
+    go(-1);
+  }
+
+  function goForward() {
+    go(1);
+  }
+
+  var listenerCount = 0;
+
+  function checkDOMListeners(delta) {
+    listenerCount += delta;
+
+    if (listenerCount === 1 && delta === 1) {
+      window.addEventListener(HashChangeEvent$1, handleHashChange);
+    } else if (listenerCount === 0) {
+      window.removeEventListener(HashChangeEvent$1, handleHashChange);
+    }
+  }
+
+  var isBlocked = false;
+
+  function block(prompt) {
+    if (prompt === void 0) {
+      prompt = false;
+    }
+
+    var unblock = transitionManager.setPrompt(prompt);
+
+    if (!isBlocked) {
+      checkDOMListeners(1);
+      isBlocked = true;
+    }
+
+    return function () {
+      if (isBlocked) {
+        isBlocked = false;
+        checkDOMListeners(-1);
+      }
+
+      return unblock();
+    };
+  }
+
+  function listen(listener) {
+    var unlisten = transitionManager.appendListener(listener);
+    checkDOMListeners(1);
+    return function () {
+      checkDOMListeners(-1);
+      unlisten();
+    };
+  }
+
+  var history = {
+    length: globalHistory.length,
+    action: 'POP',
+    location: initialLocation,
+    createHref: createHref,
+    push: push,
+    replace: replace,
+    go: go,
+    goBack: goBack,
+    goForward: goForward,
+    block: block,
+    listen: listen
+  };
+  return history;
+}
+
+function clamp(n, lowerBound, upperBound) {
+  return Math.min(Math.max(n, lowerBound), upperBound);
+}
+/**
+ * Creates a history object that stores locations in memory.
+ */
+
+
+function createMemoryHistory(props) {
+  if (props === void 0) {
+    props = {};
+  }
+
+  var _props = props,
+      getUserConfirmation = _props.getUserConfirmation,
+      _props$initialEntries = _props.initialEntries,
+      initialEntries = _props$initialEntries === void 0 ? ['/'] : _props$initialEntries,
+      _props$initialIndex = _props.initialIndex,
+      initialIndex = _props$initialIndex === void 0 ? 0 : _props$initialIndex,
+      _props$keyLength = _props.keyLength,
+      keyLength = _props$keyLength === void 0 ? 6 : _props$keyLength;
+  var transitionManager = createTransitionManager();
+
+  function setState(nextState) {
+    (0, _extends2.default)(history, nextState);
+    history.length = history.entries.length;
+    transitionManager.notifyListeners(history.location, history.action);
+  }
+
+  function createKey() {
+    return Math.random().toString(36).substr(2, keyLength);
+  }
+
+  var index = clamp(initialIndex, 0, initialEntries.length - 1);
+  var entries = initialEntries.map(function (entry) {
+    return typeof entry === 'string' ? createLocation(entry, undefined, createKey()) : createLocation(entry, undefined, entry.key || createKey());
+  }); // Public interface
+
+  var createHref = createPath;
+
+  function push(path, state) {
+    undefined !== "production" ? (0, _tinyWarning.default)(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to push when the 1st ' + 'argument is a location-like object that already has state; it is ignored') : void 0;
+    var action = 'PUSH';
+    var location = createLocation(path, state, createKey(), history.location);
+    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+      if (!ok) return;
+      var prevIndex = history.index;
+      var nextIndex = prevIndex + 1;
+      var nextEntries = history.entries.slice(0);
+
+      if (nextEntries.length > nextIndex) {
+        nextEntries.splice(nextIndex, nextEntries.length - nextIndex, location);
+      } else {
+        nextEntries.push(location);
+      }
+
+      setState({
+        action: action,
+        location: location,
+        index: nextIndex,
+        entries: nextEntries
+      });
+    });
+  }
+
+  function replace(path, state) {
+    undefined !== "production" ? (0, _tinyWarning.default)(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to replace when the 1st ' + 'argument is a location-like object that already has state; it is ignored') : void 0;
+    var action = 'REPLACE';
+    var location = createLocation(path, state, createKey(), history.location);
+    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+      if (!ok) return;
+      history.entries[history.index] = location;
+      setState({
+        action: action,
+        location: location
+      });
+    });
+  }
+
+  function go(n) {
+    var nextIndex = clamp(history.index + n, 0, history.entries.length - 1);
+    var action = 'POP';
+    var location = history.entries[nextIndex];
+    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+      if (ok) {
+        setState({
+          action: action,
+          location: location,
+          index: nextIndex
+        });
+      } else {
+        // Mimic the behavior of DOM histories by
+        // causing a render after a cancelled POP.
+        setState();
+      }
+    });
+  }
+
+  function goBack() {
+    go(-1);
+  }
+
+  function goForward() {
+    go(1);
+  }
+
+  function canGo(n) {
+    var nextIndex = history.index + n;
+    return nextIndex >= 0 && nextIndex < history.entries.length;
+  }
+
+  function block(prompt) {
+    if (prompt === void 0) {
+      prompt = false;
+    }
+
+    return transitionManager.setPrompt(prompt);
+  }
+
+  function listen(listener) {
+    return transitionManager.appendListener(listener);
+  }
+
+  var history = {
+    length: entries.length,
+    action: 'POP',
+    location: entries[index],
+    index: index,
+    entries: entries,
+    createHref: createHref,
+    push: push,
+    replace: replace,
+    go: go,
+    goBack: goBack,
+    goForward: goForward,
+    canGo: canGo,
+    block: block,
+    listen: listen
+  };
+  return history;
+}
+},{"@babel/runtime/helpers/esm/extends":"../node_modules/@babel/runtime/helpers/esm/extends.js","resolve-pathname":"../node_modules/resolve-pathname/index.js","value-equal":"../node_modules/value-equal/index.js","tiny-warning":"../node_modules/tiny-warning/dist/tiny-warning.esm.js","tiny-invariant":"../node_modules/tiny-invariant/dist/tiny-invariant.esm.js"}],"../node_modules/warning/browser.js":[function(require,module,exports) {
+/**
+ * Copyright 2014-2015, Facebook, Inc.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ */
+'use strict';
+/**
+ * Similar to invariant but only logs a warning if the condition is not met.
+ * This can be used to log issues in development environments in critical
+ * paths. Removing the logging code for production environments will keep the
+ * same logic and follow the same code paths.
+ */
+
+var warning = function () {};
+
+if (undefined !== 'production') {
+  warning = function (condition, format, args) {
+    var len = arguments.length;
+    args = new Array(len > 2 ? len - 2 : 0);
+
+    for (var key = 2; key < len; key++) {
+      args[key - 2] = arguments[key];
+    }
+
+    if (format === undefined) {
+      throw new Error('`warning(condition, format, ...args)` requires a warning ' + 'message argument');
+    }
+
+    if (format.length < 10 || /^[s\W]*$/.test(format)) {
+      throw new Error('The warning format should be able to uniquely identify this ' + 'warning. Please, use a more descriptive format than: ' + format);
+    }
+
+    if (!condition) {
+      var argIndex = 0;
+      var message = 'Warning: ' + format.replace(/%s/g, function () {
+        return args[argIndex++];
+      });
+
+      if (typeof console !== 'undefined') {
+        console.error(message);
+      }
+
+      try {
+        // This error was thrown as a convenience so that you can use this stack
+        // to find the callsite that caused this warning to fire.
+        throw new Error(message);
+      } catch (x) {}
+    }
+  };
+}
+
+module.exports = warning;
+},{}],"../node_modules/history/warnAboutDeprecatedCJSRequire.js":[function(require,module,exports) {
+'use strict';
+
+var printWarning = function () {};
+
+if (undefined !== 'production') {
+  printWarning = function (format, subs) {
+    var index = 0;
+    var message = 'Warning: ' + (subs.length > 0 ? format.replace(/%s/g, function () {
+      return subs[index++];
+    }) : format);
+
+    if (typeof console !== 'undefined') {
+      console.error(message);
+    }
+
+    try {
+      // --- Welcome to debugging history ---
+      // This error was thrown as a convenience so that you can use the
+      // stack trace to find the callsite that triggered this warning.
+      throw new Error(message);
+    } catch (e) {}
+  };
+}
+
+module.exports = function (member) {
+  printWarning('Please use `require("history").%s` instead of `require("history/%s")`. ' + 'Support for the latter will be removed in the next major release.', [member, member]);
+};
+},{}],"../node_modules/history/cjs/history.js":[function(require,module,exports) {
+'use strict';
+
+Object.defineProperty(exports, '__esModule', { value: true });
+
+function _interopDefault (ex) { return (ex && (typeof ex === 'object') && 'default' in ex) ? ex['default'] : ex; }
+
+var resolvePathname = _interopDefault(require('resolve-pathname'));
+var valueEqual = _interopDefault(require('value-equal'));
+var warning = _interopDefault(require('tiny-warning'));
+var invariant = _interopDefault(require('tiny-invariant'));
+
+function _extends() {
+  _extends = Object.assign || function (target) {
+    for (var i = 1; i < arguments.length; i++) {
+      var source = arguments[i];
+
+      for (var key in source) {
+        if (Object.prototype.hasOwnProperty.call(source, key)) {
+          target[key] = source[key];
+        }
+      }
+    }
+
+    return target;
+  };
+
+  return _extends.apply(this, arguments);
+}
+
+function addLeadingSlash(path) {
+  return path.charAt(0) === '/' ? path : '/' + path;
+}
+function stripLeadingSlash(path) {
+  return path.charAt(0) === '/' ? path.substr(1) : path;
+}
+function hasBasename(path, prefix) {
+  return new RegExp('^' + prefix + '(\\/|\\?|#|$)', 'i').test(path);
+}
+function stripBasename(path, prefix) {
+  return hasBasename(path, prefix) ? path.substr(prefix.length) : path;
+}
+function stripTrailingSlash(path) {
+  return path.charAt(path.length - 1) === '/' ? path.slice(0, -1) : path;
+}
+function parsePath(path) {
+  var pathname = path || '/';
+  var search = '';
+  var hash = '';
+  var hashIndex = pathname.indexOf('#');
+
+  if (hashIndex !== -1) {
+    hash = pathname.substr(hashIndex);
+    pathname = pathname.substr(0, hashIndex);
+  }
+
+  var searchIndex = pathname.indexOf('?');
+
+  if (searchIndex !== -1) {
+    search = pathname.substr(searchIndex);
+    pathname = pathname.substr(0, searchIndex);
+  }
+
+  return {
+    pathname: pathname,
+    search: search === '?' ? '' : search,
+    hash: hash === '#' ? '' : hash
+  };
+}
+function createPath(location) {
+  var pathname = location.pathname,
+      search = location.search,
+      hash = location.hash;
+  var path = pathname || '/';
+  if (search && search !== '?') path += search.charAt(0) === '?' ? search : "?" + search;
+  if (hash && hash !== '#') path += hash.charAt(0) === '#' ? hash : "#" + hash;
+  return path;
+}
+
+function createLocation(path, state, key, currentLocation) {
+  var location;
+
+  if (typeof path === 'string') {
+    // Two-arg form: push(path, state)
+    location = parsePath(path);
+    location.state = state;
+  } else {
+    // One-arg form: push(location)
+    location = _extends({}, path);
+    if (location.pathname === undefined) location.pathname = '';
+
+    if (location.search) {
+      if (location.search.charAt(0) !== '?') location.search = '?' + location.search;
+    } else {
+      location.search = '';
+    }
+
+    if (location.hash) {
+      if (location.hash.charAt(0) !== '#') location.hash = '#' + location.hash;
+    } else {
+      location.hash = '';
+    }
+
+    if (state !== undefined && location.state === undefined) location.state = state;
+  }
+
+  try {
+    location.pathname = decodeURI(location.pathname);
+  } catch (e) {
+    if (e instanceof URIError) {
+      throw new URIError('Pathname "' + location.pathname + '" could not be decoded. ' + 'This is likely caused by an invalid percent-encoding.');
+    } else {
+      throw e;
+    }
+  }
+
+  if (key) location.key = key;
+
+  if (currentLocation) {
+    // Resolve incomplete/relative pathname relative to current location.
+    if (!location.pathname) {
+      location.pathname = currentLocation.pathname;
+    } else if (location.pathname.charAt(0) !== '/') {
+      location.pathname = resolvePathname(location.pathname, currentLocation.pathname);
+    }
+  } else {
+    // When there is no prior location and pathname is empty, set it to /
+    if (!location.pathname) {
+      location.pathname = '/';
+    }
+  }
+
+  return location;
+}
+function locationsAreEqual(a, b) {
+  return a.pathname === b.pathname && a.search === b.search && a.hash === b.hash && a.key === b.key && valueEqual(a.state, b.state);
+}
+
+function createTransitionManager() {
+  var prompt = null;
+
+  function setPrompt(nextPrompt) {
+    warning(prompt == null, 'A history supports only one prompt at a time');
+    prompt = nextPrompt;
+    return function () {
+      if (prompt === nextPrompt) prompt = null;
+    };
+  }
+
+  function confirmTransitionTo(location, action, getUserConfirmation, callback) {
+    // TODO: If another transition starts while we're still confirming
+    // the previous one, we may end up in a weird state. Figure out the
+    // best way to handle this.
+    if (prompt != null) {
+      var result = typeof prompt === 'function' ? prompt(location, action) : prompt;
+
+      if (typeof result === 'string') {
+        if (typeof getUserConfirmation === 'function') {
+          getUserConfirmation(result, callback);
+        } else {
+          warning(false, 'A history needs a getUserConfirmation function in order to use a prompt message');
+          callback(true);
+        }
+      } else {
+        // Return false from a transition hook to cancel the transition.
+        callback(result !== false);
+      }
+    } else {
+      callback(true);
+    }
+  }
+
+  var listeners = [];
+
+  function appendListener(fn) {
+    var isActive = true;
+
+    function listener() {
+      if (isActive) fn.apply(void 0, arguments);
+    }
+
+    listeners.push(listener);
+    return function () {
+      isActive = false;
+      listeners = listeners.filter(function (item) {
+        return item !== listener;
+      });
+    };
+  }
+
+  function notifyListeners() {
+    for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    listeners.forEach(function (listener) {
+      return listener.apply(void 0, args);
+    });
+  }
+
+  return {
+    setPrompt: setPrompt,
+    confirmTransitionTo: confirmTransitionTo,
+    appendListener: appendListener,
+    notifyListeners: notifyListeners
+  };
+}
+
+var canUseDOM = !!(typeof window !== 'undefined' && window.document && window.document.createElement);
+function getConfirmation(message, callback) {
+  callback(window.confirm(message)); // eslint-disable-line no-alert
+}
+/**
+ * Returns true if the HTML5 history API is supported. Taken from Modernizr.
+ *
+ * https://github.com/Modernizr/Modernizr/blob/master/LICENSE
+ * https://github.com/Modernizr/Modernizr/blob/master/feature-detects/history.js
+ * changed to avoid false negatives for Windows Phones: https://github.com/reactjs/react-router/issues/586
+ */
+
+function supportsHistory() {
+  var ua = window.navigator.userAgent;
+  if ((ua.indexOf('Android 2.') !== -1 || ua.indexOf('Android 4.0') !== -1) && ua.indexOf('Mobile Safari') !== -1 && ua.indexOf('Chrome') === -1 && ua.indexOf('Windows Phone') === -1) return false;
+  return window.history && 'pushState' in window.history;
+}
+/**
+ * Returns true if browser fires popstate on hash change.
+ * IE10 and IE11 do not.
+ */
+
+function supportsPopStateOnHashChange() {
+  return window.navigator.userAgent.indexOf('Trident') === -1;
+}
+/**
+ * Returns false if using go(n) with hash history causes a full page reload.
+ */
+
+function supportsGoWithoutReloadUsingHash() {
+  return window.navigator.userAgent.indexOf('Firefox') === -1;
+}
+/**
+ * Returns true if a given popstate event is an extraneous WebKit event.
+ * Accounts for the fact that Chrome on iOS fires real popstate events
+ * containing undefined state when pressing the back button.
+ */
+
+function isExtraneousPopstateEvent(event) {
+  event.state === undefined && navigator.userAgent.indexOf('CriOS') === -1;
+}
+
+var PopStateEvent = 'popstate';
+var HashChangeEvent = 'hashchange';
+
+function getHistoryState() {
+  try {
+    return window.history.state || {};
+  } catch (e) {
+    // IE 11 sometimes throws when accessing window.history.state
+    // See https://github.com/ReactTraining/history/pull/289
+    return {};
+  }
+}
+/**
+ * Creates a history object that uses the HTML5 history API including
+ * pushState, replaceState, and the popstate event.
+ */
+
+
+function createBrowserHistory(props) {
+  if (props === void 0) {
+    props = {};
+  }
+
+  !canUseDOM ? invariant(false, 'Browser history needs a DOM') : void 0;
+  var globalHistory = window.history;
+  var canUseHistory = supportsHistory();
+  var needsHashChangeListener = !supportsPopStateOnHashChange();
+  var _props = props,
+      _props$forceRefresh = _props.forceRefresh,
+      forceRefresh = _props$forceRefresh === void 0 ? false : _props$forceRefresh,
+      _props$getUserConfirm = _props.getUserConfirmation,
+      getUserConfirmation = _props$getUserConfirm === void 0 ? getConfirmation : _props$getUserConfirm,
+      _props$keyLength = _props.keyLength,
+      keyLength = _props$keyLength === void 0 ? 6 : _props$keyLength;
+  var basename = props.basename ? stripTrailingSlash(addLeadingSlash(props.basename)) : '';
+
+  function getDOMLocation(historyState) {
+    var _ref = historyState || {},
+        key = _ref.key,
+        state = _ref.state;
+
+    var _window$location = window.location,
+        pathname = _window$location.pathname,
+        search = _window$location.search,
+        hash = _window$location.hash;
+    var path = pathname + search + hash;
+    warning(!basename || hasBasename(path, basename), 'You are attempting to use a basename on a page whose URL path does not begin ' + 'with the basename. Expected path "' + path + '" to begin with "' + basename + '".');
+    if (basename) path = stripBasename(path, basename);
+    return createLocation(path, state, key);
+  }
+
+  function createKey() {
+    return Math.random().toString(36).substr(2, keyLength);
+  }
+
+  var transitionManager = createTransitionManager();
+
+  function setState(nextState) {
+    _extends(history, nextState);
+
+    history.length = globalHistory.length;
+    transitionManager.notifyListeners(history.location, history.action);
+  }
+
+  function handlePopState(event) {
+    // Ignore extraneous popstate events in WebKit.
+    if (isExtraneousPopstateEvent(event)) return;
+    handlePop(getDOMLocation(event.state));
+  }
+
+  function handleHashChange() {
+    handlePop(getDOMLocation(getHistoryState()));
+  }
+
+  var forceNextPop = false;
+
+  function handlePop(location) {
+    if (forceNextPop) {
+      forceNextPop = false;
+      setState();
+    } else {
+      var action = 'POP';
+      transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+        if (ok) {
+          setState({
+            action: action,
+            location: location
+          });
+        } else {
+          revertPop(location);
+        }
+      });
+    }
+  }
+
+  function revertPop(fromLocation) {
+    var toLocation = history.location; // TODO: We could probably make this more reliable by
+    // keeping a list of keys we've seen in sessionStorage.
+    // Instead, we just default to 0 for keys we don't know.
+
+    var toIndex = allKeys.indexOf(toLocation.key);
+    if (toIndex === -1) toIndex = 0;
+    var fromIndex = allKeys.indexOf(fromLocation.key);
+    if (fromIndex === -1) fromIndex = 0;
+    var delta = toIndex - fromIndex;
+
+    if (delta) {
+      forceNextPop = true;
+      go(delta);
+    }
+  }
+
+  var initialLocation = getDOMLocation(getHistoryState());
+  var allKeys = [initialLocation.key]; // Public interface
+
+  function createHref(location) {
+    return basename + createPath(location);
+  }
+
+  function push(path, state) {
+    warning(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to push when the 1st ' + 'argument is a location-like object that already has state; it is ignored');
+    var action = 'PUSH';
+    var location = createLocation(path, state, createKey(), history.location);
+    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+      if (!ok) return;
+      var href = createHref(location);
+      var key = location.key,
+          state = location.state;
+
+      if (canUseHistory) {
+        globalHistory.pushState({
+          key: key,
+          state: state
+        }, null, href);
+
+        if (forceRefresh) {
+          window.location.href = href;
+        } else {
+          var prevIndex = allKeys.indexOf(history.location.key);
+          var nextKeys = allKeys.slice(0, prevIndex === -1 ? 0 : prevIndex + 1);
+          nextKeys.push(location.key);
+          allKeys = nextKeys;
+          setState({
+            action: action,
+            location: location
+          });
+        }
+      } else {
+        warning(state === undefined, 'Browser history cannot push state in browsers that do not support HTML5 history');
+        window.location.href = href;
+      }
+    });
+  }
+
+  function replace(path, state) {
+    warning(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to replace when the 1st ' + 'argument is a location-like object that already has state; it is ignored');
+    var action = 'REPLACE';
+    var location = createLocation(path, state, createKey(), history.location);
+    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+      if (!ok) return;
+      var href = createHref(location);
+      var key = location.key,
+          state = location.state;
+
+      if (canUseHistory) {
+        globalHistory.replaceState({
+          key: key,
+          state: state
+        }, null, href);
+
+        if (forceRefresh) {
+          window.location.replace(href);
+        } else {
+          var prevIndex = allKeys.indexOf(history.location.key);
+          if (prevIndex !== -1) allKeys[prevIndex] = location.key;
+          setState({
+            action: action,
+            location: location
+          });
+        }
+      } else {
+        warning(state === undefined, 'Browser history cannot replace state in browsers that do not support HTML5 history');
+        window.location.replace(href);
+      }
+    });
+  }
+
+  function go(n) {
+    globalHistory.go(n);
+  }
+
+  function goBack() {
+    go(-1);
+  }
+
+  function goForward() {
+    go(1);
+  }
+
+  var listenerCount = 0;
+
+  function checkDOMListeners(delta) {
+    listenerCount += delta;
+
+    if (listenerCount === 1 && delta === 1) {
+      window.addEventListener(PopStateEvent, handlePopState);
+      if (needsHashChangeListener) window.addEventListener(HashChangeEvent, handleHashChange);
+    } else if (listenerCount === 0) {
+      window.removeEventListener(PopStateEvent, handlePopState);
+      if (needsHashChangeListener) window.removeEventListener(HashChangeEvent, handleHashChange);
+    }
+  }
+
+  var isBlocked = false;
+
+  function block(prompt) {
+    if (prompt === void 0) {
+      prompt = false;
+    }
+
+    var unblock = transitionManager.setPrompt(prompt);
+
+    if (!isBlocked) {
+      checkDOMListeners(1);
+      isBlocked = true;
+    }
+
+    return function () {
+      if (isBlocked) {
+        isBlocked = false;
+        checkDOMListeners(-1);
+      }
+
+      return unblock();
+    };
+  }
+
+  function listen(listener) {
+    var unlisten = transitionManager.appendListener(listener);
+    checkDOMListeners(1);
+    return function () {
+      checkDOMListeners(-1);
+      unlisten();
+    };
+  }
+
+  var history = {
+    length: globalHistory.length,
+    action: 'POP',
+    location: initialLocation,
+    createHref: createHref,
+    push: push,
+    replace: replace,
+    go: go,
+    goBack: goBack,
+    goForward: goForward,
+    block: block,
+    listen: listen
+  };
+  return history;
+}
+
+var HashChangeEvent$1 = 'hashchange';
+var HashPathCoders = {
+  hashbang: {
+    encodePath: function encodePath(path) {
+      return path.charAt(0) === '!' ? path : '!/' + stripLeadingSlash(path);
+    },
+    decodePath: function decodePath(path) {
+      return path.charAt(0) === '!' ? path.substr(1) : path;
+    }
+  },
+  noslash: {
+    encodePath: stripLeadingSlash,
+    decodePath: addLeadingSlash
+  },
+  slash: {
+    encodePath: addLeadingSlash,
+    decodePath: addLeadingSlash
+  }
+};
+
+function getHashPath() {
+  // We can't use window.location.hash here because it's not
+  // consistent across browsers - Firefox will pre-decode it!
+  var href = window.location.href;
+  var hashIndex = href.indexOf('#');
+  return hashIndex === -1 ? '' : href.substring(hashIndex + 1);
+}
+
+function pushHashPath(path) {
+  window.location.hash = path;
+}
+
+function replaceHashPath(path) {
+  var hashIndex = window.location.href.indexOf('#');
+  window.location.replace(window.location.href.slice(0, hashIndex >= 0 ? hashIndex : 0) + '#' + path);
+}
+
+function createHashHistory(props) {
+  if (props === void 0) {
+    props = {};
+  }
+
+  !canUseDOM ? invariant(false, 'Hash history needs a DOM') : void 0;
+  var globalHistory = window.history;
+  var canGoWithoutReload = supportsGoWithoutReloadUsingHash();
+  var _props = props,
+      _props$getUserConfirm = _props.getUserConfirmation,
+      getUserConfirmation = _props$getUserConfirm === void 0 ? getConfirmation : _props$getUserConfirm,
+      _props$hashType = _props.hashType,
+      hashType = _props$hashType === void 0 ? 'slash' : _props$hashType;
+  var basename = props.basename ? stripTrailingSlash(addLeadingSlash(props.basename)) : '';
+  var _HashPathCoders$hashT = HashPathCoders[hashType],
+      encodePath = _HashPathCoders$hashT.encodePath,
+      decodePath = _HashPathCoders$hashT.decodePath;
+
+  function getDOMLocation() {
+    var path = decodePath(getHashPath());
+    warning(!basename || hasBasename(path, basename), 'You are attempting to use a basename on a page whose URL path does not begin ' + 'with the basename. Expected path "' + path + '" to begin with "' + basename + '".');
+    if (basename) path = stripBasename(path, basename);
+    return createLocation(path);
+  }
+
+  var transitionManager = createTransitionManager();
+
+  function setState(nextState) {
+    _extends(history, nextState);
+
+    history.length = globalHistory.length;
+    transitionManager.notifyListeners(history.location, history.action);
+  }
+
+  var forceNextPop = false;
+  var ignorePath = null;
+
+  function handleHashChange() {
+    var path = getHashPath();
+    var encodedPath = encodePath(path);
+
+    if (path !== encodedPath) {
+      // Ensure we always have a properly-encoded hash.
+      replaceHashPath(encodedPath);
+    } else {
+      var location = getDOMLocation();
+      var prevLocation = history.location;
+      if (!forceNextPop && locationsAreEqual(prevLocation, location)) return; // A hashchange doesn't always == location change.
+
+      if (ignorePath === createPath(location)) return; // Ignore this change; we already setState in push/replace.
+
+      ignorePath = null;
+      handlePop(location);
+    }
+  }
+
+  function handlePop(location) {
+    if (forceNextPop) {
+      forceNextPop = false;
+      setState();
+    } else {
+      var action = 'POP';
+      transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+        if (ok) {
+          setState({
+            action: action,
+            location: location
+          });
+        } else {
+          revertPop(location);
+        }
+      });
+    }
+  }
+
+  function revertPop(fromLocation) {
+    var toLocation = history.location; // TODO: We could probably make this more reliable by
+    // keeping a list of paths we've seen in sessionStorage.
+    // Instead, we just default to 0 for paths we don't know.
+
+    var toIndex = allPaths.lastIndexOf(createPath(toLocation));
+    if (toIndex === -1) toIndex = 0;
+    var fromIndex = allPaths.lastIndexOf(createPath(fromLocation));
+    if (fromIndex === -1) fromIndex = 0;
+    var delta = toIndex - fromIndex;
+
+    if (delta) {
+      forceNextPop = true;
+      go(delta);
+    }
+  } // Ensure the hash is encoded properly before doing anything else.
+
+
+  var path = getHashPath();
+  var encodedPath = encodePath(path);
+  if (path !== encodedPath) replaceHashPath(encodedPath);
+  var initialLocation = getDOMLocation();
+  var allPaths = [createPath(initialLocation)]; // Public interface
+
+  function createHref(location) {
+    return '#' + encodePath(basename + createPath(location));
+  }
+
+  function push(path, state) {
+    warning(state === undefined, 'Hash history cannot push state; it is ignored');
+    var action = 'PUSH';
+    var location = createLocation(path, undefined, undefined, history.location);
+    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+      if (!ok) return;
+      var path = createPath(location);
+      var encodedPath = encodePath(basename + path);
+      var hashChanged = getHashPath() !== encodedPath;
+
+      if (hashChanged) {
+        // We cannot tell if a hashchange was caused by a PUSH, so we'd
+        // rather setState here and ignore the hashchange. The caveat here
+        // is that other hash histories in the page will consider it a POP.
+        ignorePath = path;
+        pushHashPath(encodedPath);
+        var prevIndex = allPaths.lastIndexOf(createPath(history.location));
+        var nextPaths = allPaths.slice(0, prevIndex === -1 ? 0 : prevIndex + 1);
+        nextPaths.push(path);
+        allPaths = nextPaths;
+        setState({
+          action: action,
+          location: location
+        });
+      } else {
+        warning(false, 'Hash history cannot PUSH the same path; a new entry will not be added to the history stack');
+        setState();
+      }
+    });
+  }
+
+  function replace(path, state) {
+    warning(state === undefined, 'Hash history cannot replace state; it is ignored');
+    var action = 'REPLACE';
+    var location = createLocation(path, undefined, undefined, history.location);
+    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+      if (!ok) return;
+      var path = createPath(location);
+      var encodedPath = encodePath(basename + path);
+      var hashChanged = getHashPath() !== encodedPath;
+
+      if (hashChanged) {
+        // We cannot tell if a hashchange was caused by a REPLACE, so we'd
+        // rather setState here and ignore the hashchange. The caveat here
+        // is that other hash histories in the page will consider it a POP.
+        ignorePath = path;
+        replaceHashPath(encodedPath);
+      }
+
+      var prevIndex = allPaths.indexOf(createPath(history.location));
+      if (prevIndex !== -1) allPaths[prevIndex] = path;
+      setState({
+        action: action,
+        location: location
+      });
+    });
+  }
+
+  function go(n) {
+    warning(canGoWithoutReload, 'Hash history go(n) causes a full page reload in this browser');
+    globalHistory.go(n);
+  }
+
+  function goBack() {
+    go(-1);
+  }
+
+  function goForward() {
+    go(1);
+  }
+
+  var listenerCount = 0;
+
+  function checkDOMListeners(delta) {
+    listenerCount += delta;
+
+    if (listenerCount === 1 && delta === 1) {
+      window.addEventListener(HashChangeEvent$1, handleHashChange);
+    } else if (listenerCount === 0) {
+      window.removeEventListener(HashChangeEvent$1, handleHashChange);
+    }
+  }
+
+  var isBlocked = false;
+
+  function block(prompt) {
+    if (prompt === void 0) {
+      prompt = false;
+    }
+
+    var unblock = transitionManager.setPrompt(prompt);
+
+    if (!isBlocked) {
+      checkDOMListeners(1);
+      isBlocked = true;
+    }
+
+    return function () {
+      if (isBlocked) {
+        isBlocked = false;
+        checkDOMListeners(-1);
+      }
+
+      return unblock();
+    };
+  }
+
+  function listen(listener) {
+    var unlisten = transitionManager.appendListener(listener);
+    checkDOMListeners(1);
+    return function () {
+      checkDOMListeners(-1);
+      unlisten();
+    };
+  }
+
+  var history = {
+    length: globalHistory.length,
+    action: 'POP',
+    location: initialLocation,
+    createHref: createHref,
+    push: push,
+    replace: replace,
+    go: go,
+    goBack: goBack,
+    goForward: goForward,
+    block: block,
+    listen: listen
+  };
+  return history;
+}
+
+function clamp(n, lowerBound, upperBound) {
+  return Math.min(Math.max(n, lowerBound), upperBound);
+}
+/**
+ * Creates a history object that stores locations in memory.
+ */
+
+
+function createMemoryHistory(props) {
+  if (props === void 0) {
+    props = {};
+  }
+
+  var _props = props,
+      getUserConfirmation = _props.getUserConfirmation,
+      _props$initialEntries = _props.initialEntries,
+      initialEntries = _props$initialEntries === void 0 ? ['/'] : _props$initialEntries,
+      _props$initialIndex = _props.initialIndex,
+      initialIndex = _props$initialIndex === void 0 ? 0 : _props$initialIndex,
+      _props$keyLength = _props.keyLength,
+      keyLength = _props$keyLength === void 0 ? 6 : _props$keyLength;
+  var transitionManager = createTransitionManager();
+
+  function setState(nextState) {
+    _extends(history, nextState);
+
+    history.length = history.entries.length;
+    transitionManager.notifyListeners(history.location, history.action);
+  }
+
+  function createKey() {
+    return Math.random().toString(36).substr(2, keyLength);
+  }
+
+  var index = clamp(initialIndex, 0, initialEntries.length - 1);
+  var entries = initialEntries.map(function (entry) {
+    return typeof entry === 'string' ? createLocation(entry, undefined, createKey()) : createLocation(entry, undefined, entry.key || createKey());
+  }); // Public interface
+
+  var createHref = createPath;
+
+  function push(path, state) {
+    warning(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to push when the 1st ' + 'argument is a location-like object that already has state; it is ignored');
+    var action = 'PUSH';
+    var location = createLocation(path, state, createKey(), history.location);
+    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+      if (!ok) return;
+      var prevIndex = history.index;
+      var nextIndex = prevIndex + 1;
+      var nextEntries = history.entries.slice(0);
+
+      if (nextEntries.length > nextIndex) {
+        nextEntries.splice(nextIndex, nextEntries.length - nextIndex, location);
+      } else {
+        nextEntries.push(location);
+      }
+
+      setState({
+        action: action,
+        location: location,
+        index: nextIndex,
+        entries: nextEntries
+      });
+    });
+  }
+
+  function replace(path, state) {
+    warning(!(typeof path === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to replace when the 1st ' + 'argument is a location-like object that already has state; it is ignored');
+    var action = 'REPLACE';
+    var location = createLocation(path, state, createKey(), history.location);
+    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+      if (!ok) return;
+      history.entries[history.index] = location;
+      setState({
+        action: action,
+        location: location
+      });
+    });
+  }
+
+  function go(n) {
+    var nextIndex = clamp(history.index + n, 0, history.entries.length - 1);
+    var action = 'POP';
+    var location = history.entries[nextIndex];
+    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
+      if (ok) {
+        setState({
+          action: action,
+          location: location,
+          index: nextIndex
+        });
+      } else {
+        // Mimic the behavior of DOM histories by
+        // causing a render after a cancelled POP.
+        setState();
+      }
+    });
+  }
+
+  function goBack() {
+    go(-1);
+  }
+
+  function goForward() {
+    go(1);
+  }
+
+  function canGo(n) {
+    var nextIndex = history.index + n;
+    return nextIndex >= 0 && nextIndex < history.entries.length;
+  }
+
+  function block(prompt) {
+    if (prompt === void 0) {
+      prompt = false;
+    }
+
+    return transitionManager.setPrompt(prompt);
+  }
+
+  function listen(listener) {
+    return transitionManager.appendListener(listener);
+  }
+
+  var history = {
+    length: entries.length,
+    action: 'POP',
+    location: entries[index],
+    index: index,
+    entries: entries,
+    createHref: createHref,
+    push: push,
+    replace: replace,
+    go: go,
+    goBack: goBack,
+    goForward: goForward,
+    canGo: canGo,
+    block: block,
+    listen: listen
+  };
+  return history;
+}
+
+exports.createBrowserHistory = createBrowserHistory;
+exports.createHashHistory = createHashHistory;
+exports.createMemoryHistory = createMemoryHistory;
+exports.createLocation = createLocation;
+exports.locationsAreEqual = locationsAreEqual;
+exports.parsePath = parsePath;
+exports.createPath = createPath;
+
+},{"resolve-pathname":"../node_modules/resolve-pathname/index.js","value-equal":"../node_modules/value-equal/index.js","tiny-warning":"../node_modules/tiny-warning/dist/tiny-warning.esm.js","tiny-invariant":"../node_modules/tiny-invariant/dist/tiny-invariant.esm.js"}],"../node_modules/history/index.js":[function(require,module,exports) {
+'use strict';
+
+if (undefined === 'production') {
+  module.exports = require('./cjs/history.min.js');
+} else {
+  module.exports = require('./cjs/history.js');
+}
+},{"./cjs/history.js":"../node_modules/history/cjs/history.js"}],"../node_modules/history/createBrowserHistory.js":[function(require,module,exports) {
+'use strict';
+require('./warnAboutDeprecatedCJSRequire.js')('createBrowserHistory');
+module.exports = require('./index.js').createBrowserHistory;
+
+},{"./warnAboutDeprecatedCJSRequire.js":"../node_modules/history/warnAboutDeprecatedCJSRequire.js","./index.js":"../node_modules/history/index.js"}],"../node_modules/react-router/node_modules/warning/warning.js":[function(require,module,exports) {
 /**
  * Copyright (c) 2014-present, Facebook, Inc.
  *
@@ -24898,330 +26267,10 @@ var _default = BrowserRouter;
 exports.default = _default;
 },{"warning":"../node_modules/warning/browser.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","history/createBrowserHistory":"../node_modules/history/createBrowserHistory.js","./Router":"../node_modules/react-router-dom/es/Router.js"}],"../node_modules/history/createHashHistory.js":[function(require,module,exports) {
 'use strict';
+require('./warnAboutDeprecatedCJSRequire.js')('createHashHistory');
+module.exports = require('./index.js').createHashHistory;
 
-exports.__esModule = true;
-
-var _extends = Object.assign || function (target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i]; for (var key in source) { if (Object.prototype.hasOwnProperty.call(source, key)) { target[key] = source[key]; } } } return target; };
-
-var _warning = require('warning');
-
-var _warning2 = _interopRequireDefault(_warning);
-
-var _invariant = require('invariant');
-
-var _invariant2 = _interopRequireDefault(_invariant);
-
-var _LocationUtils = require('./LocationUtils');
-
-var _PathUtils = require('./PathUtils');
-
-var _createTransitionManager = require('./createTransitionManager');
-
-var _createTransitionManager2 = _interopRequireDefault(_createTransitionManager);
-
-var _DOMUtils = require('./DOMUtils');
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var HashChangeEvent = 'hashchange';
-
-var HashPathCoders = {
-  hashbang: {
-    encodePath: function encodePath(path) {
-      return path.charAt(0) === '!' ? path : '!/' + (0, _PathUtils.stripLeadingSlash)(path);
-    },
-    decodePath: function decodePath(path) {
-      return path.charAt(0) === '!' ? path.substr(1) : path;
-    }
-  },
-  noslash: {
-    encodePath: _PathUtils.stripLeadingSlash,
-    decodePath: _PathUtils.addLeadingSlash
-  },
-  slash: {
-    encodePath: _PathUtils.addLeadingSlash,
-    decodePath: _PathUtils.addLeadingSlash
-  }
-};
-
-var getHashPath = function getHashPath() {
-  // We can't use window.location.hash here because it's not
-  // consistent across browsers - Firefox will pre-decode it!
-  var href = window.location.href;
-  var hashIndex = href.indexOf('#');
-  return hashIndex === -1 ? '' : href.substring(hashIndex + 1);
-};
-
-var pushHashPath = function pushHashPath(path) {
-  return window.location.hash = path;
-};
-
-var replaceHashPath = function replaceHashPath(path) {
-  var hashIndex = window.location.href.indexOf('#');
-
-  window.location.replace(window.location.href.slice(0, hashIndex >= 0 ? hashIndex : 0) + '#' + path);
-};
-
-var createHashHistory = function createHashHistory() {
-  var props = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-
-  (0, _invariant2.default)(_DOMUtils.canUseDOM, 'Hash history needs a DOM');
-
-  var globalHistory = window.history;
-  var canGoWithoutReload = (0, _DOMUtils.supportsGoWithoutReloadUsingHash)();
-
-  var _props$getUserConfirm = props.getUserConfirmation,
-      getUserConfirmation = _props$getUserConfirm === undefined ? _DOMUtils.getConfirmation : _props$getUserConfirm,
-      _props$hashType = props.hashType,
-      hashType = _props$hashType === undefined ? 'slash' : _props$hashType;
-
-  var basename = props.basename ? (0, _PathUtils.stripTrailingSlash)((0, _PathUtils.addLeadingSlash)(props.basename)) : '';
-
-  var _HashPathCoders$hashT = HashPathCoders[hashType],
-      encodePath = _HashPathCoders$hashT.encodePath,
-      decodePath = _HashPathCoders$hashT.decodePath;
-
-
-  var getDOMLocation = function getDOMLocation() {
-    var path = decodePath(getHashPath());
-
-    (0, _warning2.default)(!basename || (0, _PathUtils.hasBasename)(path, basename), 'You are attempting to use a basename on a page whose URL path does not begin ' + 'with the basename. Expected path "' + path + '" to begin with "' + basename + '".');
-
-    if (basename) path = (0, _PathUtils.stripBasename)(path, basename);
-
-    return (0, _LocationUtils.createLocation)(path);
-  };
-
-  var transitionManager = (0, _createTransitionManager2.default)();
-
-  var setState = function setState(nextState) {
-    _extends(history, nextState);
-
-    history.length = globalHistory.length;
-
-    transitionManager.notifyListeners(history.location, history.action);
-  };
-
-  var forceNextPop = false;
-  var ignorePath = null;
-
-  var handleHashChange = function handleHashChange() {
-    var path = getHashPath();
-    var encodedPath = encodePath(path);
-
-    if (path !== encodedPath) {
-      // Ensure we always have a properly-encoded hash.
-      replaceHashPath(encodedPath);
-    } else {
-      var location = getDOMLocation();
-      var prevLocation = history.location;
-
-      if (!forceNextPop && (0, _LocationUtils.locationsAreEqual)(prevLocation, location)) return; // A hashchange doesn't always == location change.
-
-      if (ignorePath === (0, _PathUtils.createPath)(location)) return; // Ignore this change; we already setState in push/replace.
-
-      ignorePath = null;
-
-      handlePop(location);
-    }
-  };
-
-  var handlePop = function handlePop(location) {
-    if (forceNextPop) {
-      forceNextPop = false;
-      setState();
-    } else {
-      var action = 'POP';
-
-      transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-        if (ok) {
-          setState({ action: action, location: location });
-        } else {
-          revertPop(location);
-        }
-      });
-    }
-  };
-
-  var revertPop = function revertPop(fromLocation) {
-    var toLocation = history.location;
-
-    // TODO: We could probably make this more reliable by
-    // keeping a list of paths we've seen in sessionStorage.
-    // Instead, we just default to 0 for paths we don't know.
-
-    var toIndex = allPaths.lastIndexOf((0, _PathUtils.createPath)(toLocation));
-
-    if (toIndex === -1) toIndex = 0;
-
-    var fromIndex = allPaths.lastIndexOf((0, _PathUtils.createPath)(fromLocation));
-
-    if (fromIndex === -1) fromIndex = 0;
-
-    var delta = toIndex - fromIndex;
-
-    if (delta) {
-      forceNextPop = true;
-      go(delta);
-    }
-  };
-
-  // Ensure the hash is encoded properly before doing anything else.
-  var path = getHashPath();
-  var encodedPath = encodePath(path);
-
-  if (path !== encodedPath) replaceHashPath(encodedPath);
-
-  var initialLocation = getDOMLocation();
-  var allPaths = [(0, _PathUtils.createPath)(initialLocation)];
-
-  // Public interface
-
-  var createHref = function createHref(location) {
-    return '#' + encodePath(basename + (0, _PathUtils.createPath)(location));
-  };
-
-  var push = function push(path, state) {
-    (0, _warning2.default)(state === undefined, 'Hash history cannot push state; it is ignored');
-
-    var action = 'PUSH';
-    var location = (0, _LocationUtils.createLocation)(path, undefined, undefined, history.location);
-
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (!ok) return;
-
-      var path = (0, _PathUtils.createPath)(location);
-      var encodedPath = encodePath(basename + path);
-      var hashChanged = getHashPath() !== encodedPath;
-
-      if (hashChanged) {
-        // We cannot tell if a hashchange was caused by a PUSH, so we'd
-        // rather setState here and ignore the hashchange. The caveat here
-        // is that other hash histories in the page will consider it a POP.
-        ignorePath = path;
-        pushHashPath(encodedPath);
-
-        var prevIndex = allPaths.lastIndexOf((0, _PathUtils.createPath)(history.location));
-        var nextPaths = allPaths.slice(0, prevIndex === -1 ? 0 : prevIndex + 1);
-
-        nextPaths.push(path);
-        allPaths = nextPaths;
-
-        setState({ action: action, location: location });
-      } else {
-        (0, _warning2.default)(false, 'Hash history cannot PUSH the same path; a new entry will not be added to the history stack');
-
-        setState();
-      }
-    });
-  };
-
-  var replace = function replace(path, state) {
-    (0, _warning2.default)(state === undefined, 'Hash history cannot replace state; it is ignored');
-
-    var action = 'REPLACE';
-    var location = (0, _LocationUtils.createLocation)(path, undefined, undefined, history.location);
-
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (!ok) return;
-
-      var path = (0, _PathUtils.createPath)(location);
-      var encodedPath = encodePath(basename + path);
-      var hashChanged = getHashPath() !== encodedPath;
-
-      if (hashChanged) {
-        // We cannot tell if a hashchange was caused by a REPLACE, so we'd
-        // rather setState here and ignore the hashchange. The caveat here
-        // is that other hash histories in the page will consider it a POP.
-        ignorePath = path;
-        replaceHashPath(encodedPath);
-      }
-
-      var prevIndex = allPaths.indexOf((0, _PathUtils.createPath)(history.location));
-
-      if (prevIndex !== -1) allPaths[prevIndex] = path;
-
-      setState({ action: action, location: location });
-    });
-  };
-
-  var go = function go(n) {
-    (0, _warning2.default)(canGoWithoutReload, 'Hash history go(n) causes a full page reload in this browser');
-
-    globalHistory.go(n);
-  };
-
-  var goBack = function goBack() {
-    return go(-1);
-  };
-
-  var goForward = function goForward() {
-    return go(1);
-  };
-
-  var listenerCount = 0;
-
-  var checkDOMListeners = function checkDOMListeners(delta) {
-    listenerCount += delta;
-
-    if (listenerCount === 1) {
-      (0, _DOMUtils.addEventListener)(window, HashChangeEvent, handleHashChange);
-    } else if (listenerCount === 0) {
-      (0, _DOMUtils.removeEventListener)(window, HashChangeEvent, handleHashChange);
-    }
-  };
-
-  var isBlocked = false;
-
-  var block = function block() {
-    var prompt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-
-    var unblock = transitionManager.setPrompt(prompt);
-
-    if (!isBlocked) {
-      checkDOMListeners(1);
-      isBlocked = true;
-    }
-
-    return function () {
-      if (isBlocked) {
-        isBlocked = false;
-        checkDOMListeners(-1);
-      }
-
-      return unblock();
-    };
-  };
-
-  var listen = function listen(listener) {
-    var unlisten = transitionManager.appendListener(listener);
-    checkDOMListeners(1);
-
-    return function () {
-      checkDOMListeners(-1);
-      unlisten();
-    };
-  };
-
-  var history = {
-    length: globalHistory.length,
-    action: 'POP',
-    location: initialLocation,
-    createHref: createHref,
-    push: push,
-    replace: replace,
-    go: go,
-    goBack: goBack,
-    goForward: goForward,
-    block: block,
-    listen: listen
-  };
-
-  return history;
-};
-
-exports.default = createHashHistory;
-},{"warning":"../node_modules/warning/browser.js","invariant":"../node_modules/invariant/browser.js","./LocationUtils":"../node_modules/history/LocationUtils.js","./PathUtils":"../node_modules/history/PathUtils.js","./createTransitionManager":"../node_modules/history/createTransitionManager.js","./DOMUtils":"../node_modules/history/DOMUtils.js"}],"../node_modules/react-router-dom/es/HashRouter.js":[function(require,module,exports) {
+},{"./warnAboutDeprecatedCJSRequire.js":"../node_modules/history/warnAboutDeprecatedCJSRequire.js","./index.js":"../node_modules/history/index.js"}],"../node_modules/react-router-dom/es/HashRouter.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -25469,1175 +26518,7 @@ Link.contextTypes = {
 };
 var _default = Link;
 exports.default = _default;
-},{"react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","invariant":"../node_modules/invariant/browser.js"}],"../node_modules/history/es/PathUtils.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.createPath = exports.parsePath = exports.stripTrailingSlash = exports.stripBasename = exports.hasBasename = exports.stripLeadingSlash = exports.addLeadingSlash = void 0;
-
-var addLeadingSlash = function addLeadingSlash(path) {
-  return path.charAt(0) === '/' ? path : '/' + path;
-};
-
-exports.addLeadingSlash = addLeadingSlash;
-
-var stripLeadingSlash = function stripLeadingSlash(path) {
-  return path.charAt(0) === '/' ? path.substr(1) : path;
-};
-
-exports.stripLeadingSlash = stripLeadingSlash;
-
-var hasBasename = function hasBasename(path, prefix) {
-  return new RegExp('^' + prefix + '(\\/|\\?|#|$)', 'i').test(path);
-};
-
-exports.hasBasename = hasBasename;
-
-var stripBasename = function stripBasename(path, prefix) {
-  return hasBasename(path, prefix) ? path.substr(prefix.length) : path;
-};
-
-exports.stripBasename = stripBasename;
-
-var stripTrailingSlash = function stripTrailingSlash(path) {
-  return path.charAt(path.length - 1) === '/' ? path.slice(0, -1) : path;
-};
-
-exports.stripTrailingSlash = stripTrailingSlash;
-
-var parsePath = function parsePath(path) {
-  var pathname = path || '/';
-  var search = '';
-  var hash = '';
-  var hashIndex = pathname.indexOf('#');
-
-  if (hashIndex !== -1) {
-    hash = pathname.substr(hashIndex);
-    pathname = pathname.substr(0, hashIndex);
-  }
-
-  var searchIndex = pathname.indexOf('?');
-
-  if (searchIndex !== -1) {
-    search = pathname.substr(searchIndex);
-    pathname = pathname.substr(0, searchIndex);
-  }
-
-  return {
-    pathname: pathname,
-    search: search === '?' ? '' : search,
-    hash: hash === '#' ? '' : hash
-  };
-};
-
-exports.parsePath = parsePath;
-
-var createPath = function createPath(location) {
-  var pathname = location.pathname,
-      search = location.search,
-      hash = location.hash;
-  var path = pathname || '/';
-  if (search && search !== '?') path += search.charAt(0) === '?' ? search : '?' + search;
-  if (hash && hash !== '#') path += hash.charAt(0) === '#' ? hash : '#' + hash;
-  return path;
-};
-
-exports.createPath = createPath;
-},{}],"../node_modules/history/es/LocationUtils.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.locationsAreEqual = exports.createLocation = void 0;
-
-var _resolvePathname = _interopRequireDefault(require("resolve-pathname"));
-
-var _valueEqual = _interopRequireDefault(require("value-equal"));
-
-var _PathUtils = require("./PathUtils");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var _extends = Object.assign || function (target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i];
-
-    for (var key in source) {
-      if (Object.prototype.hasOwnProperty.call(source, key)) {
-        target[key] = source[key];
-      }
-    }
-  }
-
-  return target;
-};
-
-var createLocation = function createLocation(path, state, key, currentLocation) {
-  var location = void 0;
-
-  if (typeof path === 'string') {
-    // Two-arg form: push(path, state)
-    location = (0, _PathUtils.parsePath)(path);
-    location.state = state;
-  } else {
-    // One-arg form: push(location)
-    location = _extends({}, path);
-    if (location.pathname === undefined) location.pathname = '';
-
-    if (location.search) {
-      if (location.search.charAt(0) !== '?') location.search = '?' + location.search;
-    } else {
-      location.search = '';
-    }
-
-    if (location.hash) {
-      if (location.hash.charAt(0) !== '#') location.hash = '#' + location.hash;
-    } else {
-      location.hash = '';
-    }
-
-    if (state !== undefined && location.state === undefined) location.state = state;
-  }
-
-  try {
-    location.pathname = decodeURI(location.pathname);
-  } catch (e) {
-    if (e instanceof URIError) {
-      throw new URIError('Pathname "' + location.pathname + '" could not be decoded. ' + 'This is likely caused by an invalid percent-encoding.');
-    } else {
-      throw e;
-    }
-  }
-
-  if (key) location.key = key;
-
-  if (currentLocation) {
-    // Resolve incomplete/relative pathname relative to current location.
-    if (!location.pathname) {
-      location.pathname = currentLocation.pathname;
-    } else if (location.pathname.charAt(0) !== '/') {
-      location.pathname = (0, _resolvePathname.default)(location.pathname, currentLocation.pathname);
-    }
-  } else {
-    // When there is no prior location and pathname is empty, set it to /
-    if (!location.pathname) {
-      location.pathname = '/';
-    }
-  }
-
-  return location;
-};
-
-exports.createLocation = createLocation;
-
-var locationsAreEqual = function locationsAreEqual(a, b) {
-  return a.pathname === b.pathname && a.search === b.search && a.hash === b.hash && a.key === b.key && (0, _valueEqual.default)(a.state, b.state);
-};
-
-exports.locationsAreEqual = locationsAreEqual;
-},{"resolve-pathname":"../node_modules/resolve-pathname/index.js","value-equal":"../node_modules/value-equal/index.js","./PathUtils":"../node_modules/history/es/PathUtils.js"}],"../node_modules/history/es/createTransitionManager.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _warning = _interopRequireDefault(require("warning"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var createTransitionManager = function createTransitionManager() {
-  var prompt = null;
-
-  var setPrompt = function setPrompt(nextPrompt) {
-    (0, _warning.default)(prompt == null, 'A history supports only one prompt at a time');
-    prompt = nextPrompt;
-    return function () {
-      if (prompt === nextPrompt) prompt = null;
-    };
-  };
-
-  var confirmTransitionTo = function confirmTransitionTo(location, action, getUserConfirmation, callback) {
-    // TODO: If another transition starts while we're still confirming
-    // the previous one, we may end up in a weird state. Figure out the
-    // best way to handle this.
-    if (prompt != null) {
-      var result = typeof prompt === 'function' ? prompt(location, action) : prompt;
-
-      if (typeof result === 'string') {
-        if (typeof getUserConfirmation === 'function') {
-          getUserConfirmation(result, callback);
-        } else {
-          (0, _warning.default)(false, 'A history needs a getUserConfirmation function in order to use a prompt message');
-          callback(true);
-        }
-      } else {
-        // Return false from a transition hook to cancel the transition.
-        callback(result !== false);
-      }
-    } else {
-      callback(true);
-    }
-  };
-
-  var listeners = [];
-
-  var appendListener = function appendListener(fn) {
-    var isActive = true;
-
-    var listener = function listener() {
-      if (isActive) fn.apply(undefined, arguments);
-    };
-
-    listeners.push(listener);
-    return function () {
-      isActive = false;
-      listeners = listeners.filter(function (item) {
-        return item !== listener;
-      });
-    };
-  };
-
-  var notifyListeners = function notifyListeners() {
-    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
-      args[_key] = arguments[_key];
-    }
-
-    listeners.forEach(function (listener) {
-      return listener.apply(undefined, args);
-    });
-  };
-
-  return {
-    setPrompt: setPrompt,
-    confirmTransitionTo: confirmTransitionTo,
-    appendListener: appendListener,
-    notifyListeners: notifyListeners
-  };
-};
-
-var _default = createTransitionManager;
-exports.default = _default;
-},{"warning":"../node_modules/warning/browser.js"}],"../node_modules/history/es/DOMUtils.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.isExtraneousPopstateEvent = exports.supportsGoWithoutReloadUsingHash = exports.supportsPopStateOnHashChange = exports.supportsHistory = exports.getConfirmation = exports.removeEventListener = exports.addEventListener = exports.canUseDOM = void 0;
-var canUseDOM = !!(typeof window !== 'undefined' && window.document && window.document.createElement);
-exports.canUseDOM = canUseDOM;
-
-var addEventListener = function addEventListener(node, event, listener) {
-  return node.addEventListener ? node.addEventListener(event, listener, false) : node.attachEvent('on' + event, listener);
-};
-
-exports.addEventListener = addEventListener;
-
-var removeEventListener = function removeEventListener(node, event, listener) {
-  return node.removeEventListener ? node.removeEventListener(event, listener, false) : node.detachEvent('on' + event, listener);
-};
-
-exports.removeEventListener = removeEventListener;
-
-var getConfirmation = function getConfirmation(message, callback) {
-  return callback(window.confirm(message));
-}; // eslint-disable-line no-alert
-
-/**
- * Returns true if the HTML5 history API is supported. Taken from Modernizr.
- *
- * https://github.com/Modernizr/Modernizr/blob/master/LICENSE
- * https://github.com/Modernizr/Modernizr/blob/master/feature-detects/history.js
- * changed to avoid false negatives for Windows Phones: https://github.com/reactjs/react-router/issues/586
- */
-
-
-exports.getConfirmation = getConfirmation;
-
-var supportsHistory = function supportsHistory() {
-  var ua = window.navigator.userAgent;
-  if ((ua.indexOf('Android 2.') !== -1 || ua.indexOf('Android 4.0') !== -1) && ua.indexOf('Mobile Safari') !== -1 && ua.indexOf('Chrome') === -1 && ua.indexOf('Windows Phone') === -1) return false;
-  return window.history && 'pushState' in window.history;
-};
-/**
- * Returns true if browser fires popstate on hash change.
- * IE10 and IE11 do not.
- */
-
-
-exports.supportsHistory = supportsHistory;
-
-var supportsPopStateOnHashChange = function supportsPopStateOnHashChange() {
-  return window.navigator.userAgent.indexOf('Trident') === -1;
-};
-/**
- * Returns false if using go(n) with hash history causes a full page reload.
- */
-
-
-exports.supportsPopStateOnHashChange = supportsPopStateOnHashChange;
-
-var supportsGoWithoutReloadUsingHash = function supportsGoWithoutReloadUsingHash() {
-  return window.navigator.userAgent.indexOf('Firefox') === -1;
-};
-/**
- * Returns true if a given popstate event is an extraneous WebKit event.
- * Accounts for the fact that Chrome on iOS fires real popstate events
- * containing undefined state when pressing the back button.
- */
-
-
-exports.supportsGoWithoutReloadUsingHash = supportsGoWithoutReloadUsingHash;
-
-var isExtraneousPopstateEvent = function isExtraneousPopstateEvent(event) {
-  return event.state === undefined && navigator.userAgent.indexOf('CriOS') === -1;
-};
-
-exports.isExtraneousPopstateEvent = isExtraneousPopstateEvent;
-},{}],"../node_modules/history/es/createBrowserHistory.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _warning = _interopRequireDefault(require("warning"));
-
-var _invariant = _interopRequireDefault(require("invariant"));
-
-var _LocationUtils = require("./LocationUtils");
-
-var _PathUtils = require("./PathUtils");
-
-var _createTransitionManager = _interopRequireDefault(require("./createTransitionManager"));
-
-var _DOMUtils = require("./DOMUtils");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
-  return typeof obj;
-} : function (obj) {
-  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-};
-
-var _extends = Object.assign || function (target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i];
-
-    for (var key in source) {
-      if (Object.prototype.hasOwnProperty.call(source, key)) {
-        target[key] = source[key];
-      }
-    }
-  }
-
-  return target;
-};
-
-var PopStateEvent = 'popstate';
-var HashChangeEvent = 'hashchange';
-
-var getHistoryState = function getHistoryState() {
-  try {
-    return window.history.state || {};
-  } catch (e) {
-    // IE 11 sometimes throws when accessing window.history.state
-    // See https://github.com/ReactTraining/history/pull/289
-    return {};
-  }
-};
-/**
- * Creates a history object that uses the HTML5 history API including
- * pushState, replaceState, and the popstate event.
- */
-
-
-var createBrowserHistory = function createBrowserHistory() {
-  var props = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-  (0, _invariant.default)(_DOMUtils.canUseDOM, 'Browser history needs a DOM');
-  var globalHistory = window.history;
-  var canUseHistory = (0, _DOMUtils.supportsHistory)();
-  var needsHashChangeListener = !(0, _DOMUtils.supportsPopStateOnHashChange)();
-  var _props$forceRefresh = props.forceRefresh,
-      forceRefresh = _props$forceRefresh === undefined ? false : _props$forceRefresh,
-      _props$getUserConfirm = props.getUserConfirmation,
-      getUserConfirmation = _props$getUserConfirm === undefined ? _DOMUtils.getConfirmation : _props$getUserConfirm,
-      _props$keyLength = props.keyLength,
-      keyLength = _props$keyLength === undefined ? 6 : _props$keyLength;
-  var basename = props.basename ? (0, _PathUtils.stripTrailingSlash)((0, _PathUtils.addLeadingSlash)(props.basename)) : '';
-
-  var getDOMLocation = function getDOMLocation(historyState) {
-    var _ref = historyState || {},
-        key = _ref.key,
-        state = _ref.state;
-
-    var _window$location = window.location,
-        pathname = _window$location.pathname,
-        search = _window$location.search,
-        hash = _window$location.hash;
-    var path = pathname + search + hash;
-    (0, _warning.default)(!basename || (0, _PathUtils.hasBasename)(path, basename), 'You are attempting to use a basename on a page whose URL path does not begin ' + 'with the basename. Expected path "' + path + '" to begin with "' + basename + '".');
-    if (basename) path = (0, _PathUtils.stripBasename)(path, basename);
-    return (0, _LocationUtils.createLocation)(path, state, key);
-  };
-
-  var createKey = function createKey() {
-    return Math.random().toString(36).substr(2, keyLength);
-  };
-
-  var transitionManager = (0, _createTransitionManager.default)();
-
-  var setState = function setState(nextState) {
-    _extends(history, nextState);
-
-    history.length = globalHistory.length;
-    transitionManager.notifyListeners(history.location, history.action);
-  };
-
-  var handlePopState = function handlePopState(event) {
-    // Ignore extraneous popstate events in WebKit.
-    if ((0, _DOMUtils.isExtraneousPopstateEvent)(event)) return;
-    handlePop(getDOMLocation(event.state));
-  };
-
-  var handleHashChange = function handleHashChange() {
-    handlePop(getDOMLocation(getHistoryState()));
-  };
-
-  var forceNextPop = false;
-
-  var handlePop = function handlePop(location) {
-    if (forceNextPop) {
-      forceNextPop = false;
-      setState();
-    } else {
-      var action = 'POP';
-      transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-        if (ok) {
-          setState({
-            action: action,
-            location: location
-          });
-        } else {
-          revertPop(location);
-        }
-      });
-    }
-  };
-
-  var revertPop = function revertPop(fromLocation) {
-    var toLocation = history.location; // TODO: We could probably make this more reliable by
-    // keeping a list of keys we've seen in sessionStorage.
-    // Instead, we just default to 0 for keys we don't know.
-
-    var toIndex = allKeys.indexOf(toLocation.key);
-    if (toIndex === -1) toIndex = 0;
-    var fromIndex = allKeys.indexOf(fromLocation.key);
-    if (fromIndex === -1) fromIndex = 0;
-    var delta = toIndex - fromIndex;
-
-    if (delta) {
-      forceNextPop = true;
-      go(delta);
-    }
-  };
-
-  var initialLocation = getDOMLocation(getHistoryState());
-  var allKeys = [initialLocation.key]; // Public interface
-
-  var createHref = function createHref(location) {
-    return basename + (0, _PathUtils.createPath)(location);
-  };
-
-  var push = function push(path, state) {
-    (0, _warning.default)(!((typeof path === 'undefined' ? 'undefined' : _typeof(path)) === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to push when the 1st ' + 'argument is a location-like object that already has state; it is ignored');
-    var action = 'PUSH';
-    var location = (0, _LocationUtils.createLocation)(path, state, createKey(), history.location);
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (!ok) return;
-      var href = createHref(location);
-      var key = location.key,
-          state = location.state;
-
-      if (canUseHistory) {
-        globalHistory.pushState({
-          key: key,
-          state: state
-        }, null, href);
-
-        if (forceRefresh) {
-          window.location.href = href;
-        } else {
-          var prevIndex = allKeys.indexOf(history.location.key);
-          var nextKeys = allKeys.slice(0, prevIndex === -1 ? 0 : prevIndex + 1);
-          nextKeys.push(location.key);
-          allKeys = nextKeys;
-          setState({
-            action: action,
-            location: location
-          });
-        }
-      } else {
-        (0, _warning.default)(state === undefined, 'Browser history cannot push state in browsers that do not support HTML5 history');
-        window.location.href = href;
-      }
-    });
-  };
-
-  var replace = function replace(path, state) {
-    (0, _warning.default)(!((typeof path === 'undefined' ? 'undefined' : _typeof(path)) === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to replace when the 1st ' + 'argument is a location-like object that already has state; it is ignored');
-    var action = 'REPLACE';
-    var location = (0, _LocationUtils.createLocation)(path, state, createKey(), history.location);
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (!ok) return;
-      var href = createHref(location);
-      var key = location.key,
-          state = location.state;
-
-      if (canUseHistory) {
-        globalHistory.replaceState({
-          key: key,
-          state: state
-        }, null, href);
-
-        if (forceRefresh) {
-          window.location.replace(href);
-        } else {
-          var prevIndex = allKeys.indexOf(history.location.key);
-          if (prevIndex !== -1) allKeys[prevIndex] = location.key;
-          setState({
-            action: action,
-            location: location
-          });
-        }
-      } else {
-        (0, _warning.default)(state === undefined, 'Browser history cannot replace state in browsers that do not support HTML5 history');
-        window.location.replace(href);
-      }
-    });
-  };
-
-  var go = function go(n) {
-    globalHistory.go(n);
-  };
-
-  var goBack = function goBack() {
-    return go(-1);
-  };
-
-  var goForward = function goForward() {
-    return go(1);
-  };
-
-  var listenerCount = 0;
-
-  var checkDOMListeners = function checkDOMListeners(delta) {
-    listenerCount += delta;
-
-    if (listenerCount === 1) {
-      (0, _DOMUtils.addEventListener)(window, PopStateEvent, handlePopState);
-      if (needsHashChangeListener) (0, _DOMUtils.addEventListener)(window, HashChangeEvent, handleHashChange);
-    } else if (listenerCount === 0) {
-      (0, _DOMUtils.removeEventListener)(window, PopStateEvent, handlePopState);
-      if (needsHashChangeListener) (0, _DOMUtils.removeEventListener)(window, HashChangeEvent, handleHashChange);
-    }
-  };
-
-  var isBlocked = false;
-
-  var block = function block() {
-    var prompt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-    var unblock = transitionManager.setPrompt(prompt);
-
-    if (!isBlocked) {
-      checkDOMListeners(1);
-      isBlocked = true;
-    }
-
-    return function () {
-      if (isBlocked) {
-        isBlocked = false;
-        checkDOMListeners(-1);
-      }
-
-      return unblock();
-    };
-  };
-
-  var listen = function listen(listener) {
-    var unlisten = transitionManager.appendListener(listener);
-    checkDOMListeners(1);
-    return function () {
-      checkDOMListeners(-1);
-      unlisten();
-    };
-  };
-
-  var history = {
-    length: globalHistory.length,
-    action: 'POP',
-    location: initialLocation,
-    createHref: createHref,
-    push: push,
-    replace: replace,
-    go: go,
-    goBack: goBack,
-    goForward: goForward,
-    block: block,
-    listen: listen
-  };
-  return history;
-};
-
-var _default = createBrowserHistory;
-exports.default = _default;
-},{"warning":"../node_modules/warning/browser.js","invariant":"../node_modules/invariant/browser.js","./LocationUtils":"../node_modules/history/es/LocationUtils.js","./PathUtils":"../node_modules/history/es/PathUtils.js","./createTransitionManager":"../node_modules/history/es/createTransitionManager.js","./DOMUtils":"../node_modules/history/es/DOMUtils.js"}],"../node_modules/history/es/createHashHistory.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _warning = _interopRequireDefault(require("warning"));
-
-var _invariant = _interopRequireDefault(require("invariant"));
-
-var _LocationUtils = require("./LocationUtils");
-
-var _PathUtils = require("./PathUtils");
-
-var _createTransitionManager = _interopRequireDefault(require("./createTransitionManager"));
-
-var _DOMUtils = require("./DOMUtils");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var _extends = Object.assign || function (target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i];
-
-    for (var key in source) {
-      if (Object.prototype.hasOwnProperty.call(source, key)) {
-        target[key] = source[key];
-      }
-    }
-  }
-
-  return target;
-};
-
-var HashChangeEvent = 'hashchange';
-var HashPathCoders = {
-  hashbang: {
-    encodePath: function encodePath(path) {
-      return path.charAt(0) === '!' ? path : '!/' + (0, _PathUtils.stripLeadingSlash)(path);
-    },
-    decodePath: function decodePath(path) {
-      return path.charAt(0) === '!' ? path.substr(1) : path;
-    }
-  },
-  noslash: {
-    encodePath: _PathUtils.stripLeadingSlash,
-    decodePath: _PathUtils.addLeadingSlash
-  },
-  slash: {
-    encodePath: _PathUtils.addLeadingSlash,
-    decodePath: _PathUtils.addLeadingSlash
-  }
-};
-
-var getHashPath = function getHashPath() {
-  // We can't use window.location.hash here because it's not
-  // consistent across browsers - Firefox will pre-decode it!
-  var href = window.location.href;
-  var hashIndex = href.indexOf('#');
-  return hashIndex === -1 ? '' : href.substring(hashIndex + 1);
-};
-
-var pushHashPath = function pushHashPath(path) {
-  return window.location.hash = path;
-};
-
-var replaceHashPath = function replaceHashPath(path) {
-  var hashIndex = window.location.href.indexOf('#');
-  window.location.replace(window.location.href.slice(0, hashIndex >= 0 ? hashIndex : 0) + '#' + path);
-};
-
-var createHashHistory = function createHashHistory() {
-  var props = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-  (0, _invariant.default)(_DOMUtils.canUseDOM, 'Hash history needs a DOM');
-  var globalHistory = window.history;
-  var canGoWithoutReload = (0, _DOMUtils.supportsGoWithoutReloadUsingHash)();
-  var _props$getUserConfirm = props.getUserConfirmation,
-      getUserConfirmation = _props$getUserConfirm === undefined ? _DOMUtils.getConfirmation : _props$getUserConfirm,
-      _props$hashType = props.hashType,
-      hashType = _props$hashType === undefined ? 'slash' : _props$hashType;
-  var basename = props.basename ? (0, _PathUtils.stripTrailingSlash)((0, _PathUtils.addLeadingSlash)(props.basename)) : '';
-  var _HashPathCoders$hashT = HashPathCoders[hashType],
-      encodePath = _HashPathCoders$hashT.encodePath,
-      decodePath = _HashPathCoders$hashT.decodePath;
-
-  var getDOMLocation = function getDOMLocation() {
-    var path = decodePath(getHashPath());
-    (0, _warning.default)(!basename || (0, _PathUtils.hasBasename)(path, basename), 'You are attempting to use a basename on a page whose URL path does not begin ' + 'with the basename. Expected path "' + path + '" to begin with "' + basename + '".');
-    if (basename) path = (0, _PathUtils.stripBasename)(path, basename);
-    return (0, _LocationUtils.createLocation)(path);
-  };
-
-  var transitionManager = (0, _createTransitionManager.default)();
-
-  var setState = function setState(nextState) {
-    _extends(history, nextState);
-
-    history.length = globalHistory.length;
-    transitionManager.notifyListeners(history.location, history.action);
-  };
-
-  var forceNextPop = false;
-  var ignorePath = null;
-
-  var handleHashChange = function handleHashChange() {
-    var path = getHashPath();
-    var encodedPath = encodePath(path);
-
-    if (path !== encodedPath) {
-      // Ensure we always have a properly-encoded hash.
-      replaceHashPath(encodedPath);
-    } else {
-      var location = getDOMLocation();
-      var prevLocation = history.location;
-      if (!forceNextPop && (0, _LocationUtils.locationsAreEqual)(prevLocation, location)) return; // A hashchange doesn't always == location change.
-
-      if (ignorePath === (0, _PathUtils.createPath)(location)) return; // Ignore this change; we already setState in push/replace.
-
-      ignorePath = null;
-      handlePop(location);
-    }
-  };
-
-  var handlePop = function handlePop(location) {
-    if (forceNextPop) {
-      forceNextPop = false;
-      setState();
-    } else {
-      var action = 'POP';
-      transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-        if (ok) {
-          setState({
-            action: action,
-            location: location
-          });
-        } else {
-          revertPop(location);
-        }
-      });
-    }
-  };
-
-  var revertPop = function revertPop(fromLocation) {
-    var toLocation = history.location; // TODO: We could probably make this more reliable by
-    // keeping a list of paths we've seen in sessionStorage.
-    // Instead, we just default to 0 for paths we don't know.
-
-    var toIndex = allPaths.lastIndexOf((0, _PathUtils.createPath)(toLocation));
-    if (toIndex === -1) toIndex = 0;
-    var fromIndex = allPaths.lastIndexOf((0, _PathUtils.createPath)(fromLocation));
-    if (fromIndex === -1) fromIndex = 0;
-    var delta = toIndex - fromIndex;
-
-    if (delta) {
-      forceNextPop = true;
-      go(delta);
-    }
-  }; // Ensure the hash is encoded properly before doing anything else.
-
-
-  var path = getHashPath();
-  var encodedPath = encodePath(path);
-  if (path !== encodedPath) replaceHashPath(encodedPath);
-  var initialLocation = getDOMLocation();
-  var allPaths = [(0, _PathUtils.createPath)(initialLocation)]; // Public interface
-
-  var createHref = function createHref(location) {
-    return '#' + encodePath(basename + (0, _PathUtils.createPath)(location));
-  };
-
-  var push = function push(path, state) {
-    (0, _warning.default)(state === undefined, 'Hash history cannot push state; it is ignored');
-    var action = 'PUSH';
-    var location = (0, _LocationUtils.createLocation)(path, undefined, undefined, history.location);
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (!ok) return;
-      var path = (0, _PathUtils.createPath)(location);
-      var encodedPath = encodePath(basename + path);
-      var hashChanged = getHashPath() !== encodedPath;
-
-      if (hashChanged) {
-        // We cannot tell if a hashchange was caused by a PUSH, so we'd
-        // rather setState here and ignore the hashchange. The caveat here
-        // is that other hash histories in the page will consider it a POP.
-        ignorePath = path;
-        pushHashPath(encodedPath);
-        var prevIndex = allPaths.lastIndexOf((0, _PathUtils.createPath)(history.location));
-        var nextPaths = allPaths.slice(0, prevIndex === -1 ? 0 : prevIndex + 1);
-        nextPaths.push(path);
-        allPaths = nextPaths;
-        setState({
-          action: action,
-          location: location
-        });
-      } else {
-        (0, _warning.default)(false, 'Hash history cannot PUSH the same path; a new entry will not be added to the history stack');
-        setState();
-      }
-    });
-  };
-
-  var replace = function replace(path, state) {
-    (0, _warning.default)(state === undefined, 'Hash history cannot replace state; it is ignored');
-    var action = 'REPLACE';
-    var location = (0, _LocationUtils.createLocation)(path, undefined, undefined, history.location);
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (!ok) return;
-      var path = (0, _PathUtils.createPath)(location);
-      var encodedPath = encodePath(basename + path);
-      var hashChanged = getHashPath() !== encodedPath;
-
-      if (hashChanged) {
-        // We cannot tell if a hashchange was caused by a REPLACE, so we'd
-        // rather setState here and ignore the hashchange. The caveat here
-        // is that other hash histories in the page will consider it a POP.
-        ignorePath = path;
-        replaceHashPath(encodedPath);
-      }
-
-      var prevIndex = allPaths.indexOf((0, _PathUtils.createPath)(history.location));
-      if (prevIndex !== -1) allPaths[prevIndex] = path;
-      setState({
-        action: action,
-        location: location
-      });
-    });
-  };
-
-  var go = function go(n) {
-    (0, _warning.default)(canGoWithoutReload, 'Hash history go(n) causes a full page reload in this browser');
-    globalHistory.go(n);
-  };
-
-  var goBack = function goBack() {
-    return go(-1);
-  };
-
-  var goForward = function goForward() {
-    return go(1);
-  };
-
-  var listenerCount = 0;
-
-  var checkDOMListeners = function checkDOMListeners(delta) {
-    listenerCount += delta;
-
-    if (listenerCount === 1) {
-      (0, _DOMUtils.addEventListener)(window, HashChangeEvent, handleHashChange);
-    } else if (listenerCount === 0) {
-      (0, _DOMUtils.removeEventListener)(window, HashChangeEvent, handleHashChange);
-    }
-  };
-
-  var isBlocked = false;
-
-  var block = function block() {
-    var prompt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-    var unblock = transitionManager.setPrompt(prompt);
-
-    if (!isBlocked) {
-      checkDOMListeners(1);
-      isBlocked = true;
-    }
-
-    return function () {
-      if (isBlocked) {
-        isBlocked = false;
-        checkDOMListeners(-1);
-      }
-
-      return unblock();
-    };
-  };
-
-  var listen = function listen(listener) {
-    var unlisten = transitionManager.appendListener(listener);
-    checkDOMListeners(1);
-    return function () {
-      checkDOMListeners(-1);
-      unlisten();
-    };
-  };
-
-  var history = {
-    length: globalHistory.length,
-    action: 'POP',
-    location: initialLocation,
-    createHref: createHref,
-    push: push,
-    replace: replace,
-    go: go,
-    goBack: goBack,
-    goForward: goForward,
-    block: block,
-    listen: listen
-  };
-  return history;
-};
-
-var _default = createHashHistory;
-exports.default = _default;
-},{"warning":"../node_modules/warning/browser.js","invariant":"../node_modules/invariant/browser.js","./LocationUtils":"../node_modules/history/es/LocationUtils.js","./PathUtils":"../node_modules/history/es/PathUtils.js","./createTransitionManager":"../node_modules/history/es/createTransitionManager.js","./DOMUtils":"../node_modules/history/es/DOMUtils.js"}],"../node_modules/history/es/createMemoryHistory.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _warning = _interopRequireDefault(require("warning"));
-
-var _PathUtils = require("./PathUtils");
-
-var _LocationUtils = require("./LocationUtils");
-
-var _createTransitionManager = _interopRequireDefault(require("./createTransitionManager"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) {
-  return typeof obj;
-} : function (obj) {
-  return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj;
-};
-
-var _extends = Object.assign || function (target) {
-  for (var i = 1; i < arguments.length; i++) {
-    var source = arguments[i];
-
-    for (var key in source) {
-      if (Object.prototype.hasOwnProperty.call(source, key)) {
-        target[key] = source[key];
-      }
-    }
-  }
-
-  return target;
-};
-
-var clamp = function clamp(n, lowerBound, upperBound) {
-  return Math.min(Math.max(n, lowerBound), upperBound);
-};
-/**
- * Creates a history object that stores locations in memory.
- */
-
-
-var createMemoryHistory = function createMemoryHistory() {
-  var props = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {};
-  var getUserConfirmation = props.getUserConfirmation,
-      _props$initialEntries = props.initialEntries,
-      initialEntries = _props$initialEntries === undefined ? ['/'] : _props$initialEntries,
-      _props$initialIndex = props.initialIndex,
-      initialIndex = _props$initialIndex === undefined ? 0 : _props$initialIndex,
-      _props$keyLength = props.keyLength,
-      keyLength = _props$keyLength === undefined ? 6 : _props$keyLength;
-  var transitionManager = (0, _createTransitionManager.default)();
-
-  var setState = function setState(nextState) {
-    _extends(history, nextState);
-
-    history.length = history.entries.length;
-    transitionManager.notifyListeners(history.location, history.action);
-  };
-
-  var createKey = function createKey() {
-    return Math.random().toString(36).substr(2, keyLength);
-  };
-
-  var index = clamp(initialIndex, 0, initialEntries.length - 1);
-  var entries = initialEntries.map(function (entry) {
-    return typeof entry === 'string' ? (0, _LocationUtils.createLocation)(entry, undefined, createKey()) : (0, _LocationUtils.createLocation)(entry, undefined, entry.key || createKey());
-  }); // Public interface
-
-  var createHref = _PathUtils.createPath;
-
-  var push = function push(path, state) {
-    (0, _warning.default)(!((typeof path === 'undefined' ? 'undefined' : _typeof(path)) === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to push when the 1st ' + 'argument is a location-like object that already has state; it is ignored');
-    var action = 'PUSH';
-    var location = (0, _LocationUtils.createLocation)(path, state, createKey(), history.location);
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (!ok) return;
-      var prevIndex = history.index;
-      var nextIndex = prevIndex + 1;
-      var nextEntries = history.entries.slice(0);
-
-      if (nextEntries.length > nextIndex) {
-        nextEntries.splice(nextIndex, nextEntries.length - nextIndex, location);
-      } else {
-        nextEntries.push(location);
-      }
-
-      setState({
-        action: action,
-        location: location,
-        index: nextIndex,
-        entries: nextEntries
-      });
-    });
-  };
-
-  var replace = function replace(path, state) {
-    (0, _warning.default)(!((typeof path === 'undefined' ? 'undefined' : _typeof(path)) === 'object' && path.state !== undefined && state !== undefined), 'You should avoid providing a 2nd state argument to replace when the 1st ' + 'argument is a location-like object that already has state; it is ignored');
-    var action = 'REPLACE';
-    var location = (0, _LocationUtils.createLocation)(path, state, createKey(), history.location);
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (!ok) return;
-      history.entries[history.index] = location;
-      setState({
-        action: action,
-        location: location
-      });
-    });
-  };
-
-  var go = function go(n) {
-    var nextIndex = clamp(history.index + n, 0, history.entries.length - 1);
-    var action = 'POP';
-    var location = history.entries[nextIndex];
-    transitionManager.confirmTransitionTo(location, action, getUserConfirmation, function (ok) {
-      if (ok) {
-        setState({
-          action: action,
-          location: location,
-          index: nextIndex
-        });
-      } else {
-        // Mimic the behavior of DOM histories by
-        // causing a render after a cancelled POP.
-        setState();
-      }
-    });
-  };
-
-  var goBack = function goBack() {
-    return go(-1);
-  };
-
-  var goForward = function goForward() {
-    return go(1);
-  };
-
-  var canGo = function canGo(n) {
-    var nextIndex = history.index + n;
-    return nextIndex >= 0 && nextIndex < history.entries.length;
-  };
-
-  var block = function block() {
-    var prompt = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : false;
-    return transitionManager.setPrompt(prompt);
-  };
-
-  var listen = function listen(listener) {
-    return transitionManager.appendListener(listener);
-  };
-
-  var history = {
-    length: entries.length,
-    action: 'POP',
-    location: entries[index],
-    index: index,
-    entries: entries,
-    createHref: createHref,
-    push: push,
-    replace: replace,
-    go: go,
-    goBack: goBack,
-    goForward: goForward,
-    canGo: canGo,
-    block: block,
-    listen: listen
-  };
-  return history;
-};
-
-var _default = createMemoryHistory;
-exports.default = _default;
-},{"warning":"../node_modules/warning/browser.js","./PathUtils":"../node_modules/history/es/PathUtils.js","./LocationUtils":"../node_modules/history/es/LocationUtils.js","./createTransitionManager":"../node_modules/history/es/createTransitionManager.js"}],"../node_modules/history/es/index.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-Object.defineProperty(exports, "createBrowserHistory", {
-  enumerable: true,
-  get: function () {
-    return _createBrowserHistory2.default;
-  }
-});
-Object.defineProperty(exports, "createHashHistory", {
-  enumerable: true,
-  get: function () {
-    return _createHashHistory2.default;
-  }
-});
-Object.defineProperty(exports, "createMemoryHistory", {
-  enumerable: true,
-  get: function () {
-    return _createMemoryHistory2.default;
-  }
-});
-Object.defineProperty(exports, "createLocation", {
-  enumerable: true,
-  get: function () {
-    return _LocationUtils.createLocation;
-  }
-});
-Object.defineProperty(exports, "locationsAreEqual", {
-  enumerable: true,
-  get: function () {
-    return _LocationUtils.locationsAreEqual;
-  }
-});
-Object.defineProperty(exports, "parsePath", {
-  enumerable: true,
-  get: function () {
-    return _PathUtils.parsePath;
-  }
-});
-Object.defineProperty(exports, "createPath", {
-  enumerable: true,
-  get: function () {
-    return _PathUtils.createPath;
-  }
-});
-
-var _createBrowserHistory2 = _interopRequireDefault(require("./createBrowserHistory"));
-
-var _createHashHistory2 = _interopRequireDefault(require("./createHashHistory"));
-
-var _createMemoryHistory2 = _interopRequireDefault(require("./createMemoryHistory"));
-
-var _LocationUtils = require("./LocationUtils");
-
-var _PathUtils = require("./PathUtils");
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-},{"./createBrowserHistory":"../node_modules/history/es/createBrowserHistory.js","./createHashHistory":"../node_modules/history/es/createHashHistory.js","./createMemoryHistory":"../node_modules/history/es/createMemoryHistory.js","./LocationUtils":"../node_modules/history/es/LocationUtils.js","./PathUtils":"../node_modules/history/es/PathUtils.js"}],"../node_modules/react-router/es/MemoryRouter.js":[function(require,module,exports) {
+},{"react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","invariant":"../node_modules/invariant/browser.js"}],"../node_modules/react-router/es/MemoryRouter.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -26728,7 +26609,7 @@ MemoryRouter.propTypes = {
 };
 var _default = MemoryRouter;
 exports.default = _default;
-},{"warning":"../node_modules/react-router/node_modules/warning/warning.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","history":"../node_modules/history/es/index.js","./Router":"../node_modules/react-router/es/Router.js"}],"../node_modules/react-router-dom/es/MemoryRouter.js":[function(require,module,exports) {
+},{"warning":"../node_modules/react-router/node_modules/warning/warning.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","history":"../node_modules/history/esm/history.js","./Router":"../node_modules/react-router/es/Router.js"}],"../node_modules/react-router-dom/es/MemoryRouter.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -27904,7 +27785,7 @@ Redirect.contextTypes = {
 };
 var _default = Redirect;
 exports.default = _default;
-},{"react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","warning":"../node_modules/react-router/node_modules/warning/warning.js","invariant":"../node_modules/invariant/browser.js","history":"../node_modules/history/es/index.js","./generatePath":"../node_modules/react-router/es/generatePath.js"}],"../node_modules/react-router-dom/es/Redirect.js":[function(require,module,exports) {
+},{"react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","warning":"../node_modules/react-router/node_modules/warning/warning.js","invariant":"../node_modules/invariant/browser.js","history":"../node_modules/history/esm/history.js","./generatePath":"../node_modules/react-router/es/generatePath.js"}],"../node_modules/react-router-dom/es/Redirect.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -28124,7 +28005,7 @@ StaticRouter.childContextTypes = {
 };
 var _default = StaticRouter;
 exports.default = _default;
-},{"warning":"../node_modules/react-router/node_modules/warning/warning.js","invariant":"../node_modules/invariant/browser.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","history":"../node_modules/history/es/index.js","./Router":"../node_modules/react-router/es/Router.js"}],"../node_modules/react-router-dom/es/StaticRouter.js":[function(require,module,exports) {
+},{"warning":"../node_modules/react-router/node_modules/warning/warning.js","invariant":"../node_modules/invariant/browser.js","react":"../node_modules/react/index.js","prop-types":"../node_modules/prop-types/index.js","history":"../node_modules/history/esm/history.js","./Router":"../node_modules/react-router/es/Router.js"}],"../node_modules/react-router-dom/es/StaticRouter.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -36567,6 +36448,7 @@ module.exports = {
   object: noopThunk,
   or: noopThunk,
   range: noopThunk,
+  ref: noopThunk,
   requiredBy: noopThunk,
   restrictedProp: noopThunk,
   sequenceOf: noopThunk,
@@ -36834,192 +36716,7 @@ var defineProperties = function (object, map) {
 
 defineProperties.supportsDescriptors = !!supportsDescriptors;
 module.exports = defineProperties;
-},{"object-keys":"../node_modules/object-keys/index.js"}],"../node_modules/object.assign/node_modules/object-keys/isArguments.js":[function(require,module,exports) {
-'use strict';
-
-var toStr = Object.prototype.toString;
-
-module.exports = function isArguments(value) {
-  var str = toStr.call(value);
-  var isArgs = str === '[object Arguments]';
-
-  if (!isArgs) {
-    isArgs = str !== '[object Array]' && value !== null && typeof value === 'object' && typeof value.length === 'number' && value.length >= 0 && toStr.call(value.callee) === '[object Function]';
-  }
-
-  return isArgs;
-};
-},{}],"../node_modules/object.assign/node_modules/object-keys/implementation.js":[function(require,module,exports) {
-'use strict';
-
-var keysShim;
-
-if (!Object.keys) {
-  // modified from https://github.com/es-shims/es5-shim
-  var has = Object.prototype.hasOwnProperty;
-  var toStr = Object.prototype.toString;
-
-  var isArgs = require('./isArguments'); // eslint-disable-line global-require
-
-
-  var isEnumerable = Object.prototype.propertyIsEnumerable;
-  var hasDontEnumBug = !isEnumerable.call({
-    toString: null
-  }, 'toString');
-  var hasProtoEnumBug = isEnumerable.call(function () {}, 'prototype');
-  var dontEnums = ['toString', 'toLocaleString', 'valueOf', 'hasOwnProperty', 'isPrototypeOf', 'propertyIsEnumerable', 'constructor'];
-
-  var equalsConstructorPrototype = function (o) {
-    var ctor = o.constructor;
-    return ctor && ctor.prototype === o;
-  };
-
-  var excludedKeys = {
-    $applicationCache: true,
-    $console: true,
-    $external: true,
-    $frame: true,
-    $frameElement: true,
-    $frames: true,
-    $innerHeight: true,
-    $innerWidth: true,
-    $outerHeight: true,
-    $outerWidth: true,
-    $pageXOffset: true,
-    $pageYOffset: true,
-    $parent: true,
-    $scrollLeft: true,
-    $scrollTop: true,
-    $scrollX: true,
-    $scrollY: true,
-    $self: true,
-    $webkitIndexedDB: true,
-    $webkitStorageInfo: true,
-    $window: true
-  };
-
-  var hasAutomationEqualityBug = function () {
-    /* global window */
-    if (typeof window === 'undefined') {
-      return false;
-    }
-
-    for (var k in window) {
-      try {
-        if (!excludedKeys['$' + k] && has.call(window, k) && window[k] !== null && typeof window[k] === 'object') {
-          try {
-            equalsConstructorPrototype(window[k]);
-          } catch (e) {
-            return true;
-          }
-        }
-      } catch (e) {
-        return true;
-      }
-    }
-
-    return false;
-  }();
-
-  var equalsConstructorPrototypeIfNotBuggy = function (o) {
-    /* global window */
-    if (typeof window === 'undefined' || !hasAutomationEqualityBug) {
-      return equalsConstructorPrototype(o);
-    }
-
-    try {
-      return equalsConstructorPrototype(o);
-    } catch (e) {
-      return false;
-    }
-  };
-
-  keysShim = function keys(object) {
-    var isObject = object !== null && typeof object === 'object';
-    var isFunction = toStr.call(object) === '[object Function]';
-    var isArguments = isArgs(object);
-    var isString = isObject && toStr.call(object) === '[object String]';
-    var theKeys = [];
-
-    if (!isObject && !isFunction && !isArguments) {
-      throw new TypeError('Object.keys called on a non-object');
-    }
-
-    var skipProto = hasProtoEnumBug && isFunction;
-
-    if (isString && object.length > 0 && !has.call(object, 0)) {
-      for (var i = 0; i < object.length; ++i) {
-        theKeys.push(String(i));
-      }
-    }
-
-    if (isArguments && object.length > 0) {
-      for (var j = 0; j < object.length; ++j) {
-        theKeys.push(String(j));
-      }
-    } else {
-      for (var name in object) {
-        if (!(skipProto && name === 'prototype') && has.call(object, name)) {
-          theKeys.push(String(name));
-        }
-      }
-    }
-
-    if (hasDontEnumBug) {
-      var skipConstructor = equalsConstructorPrototypeIfNotBuggy(object);
-
-      for (var k = 0; k < dontEnums.length; ++k) {
-        if (!(skipConstructor && dontEnums[k] === 'constructor') && has.call(object, dontEnums[k])) {
-          theKeys.push(dontEnums[k]);
-        }
-      }
-    }
-
-    return theKeys;
-  };
-}
-
-module.exports = keysShim;
-},{"./isArguments":"../node_modules/object.assign/node_modules/object-keys/isArguments.js"}],"../node_modules/object.assign/node_modules/object-keys/index.js":[function(require,module,exports) {
-'use strict';
-
-var slice = Array.prototype.slice;
-
-var isArgs = require('./isArguments');
-
-var origKeys = Object.keys;
-var keysShim = origKeys ? function keys(o) {
-  return origKeys(o);
-} : require('./implementation');
-var originalKeys = Object.keys;
-
-keysShim.shim = function shimObjectKeys() {
-  if (Object.keys) {
-    var keysWorksWithArguments = function () {
-      // Safari 5.0 bug
-      var args = Object.keys(arguments);
-      return args && args.length === arguments.length;
-    }(1, 2);
-
-    if (!keysWorksWithArguments) {
-      Object.keys = function keys(object) {
-        // eslint-disable-line func-name-matching
-        if (isArgs(object)) {
-          return originalKeys(slice.call(object));
-        }
-
-        return originalKeys(object);
-      };
-    }
-  } else {
-    Object.keys = keysShim;
-  }
-
-  return Object.keys || keysShim;
-};
-
-module.exports = keysShim;
-},{"./isArguments":"../node_modules/object.assign/node_modules/object-keys/isArguments.js","./implementation":"../node_modules/object.assign/node_modules/object-keys/implementation.js"}],"../node_modules/function-bind/implementation.js":[function(require,module,exports) {
+},{"object-keys":"../node_modules/object-keys/index.js"}],"../node_modules/function-bind/implementation.js":[function(require,module,exports) {
 'use strict';
 
 /* eslint no-invalid-this: 1 */
@@ -37206,7 +36903,7 @@ module.exports = function assign(target, source1) {
 
   return objTarget;
 };
-},{"object-keys":"../node_modules/object.assign/node_modules/object-keys/index.js","function-bind":"../node_modules/function-bind/index.js","has-symbols/shams":"../node_modules/has-symbols/shams.js"}],"../node_modules/object.assign/polyfill.js":[function(require,module,exports) {
+},{"object-keys":"../node_modules/object-keys/index.js","function-bind":"../node_modules/function-bind/index.js","has-symbols/shams":"../node_modules/has-symbols/shams.js"}],"../node_modules/object.assign/polyfill.js":[function(require,module,exports) {
 'use strict';
 
 var implementation = require('./implementation');
@@ -39931,21 +39628,26 @@ var ES = require('es-abstract/es6');
 
 module.exports = function find(predicate) {
 	var list = ES.ToObject(this);
-	var length = ES.ToInteger(ES.ToLength(list.length));
+	var length = ES.ToLength(list.length);
 	if (!ES.IsCallable(predicate)) {
 		throw new TypeError('Array#find: predicate must be a function');
 	}
 	if (length === 0) {
-		return undefined;
+		return void 0;
 	}
-	var thisArg = arguments[1];
+	var thisArg;
+	if (arguments.length > 0) {
+		thisArg = arguments[1];
+	}
+
 	for (var i = 0, value; i < length; i++) {
 		value = list[i];
-		if (ES.Call(predicate, thisArg, [value, i, list])) {
+		// inlined for performance: if (ES.Call(predicate, thisArg, [value, i, list])) {
+		if (predicate.apply(thisArg, [value, i, list])) {
 			return value;
 		}
 	}
-	return undefined;
+	return void 0;
 };
 
 },{"es-abstract/es6":"../node_modules/es-abstract/es6.js"}],"../node_modules/array.prototype.find/polyfill.js":[function(require,module,exports) {
@@ -39954,12 +39656,12 @@ module.exports = function find(predicate) {
 module.exports = function getPolyfill() {
 	// Detect if an implementation exists
 	// Detect early implementations which skipped holes in sparse arrays
-  // eslint-disable-next-line no-sparse-arrays
+	// eslint-disable-next-line no-sparse-arrays
 	var implemented = Array.prototype.find && [, 1].find(function () {
 		return true;
 	}) !== 1;
 
-  // eslint-disable-next-line global-require
+	// eslint-disable-next-line global-require
 	return implemented ? Array.prototype.find : require('./implementation');
 };
 
@@ -41570,7 +41272,70 @@ function range(min, max) {
   });
 }
 
-},{"./and":"../node_modules/airbnb-prop-types/build/and.js","./between":"../node_modules/airbnb-prop-types/build/between.js","./integer":"../node_modules/airbnb-prop-types/build/integer.js","./helpers/isInteger":"../node_modules/airbnb-prop-types/build/helpers/isInteger.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/requiredBy.js":[function(require,module,exports) {
+},{"./and":"../node_modules/airbnb-prop-types/build/and.js","./between":"../node_modules/airbnb-prop-types/build/between.js","./integer":"../node_modules/airbnb-prop-types/build/integer.js","./helpers/isInteger":"../node_modules/airbnb-prop-types/build/helpers/isInteger.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/ref.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports["default"] = void 0;
+
+var _react = require("react");
+
+var _isPlainObject = _interopRequireDefault(require("./helpers/isPlainObject"));
+
+var _wrapValidator = _interopRequireDefault(require("./helpers/wrapValidator"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { "default": obj }; }
+
+var isPrototypeOf = Object.prototype.isPrototypeOf;
+
+function isNewRef(prop) {
+  if (!(0, _isPlainObject["default"])(prop)) {
+    return false;
+  }
+
+  var ownProperties = Object.keys(prop);
+  return ownProperties.length === 1 && ownProperties[0] === 'current';
+}
+
+function isCallbackRef(prop) {
+  return typeof prop === 'function' && !isPrototypeOf.call(_react.Component, prop) && (!_react.PureComponent || !isPrototypeOf.call(_react.PureComponent, prop));
+}
+
+function requiredRef(props, propName, componentName) {
+  var propValue = props[propName];
+
+  if (isCallbackRef(propValue) || isNewRef(propValue)) {
+    return null;
+  }
+
+  return new TypeError("".concat(propName, " in ").concat(componentName, " must be a ref"));
+}
+
+function ref(props, propName, componentName) {
+  var propValue = props[propName];
+
+  if (propValue == null) {
+    return null;
+  }
+
+  for (var _len = arguments.length, rest = new Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
+    rest[_key - 3] = arguments[_key];
+  }
+
+  return requiredRef.apply(void 0, [props, propName, componentName].concat(rest));
+}
+
+ref.isRequired = requiredRef;
+
+var _default = function _default() {
+  return (0, _wrapValidator["default"])(ref, 'ref');
+};
+
+exports["default"] = _default;
+
+},{"react":"../node_modules/react/index.js","./helpers/isPlainObject":"../node_modules/airbnb-prop-types/build/helpers/isPlainObject.js","./helpers/wrapValidator":"../node_modules/airbnb-prop-types/build/helpers/wrapValidator.js"}],"../node_modules/airbnb-prop-types/build/requiredBy.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -41934,6 +41699,8 @@ var _or = _interopRequireDefault(require("./or"));
 
 var _range = _interopRequireDefault(require("./range"));
 
+var _ref = _interopRequireDefault(require("./ref"));
+
 var _requiredBy = _interopRequireDefault(require("./requiredBy"));
 
 var _restrictedProp = _interopRequireDefault(require("./restrictedProp"));
@@ -41979,6 +41746,7 @@ module.exports = {
   object: _object["default"],
   or: _or["default"],
   range: _range["default"],
+  ref: _ref["default"],
   requiredBy: _requiredBy["default"],
   restrictedProp: _restrictedProp["default"],
   sequenceOf: _sequenceOf["default"],
@@ -41990,7 +41758,7 @@ module.exports = {
   withShape: _withShape["default"]
 };
 
-},{"prop-types-exact":"../node_modules/prop-types-exact/build/index.js","./and":"../node_modules/airbnb-prop-types/build/and.js","./between":"../node_modules/airbnb-prop-types/build/between.js","./booleanSome":"../node_modules/airbnb-prop-types/build/booleanSome.js","./childrenHavePropXorChildren":"../node_modules/airbnb-prop-types/build/childrenHavePropXorChildren.js","./childrenOf":"../node_modules/airbnb-prop-types/build/childrenOf.js","./childrenOfType":"../node_modules/airbnb-prop-types/build/childrenOfType.js","./childrenSequenceOf":"../node_modules/airbnb-prop-types/build/childrenSequenceOf.js","./componentWithName":"../node_modules/airbnb-prop-types/build/componentWithName.js","./disallowedIf":"../node_modules/airbnb-prop-types/build/disallowedIf.js","./elementType":"../node_modules/airbnb-prop-types/build/elementType.js","./empty":"../node_modules/airbnb-prop-types/build/empty.js","./explicitNull":"../node_modules/airbnb-prop-types/build/explicitNull.js","./integer":"../node_modules/airbnb-prop-types/build/integer.js","./keysOf":"../node_modules/airbnb-prop-types/build/keysOf.js","./mutuallyExclusiveProps":"../node_modules/airbnb-prop-types/build/mutuallyExclusiveProps.js","./mutuallyExclusiveTrueProps":"../node_modules/airbnb-prop-types/build/mutuallyExclusiveTrueProps.js","./nChildren":"../node_modules/airbnb-prop-types/build/nChildren.js","./nonNegativeInteger":"../node_modules/airbnb-prop-types/build/nonNegativeInteger.js","./nonNegativeNumber":"../node_modules/airbnb-prop-types/build/nonNegativeNumber.js","./numericString":"../node_modules/airbnb-prop-types/build/numericString.js","./object":"../node_modules/airbnb-prop-types/build/object.js","./or":"../node_modules/airbnb-prop-types/build/or.js","./range":"../node_modules/airbnb-prop-types/build/range.js","./requiredBy":"../node_modules/airbnb-prop-types/build/requiredBy.js","./restrictedProp":"../node_modules/airbnb-prop-types/build/restrictedProp.js","./sequenceOf":"../node_modules/airbnb-prop-types/build/sequenceOf.js","./shape":"../node_modules/airbnb-prop-types/build/shape.js","./stringStartsWith":"../node_modules/airbnb-prop-types/build/stringStartsWith.js","./uniqueArray":"../node_modules/airbnb-prop-types/build/uniqueArray.js","./uniqueArrayOf":"../node_modules/airbnb-prop-types/build/uniqueArrayOf.js","./valuesOf":"../node_modules/airbnb-prop-types/build/valuesOf.js","./withShape":"../node_modules/airbnb-prop-types/build/withShape.js"}],"../node_modules/airbnb-prop-types/index.js":[function(require,module,exports) {
+},{"prop-types-exact":"../node_modules/prop-types-exact/build/index.js","./and":"../node_modules/airbnb-prop-types/build/and.js","./between":"../node_modules/airbnb-prop-types/build/between.js","./booleanSome":"../node_modules/airbnb-prop-types/build/booleanSome.js","./childrenHavePropXorChildren":"../node_modules/airbnb-prop-types/build/childrenHavePropXorChildren.js","./childrenOf":"../node_modules/airbnb-prop-types/build/childrenOf.js","./childrenOfType":"../node_modules/airbnb-prop-types/build/childrenOfType.js","./childrenSequenceOf":"../node_modules/airbnb-prop-types/build/childrenSequenceOf.js","./componentWithName":"../node_modules/airbnb-prop-types/build/componentWithName.js","./disallowedIf":"../node_modules/airbnb-prop-types/build/disallowedIf.js","./elementType":"../node_modules/airbnb-prop-types/build/elementType.js","./empty":"../node_modules/airbnb-prop-types/build/empty.js","./explicitNull":"../node_modules/airbnb-prop-types/build/explicitNull.js","./integer":"../node_modules/airbnb-prop-types/build/integer.js","./keysOf":"../node_modules/airbnb-prop-types/build/keysOf.js","./mutuallyExclusiveProps":"../node_modules/airbnb-prop-types/build/mutuallyExclusiveProps.js","./mutuallyExclusiveTrueProps":"../node_modules/airbnb-prop-types/build/mutuallyExclusiveTrueProps.js","./nChildren":"../node_modules/airbnb-prop-types/build/nChildren.js","./nonNegativeInteger":"../node_modules/airbnb-prop-types/build/nonNegativeInteger.js","./nonNegativeNumber":"../node_modules/airbnb-prop-types/build/nonNegativeNumber.js","./numericString":"../node_modules/airbnb-prop-types/build/numericString.js","./object":"../node_modules/airbnb-prop-types/build/object.js","./or":"../node_modules/airbnb-prop-types/build/or.js","./range":"../node_modules/airbnb-prop-types/build/range.js","./ref":"../node_modules/airbnb-prop-types/build/ref.js","./requiredBy":"../node_modules/airbnb-prop-types/build/requiredBy.js","./restrictedProp":"../node_modules/airbnb-prop-types/build/restrictedProp.js","./sequenceOf":"../node_modules/airbnb-prop-types/build/sequenceOf.js","./shape":"../node_modules/airbnb-prop-types/build/shape.js","./stringStartsWith":"../node_modules/airbnb-prop-types/build/stringStartsWith.js","./uniqueArray":"../node_modules/airbnb-prop-types/build/uniqueArray.js","./uniqueArrayOf":"../node_modules/airbnb-prop-types/build/uniqueArrayOf.js","./valuesOf":"../node_modules/airbnb-prop-types/build/valuesOf.js","./withShape":"../node_modules/airbnb-prop-types/build/withShape.js"}],"../node_modules/airbnb-prop-types/index.js":[function(require,module,exports) {
 module.exports = undefined === 'production' ? require('./build/mocks') : require('./build');
 },{"./build/mocks":"../node_modules/airbnb-prop-types/build/mocks/index.js","./build":"../node_modules/airbnb-prop-types/build/index.js"}],"../node_modules/react-dates/constants.js":[function(require,module,exports) {
 module.exports = {
@@ -83578,7 +83346,7 @@ exports.default = exports.history = void 0;
 
 var _react = _interopRequireDefault(require("react"));
 
-var _createBrowserHistory = _interopRequireDefault(require("history/createBrowserHistory"));
+var _history = require("history");
 
 var _reactRouterDom = require("react-router-dom");
 
@@ -83608,7 +83376,7 @@ var _Tags = _interopRequireDefault(require("../components/Tags"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var history = (0, _createBrowserHistory.default)();
+var history = (0, _history.createBrowserHistory)();
 exports.history = history;
 
 var AppRouter = function AppRouter() {
@@ -83652,7 +83420,7 @@ var AppRouter = function AppRouter() {
 
 var _default = AppRouter;
 exports.default = _default;
-},{"react":"../node_modules/react/index.js","history/createBrowserHistory":"../node_modules/history/createBrowserHistory.js","react-router-dom":"../node_modules/react-router-dom/es/index.js","../components/DashboardPage":"../src/components/DashboardPage.js","../components/NotFoundPage":"../src/components/NotFoundPage.js","../components/EditBlogPost":"../src/components/EditBlogPost.js","../components/AddBlogPost":"../src/components/AddBlogPost.js","../components/LoadingPage":"../src/components/LoadingPage.js","../components/LoginPage":"../src/components/LoginPage.js","../components/BlogPost":"../src/components/BlogPost.js","../components/Archives":"../src/components/Archives.js","./PrivateRoute":"../src/routers/PrivateRoute.js","./PublicRoute":"../src/routers/PublicRoute.js","../components/Blog":"../src/components/Blog.js","../components/Tags":"../src/components/Tags.js"}],"../node_modules/normalize.css/normalize.css":[function(require,module,exports) {
+},{"react":"../node_modules/react/index.js","history":"../node_modules/history/esm/history.js","react-router-dom":"../node_modules/react-router-dom/es/index.js","../components/DashboardPage":"../src/components/DashboardPage.js","../components/NotFoundPage":"../src/components/NotFoundPage.js","../components/EditBlogPost":"../src/components/EditBlogPost.js","../components/AddBlogPost":"../src/components/AddBlogPost.js","../components/LoadingPage":"../src/components/LoadingPage.js","../components/LoginPage":"../src/components/LoginPage.js","../components/BlogPost":"../src/components/BlogPost.js","../components/Archives":"../src/components/Archives.js","./PrivateRoute":"../src/routers/PrivateRoute.js","./PublicRoute":"../src/routers/PublicRoute.js","../components/Blog":"../src/components/Blog.js","../components/Tags":"../src/components/Tags.js"}],"../node_modules/normalize.css/normalize.css":[function(require,module,exports) {
 
         var reloadCSS = require('_css_loader');
         module.hot.dispose(reloadCSS);
@@ -83760,7 +83528,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "43719" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "43893" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

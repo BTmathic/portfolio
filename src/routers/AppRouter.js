@@ -1,5 +1,5 @@
 import React from 'react';
-import createHistory from 'history/createBrowserHistory';
+import { createBrowserHistory } from 'history';
 import { Router, Route, Switch } from 'react-router-dom';
 import DashboardPage from '../components/DashboardPage';
 import NotFoundPage from '../components/NotFoundPage';
@@ -14,7 +14,7 @@ import PublicRoute from './PublicRoute';
 import Blog from '../components/Blog';
 import Tags from '../components/Tags';
 
-export const history = createHistory();
+export const history = createBrowserHistory();
 
 const AppRouter = () => (
   <Router history={history}>
